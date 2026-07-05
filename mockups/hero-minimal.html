@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hero Minimal · Issencial</title>
+<style>
+  :root {
+    --primary: #002e35;
+    --primary-light: #004a54;
+    --accent: #d7de6a;
+    --accent-light: #e3e88f;
+    --dark: #151e28;
+    --light: #f1f1f1;
+    --white: #ffffff;
+    --font: "OverusedGrotesk", "Inter", system-ui, -apple-system, sans-serif;
+  }
+
+  @font-face {
+    font-family: "OverusedGrotesk";
+    src: url("../public/fonts/overused grotesk/variable/OverusedGrotesk-VF.woff2") format("woff2");
+    font-weight: 100 900;
+    font-display: swap;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: var(--font);
+    background: var(--white);
+    color: var(--dark);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ─── Hero ─── */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 80px 24px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Very subtle background texture */
+  .hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    opacity: 0.02;
+    background-image: radial-gradient(circle at 30% 40%, var(--primary) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+
+  /* ─── Content (centered on mobile) ─── */
+  .hero-inner {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    max-width: 520px;
+    text-align: center;
+  }
+
+  .hero-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid rgba(0,46,53,0.1);
+    background: rgba(0,46,53,0.03);
+    padding: 5px 12px;
+    border-radius: 9999px;
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--primary);
+    margin-bottom: 24px;
+  }
+
+  .hero-tag svg { width: 10px; height: 10px; }
+
+  .hero-title {
+    font-size: 2.6rem;
+    font-weight: 700;
+    line-height: 1.05;
+    color: var(--primary);
+    margin-bottom: 20px;
+    letter-spacing: -0.02em;
+  }
+
+  .hero-title .gradient {
+    background: linear-gradient(135deg, var(--primary), #3a5a40);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero-desc {
+    font-size: 0.95rem;
+    line-height: 1.65;
+    color: #777;
+    max-width: 400px;
+    margin: 0 auto 36px;
+  }
+
+  .hero-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 26px;
+    border-radius: 9999px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s ease;
+  }
+
+  .btn-primary {
+    background: var(--primary);
+    color: var(--white);
+  }
+
+  .btn-primary:hover {
+    background: var(--primary-light);
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px rgba(0,46,53,0.15);
+  }
+
+  .btn-outline {
+    background: transparent;
+    color: var(--primary);
+    border: 1px solid rgba(0,46,53,0.15);
+  }
+
+  .btn-outline:hover {
+    border-color: var(--primary);
+    transform: translateY(-1px);
+  }
+
+  /* ─── Pattern badge (small visual element) ─── */
+  .pattern-badge {
+    width: 80px;
+    height: 80px;
+    border-radius: 20px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    margin: 0 auto 28px;
+    position: relative;
+    overflow: hidden;
+    rotate: -6deg;
+    transition: rotate 0.4s ease;
+  }
+
+  .pattern-badge:hover {
+    rotate: 0deg;
+  }
+
+  .pattern-badge::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    opacity: 0.1;
+    background-image:
+      radial-gradient(circle at 30% 20%, #d7de6a 1px, transparent 1px);
+    background-size: 12px 12px;
+  }
+
+  .pattern-badge svg {
+    position: relative;
+    z-index: 2;
+    width: 32px;
+    height: 32px;
+    color: var(--accent);
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  /* ─── Floating glyphs ─── */
+  .glyph {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    border: 1.5px solid rgba(0,46,53,0.06);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary);
+    opacity: 0.25;
+    transition: all 0.4s ease;
+    pointer-events: none;
+  }
+
+  .glyph:hover {
+    opacity: 0.6;
+    transform: scale(1.1);
+    pointer-events: auto;
+  }
+
+  .glyph svg { width: 18px; height: 18px; }
+
+  .g-1 { top: 10%; left: 5%; rotate: -8deg; }
+  .g-2 { top: 18%; right: 8%; rotate: 12deg; }
+  .g-3 { bottom: 22%; left: 8%; rotate: -5deg; }
+  .g-4 { bottom: 12%; right: 5%; rotate: 6deg; }
+  .g-5 { top: 55%; left: 3%; rotate: -12deg; }
+  .g-6 { top: 45%; right: 3%; rotate: 8deg; }
+
+  /* ─── Desktop ─── */
+  @media (min-width: 1024px) {
+    .hero {
+      flex-direction: row;
+      padding: 0 64px;
+    }
+
+    .hero-inner {
+      text-align: left;
+      max-width: 600px;
+    }
+
+    .hero-title {
+      font-size: 3.2rem;
+    }
+
+    .hero-desc {
+      margin: 0 0 36px;
+    }
+
+    .hero-buttons {
+      justify-content: flex-start;
+    }
+
+    .pattern-badge {
+      width: 100px;
+      height: 100px;
+      margin: 0 0 28px;
+    }
+
+    .pattern-badge svg { width: 40px; height: 40px; }
+
+    /* More glyphs on desktop */
+    .glyph { opacity: 0.18; }
+
+    .g1 { display: block; }
+  }
+
+  /* Responsive glyph visibility */
+  @media (max-width: 639px) {
+    .g-3, .g-4, .g-5, .g-6 { display: none; }
+    .g-1, .g-2 { opacity: 0.12; }
+  }
+
+  @media (min-width: 640px) and (max-width: 1023px) {
+    .g-5, .g-6 { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<section class="hero">
+  <!-- Floating glyphs -->
+  <div class="glyph g-1">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20z"/><path d="M2 12h20"/></svg>
+  </div>
+  <div class="glyph g-2">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 1.1 2.7 2 6 2s6-.9 6-2v-5"/></svg>
+  </div>
+  <div class="glyph g-3">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M6 12h12"/></svg>
+  </div>
+  <div class="glyph g-4">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20z"/></svg>
+  </div>
+  <div class="glyph g-5">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+  </div>
+  <div class="glyph g-6">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+  </div>
+
+  <div class="hero-inner">
+    <!-- Pattern badge -->
+    <div class="pattern-badge">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+        <path d="M2 17l10 5 10-5"/>
+        <path d="M2 12l10 5 10-5"/>
+      </svg>
+    </div>
+
+    <div class="hero-tag">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+      Serviços Integrados Globais
+    </div>
+
+    <h1 class="hero-title">
+      Simplificamos<br>
+      processos.<br>
+      <span class="gradient">Conectamos<br>oportunidades.</span>
+    </h1>
+
+    <p class="hero-desc">
+      A sua sociedade de confiança para cuidar de processos a todos os níveis — desde viagens e educação até serviços administrativos — em qualquer parte do mundo.
+    </p>
+
+    <div class="hero-buttons">
+      <a href="#" class="btn btn-primary">Explorar Serviços →</a>
+      <a href="#" class="btn btn-outline">Sobre Nós</a>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>

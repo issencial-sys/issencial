@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Issencial — Cards Angulares + Hero B</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Overused+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #002e35;
+      --primary-light: #004a54;
+      --accent: #d7de6a;
+      --accent-light: #e3e88f;
+      --neutral: #d9dad3;
+      --neutral-light: #ebeceb;
+      --dark: #151e28;
+      --light: #f1f1f1;
+      --white: #ffffff;
+      --card-gray: #e8e9e4;
+      --card-green-light: #c8d4a0;
+      --card-green-dark: #3a5a40;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Overused Grotesk', system-ui, sans-serif;
+      background: var(--light);
+      color: var(--dark);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* === HEADER === */
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(241,241,241,0.85);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(0,46,53,0.06);
+    }
+    .header-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 16px 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .header-logo { height: 36px; }
+    .header-logo img { height: 100%; width: auto; object-fit: contain; }
+    .header-nav { display: flex; gap: 32px; align-items: center; }
+    .header-nav a {
+      font-size: 14px; font-weight: 500; color: var(--primary);
+      text-decoration: none; opacity: 0.7; transition: opacity 0.2s;
+    }
+    .header-nav a:hover { opacity: 1; }
+    .header-nav .btn-nav {
+      background: var(--primary); color: var(--white);
+      padding: 10px 20px; border-radius: 10px; opacity: 1; font-weight: 600;
+    }
+    .header-nav .btn-nav:hover { background: var(--primary-light); }
+
+    /* === HERO VARIATION B === */
+    .hero-b {
+      position: relative;
+      min-height: 600px;
+      display: flex;
+      align-items: center;
+      background: var(--white);
+      overflow: hidden;
+      border-radius: 0;
+      border-bottom: 1px solid rgba(0,46,53,0.06);
+    }
+    .hero-b .left {
+      flex: 1;
+      padding: 80px 48px 80px 80px;
+      position: relative;
+      z-index: 2;
+    }
+    .hero-b .right {
+      flex: 1;
+      position: relative;
+      min-height: 600px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .hero-b .right .pattern-card {
+      width: 340px;
+      height: 420px;
+      border-radius: 24px;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 50%, var(--dark) 100%);
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 40px 80px rgba(0,46,53,0.2);
+      transform: rotate(-3deg);
+      transition: transform 0.4s ease;
+    }
+    .hero-b .right .pattern-card:hover { transform: rotate(0deg); }
+    .hero-b .right .pattern-card .inner-pattern {
+      position: absolute; inset: 0; opacity: 0.06;
+      background-image:
+        radial-gradient(circle at 20% 30%, var(--accent) 1px, transparent 1px),
+        radial-gradient(circle at 80% 70%, var(--accent) 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+    .hero-b .right .pattern-card .card-content {
+      position: relative; z-index: 2; padding: 40px 32px;
+      height: 100%; display: flex; flex-direction: column;
+      justify-content: space-between;
+    }
+    .hero-b .right .pattern-card .card-logo { width: 48px; height: 48px; opacity: 0.9; }
+    .hero-b .right .pattern-card .card-logo img { width: 100%; height: 100%; object-fit: contain; }
+    .hero-b .right .pattern-card h3 {
+      font-size: 24px; font-weight: 700; color: var(--white); line-height: 1.2;
+    }
+    .hero-b .right .pattern-card .card-icons { display: flex; gap: 16px; }
+    .hero-b .right .pattern-card .card-icon {
+      width: 44px; height: 44px; border-radius: 12px;
+      background: rgba(255,255,255,0.1); display: flex;
+      align-items: center; justify-content: center;
+    }
+    .hero-b .right .pattern-card .card-icon img {
+      width: 28px; height: 28px; object-fit: contain; filter: brightness(0) invert(1);
+    }
+
+    /* Angular cards floating around the hero */
+    .hero-b .right .angular-float {
+      position: absolute;
+      overflow: hidden;
+      box-shadow: 0 16px 40px rgba(0,46,53,0.12);
+      transition: transform 0.4s ease;
+    }
+    .hero-b .right .angular-float:hover { transform: scale(1.05); }
+
+    .hero-b .right .angular-float-1 {
+      width: 160px; height: 110px;
+      background: var(--card-gray);
+      clip-path: polygon(0 0, 72% 0, 100% 28%, 100% 100%, 0 100%);
+      bottom: 80px; left: -20px;
+      transform: rotate(2deg);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .hero-b .right .angular-float-1 img {
+      width: 36px; height: 36px; object-fit: contain; opacity: 0.6;
+    }
+
+    .hero-b .right .angular-float-2 {
+      width: 130px; height: 90px;
+      background: var(--card-green-light);
+      clip-path: polygon(0 0, 72% 0, 100% 28%, 100% 100%, 0 100%);
+      top: 60px; left: 20px;
+      transform: rotate(-4deg);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .hero-b .right .angular-float-2 img {
+      width: 28px; height: 28px; object-fit: contain; opacity: 0.6;
+    }
+
+    .hero-b .right .angular-float-3 {
+      width: 110px; height: 75px;
+      background: var(--card-green-dark);
+      clip-path: polygon(0 0, 72% 0, 100% 28%, 100% 100%, 0 100%);
+      bottom: 140px; right: 20px;
+      transform: rotate(-2deg);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .hero-b .right .angular-float-3 img {
+      width: 24px; height: 24px; object-fit: contain; filter: brightness(0) invert(1); opacity: 0.7;
+    }
+
+    .hero-b .tag {
+      display: inline-flex; align-items: center; gap: 6px;
+      border: 1px solid rgba(0,46,53,0.12); background: rgba(0,46,53,0.03);
+      padding: 6px 14px; border-radius: 999px;
+      font-size: 12px; font-weight: 600; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--primary); margin-bottom: 20px;
+    }
+    .hero-b .tag img { width: 12px; height: 12px; object-fit: contain; }
+    .hero-b h1 {
+      font-size: 42px; font-weight: 700; line-height: 1.1;
+      color: var(--primary); margin-bottom: 16px;
+    }
+    .hero-b h1 span {
+      background: linear-gradient(135deg, var(--primary) 0%, #3a5a40 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .hero-b .desc {
+      font-size: 17px; line-height: 1.6; color: #666;
+      margin-bottom: 32px; max-width: 440px;
+    }
+    .hero-b .cta-row { display: flex; gap: 12px; }
+
+    .btn { display: inline-flex; align-items: center; gap: 8px; padding: 14px 28px; border-radius: 12px; font-size: 15px; font-weight: 600; text-decoration: none; transition: all 0.2s ease; cursor: pointer; border: none; }
+    .btn-dark { background: var(--primary); color: var(--white); }
+    .btn-dark:hover { background: var(--primary-light); transform: translateY(-1px); }
+    .btn-ghost { background: transparent; color: var(--primary); border: 1px solid rgba(0,46,53,0.15); }
+    .btn-ghost:hover { border-color: rgba(0,46,53,0.3); background: rgba(0,46,53,0.03); }
+
+    /* === SERVICES SECTION WITH ANGULAR CARDS === */
+    .section {
+      max-width: 1200px; margin: 0 auto; padding: 80px 40px;
+    }
+    .section-label {
+      font-size: 11px; font-weight: 600; letter-spacing: 0.15em;
+      text-transform: uppercase; color: var(--primary); opacity: 0.5; margin-bottom: 12px;
+    }
+    .section-title {
+      font-size: 40px; font-weight: 700; line-height: 1.12;
+      color: var(--primary); margin-bottom: 16px;
+    }
+    .section-desc {
+      font-size: 17px; line-height: 1.6; color: #666;
+      max-width: 560px; margin-bottom: 48px;
+    }
+
+    /* Angular card grid — matches real card images exactly */
+    .angular-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+
+    .angular-card {
+      position: relative;
+      min-height: 260px;
+      padding: 32px 28px 28px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      clip-path: polygon(0 0, 72% 0, 100% 28%, 100% 100%, 0 100%);
+      transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94), box-shadow 0.35s ease;
+    }
+
+    .angular-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 24px 48px rgba(0,46,53,0.12);
+    }
+
+    /* Color variants — matching the real card images */
+    .angular-card.bg-gray { background: var(--card-gray); }
+    .angular-card.bg-green-light { background: var(--card-green-light); }
+    .angular-card.bg-green-dark { background: var(--card-green-dark); }
+
+    .angular-card .card-icon-wrap {
+      width: 52px; height: 52px; display: flex;
+      align-items: center; justify-content: center;
+      margin-bottom: 20px; transition: transform 0.3s ease;
+    }
+    .angular-card:hover .card-icon-wrap { transform: scale(1.08); }
+
+    .angular-card .card-icon-wrap img {
+      width: 40px; height: 40px; object-fit: contain;
+    }
+
+    /* Icon tinting for dark backgrounds */
+    .angular-card.bg-green-dark .card-icon-wrap img {
+      filter: brightness(0) invert(1);
+    }
+
+    .angular-card h3 {
+      font-size: 18px; font-weight: 600; margin-bottom: 8px;
+    }
+    .angular-card.bg-gray h3,
+    .angular-card.bg-green-light h3 { color: var(--primary); }
+    .angular-card.bg-green-dark h3 { color: var(--white); }
+
+    .angular-card p {
+      font-size: 14px; line-height: 1.55;
+    }
+    .angular-card.bg-gray p,
+    .angular-card.bg-green-light p { color: #666; }
+    .angular-card.bg-green-dark p { color: rgba(255,255,255,0.7); }
+
+    .angular-card .card-link {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 13px; font-weight: 600; text-decoration: none;
+      margin-top: 16px; opacity: 0; transform: translateX(-8px);
+      transition: all 0.3s ease;
+    }
+    .angular-card:hover .card-link { opacity: 1; transform: translateX(0); }
+    .angular-card.bg-gray .card-link,
+    .angular-card.bg-green-light .card-link { color: var(--primary); }
+    .angular-card.bg-green-dark .card-link { color: var(--accent); }
+
+    /* === WHY ISSENCIAL SECTION === */
+    .why-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 64px; align-items: center;
+    }
+    .why-left .badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      border: 1px solid rgba(0,46,53,0.1); background: rgba(0,46,53,0.03);
+      padding: 6px 14px; border-radius: 999px;
+      font-size: 12px; font-weight: 600; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--primary); margin-bottom: 20px;
+    }
+    .why-left h2 {
+      font-size: 36px; font-weight: 700; line-height: 1.15;
+      color: var(--primary); margin-bottom: 16px;
+    }
+    .why-left h2 span {
+      background: linear-gradient(135deg, var(--primary) 0%, #3a5a40 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .why-left > p {
+      font-size: 16px; line-height: 1.6; color: #777; margin-bottom: 36px;
+    }
+    .reason-item { display: flex; gap: 16px; margin-bottom: 28px; }
+    .reason-item .reason-icon {
+      width: 48px; height: 48px; border-radius: 14px;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .reason-item .reason-icon img { width: 30px; height: 30px; object-fit: contain; }
+    .reason-item .reason-icon.bg-accent { background: rgba(215,222,106,0.15); }
+    .reason-item .reason-icon.bg-primary { background: rgba(0,46,53,0.06); }
+    .reason-item .reason-icon.bg-green { background: rgba(58,90,64,0.08); }
+    .reason-item h4 { font-size: 16px; font-weight: 600; color: var(--primary); margin-bottom: 4px; }
+    .reason-item p { font-size: 14px; line-height: 1.55; color: #888; }
+
+    /* Mission card */
+    .mission-card {
+      position: relative; border-radius: 24px;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+      padding: 48px 40px; overflow: hidden;
+      min-height: 400px; display: flex; flex-direction: column; justify-content: space-between;
+    }
+    .mission-card .pattern-overlay {
+      position: absolute; inset: 0; opacity: 0.06;
+      background-image:
+        radial-gradient(circle at 20% 20%, var(--accent) 1px, transparent 1px),
+        radial-gradient(circle at 80% 80%, var(--accent) 1px, transparent 1px);
+      background-size: 48px 48px;
+    }
+    .mission-card .glow {
+      position: absolute; top: -40px; right: -40px;
+      width: 200px; height: 200px;
+      background: radial-gradient(circle, rgba(215,222,106,0.15), transparent 70%);
+      border-radius: 50%;
+    }
+    .mission-card .card-top { position: relative; z-index: 2; }
+    .mission-card .card-logo { width: 48px; height: 48px; margin-bottom: 32px; }
+    .mission-card .card-logo img { width: 100%; height: 100%; object-fit: contain; }
+    .mission-card .card-label {
+      font-size: 13px; font-weight: 600; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--accent); margin-bottom: 16px;
+    }
+    .mission-card blockquote {
+      font-size: 20px; line-height: 1.5; color: rgba(255,255,255,0.9);
+      font-style: italic; position: relative; z-index: 2;
+    }
+    .mission-card blockquote::before {
+      content: '\201C'; position: absolute; top: -20px; left: -8px;
+      font-size: 60px; color: rgba(215,222,106,0.2); font-style: normal; line-height: 1;
+    }
+    .mission-card .card-bottom {
+      position: relative; z-index: 2; padding-top: 32px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      display: flex; align-items: center; gap: 12px;
+    }
+    .mission-card .card-bottom .avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: rgba(255,255,255,0.1);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .mission-card .card-bottom .avatar img { width: 24px; height: 24px; object-fit: contain; }
+    .mission-card .card-bottom .author-name { font-size: 14px; font-weight: 600; color: var(--white); }
+    .mission-card .card-bottom .author-role { font-size: 12px; color: rgba(255,255,255,0.45); }
+
+    /* === FOOTER === */
+    .footer { background: var(--primary); padding: 48px 40px; }
+    .footer-inner {
+      max-width: 1200px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .footer-logo { height: 32px; }
+    .footer-logo img { height: 100%; width: auto; object-fit: contain; }
+    .footer-text { font-size: 13px; color: rgba(255,255,255,0.4); }
+    .footer-links { display: flex; gap: 24px; }
+    .footer-links a {
+      font-size: 13px; color: rgba(255,255,255,0.5);
+      text-decoration: none; transition: color 0.2s;
+    }
+    .footer-links a:hover { color: var(--accent); }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-inner">
+      <div class="header-logo">
+        <img src="../public/logo/principal_azul.png" alt="Issencial">
+      </div>
+      <nav class="header-nav">
+        <a href="#">Início</a>
+        <a href="#">Serviços</a>
+        <a href="#">Sobre</a>
+        <a href="#">Contacto</a>
+        <a href="#" class="btn-nav">Portal</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- HERO VARIATION B (the one the user liked) -->
+  <section class="hero-b">
+    <div class="left">
+      <div class="tag">
+        <img src="../public/logo/secundario_verde.png" alt="">
+        Serviços Integrados Globais
+      </div>
+      <h1>Simplificamos<br>processos.<br><span>Conectamos<br>oportunidades.</span></h1>
+      <p class="desc">A sua sociedade de confiança para cuidar de processos a todos os níveis — desde viagens e educação até serviços administrativos — em qualquer parte do mundo.</p>
+      <div class="cta-row">
+        <a href="#" class="btn btn-dark">Explorar Serviços →</a>
+        <a href="#" class="btn btn-ghost">Sobre Nós</a>
+      </div>
+    </div>
+    <div class="right">
+      <div class="pattern-card">
+        <div class="inner-pattern"></div>
+        <div class="card-content">
+          <div class="card-logo">
+            <img src="../public/logo/principal_branco.png" alt="Issencial">
+          </div>
+          <h3>Soluções integradas para cada necessidade</h3>
+          <div class="card-icons">
+            <div class="card-icon"><img src="../public/assets/icons/viagem-aviao.webp" alt=""></div>
+            <div class="card-icon"><img src="../public/assets/icons/licenciatura.webp" alt=""></div>
+            <div class="card-icon"><img src="../public/assets/icons/dinheiro-dolar.webp" alt=""></div>
+            <div class="card-icon"><img src="../public/assets/icons/www.webp" alt=""></div>
+          </div>
+        </div>
+      </div>
+      <!-- Floating angular cards around the hero -->
+      <div class="angular-float angular-float-1">
+        <img src="../public/assets/icons/viagem-aviao.webp" alt="">
+      </div>
+      <div class="angular-float angular-float-2">
+        <img src="../public/assets/icons/licenciatura.webp" alt="">
+      </div>
+      <div class="angular-float angular-float-3">
+        <img src="../public/assets/icons/dinheiro-dolar.webp" alt="">
+      </div>
+    </div>
+  </section>
+
+  <!-- SERVICES SECTION WITH ANGULAR CARDS (matching real card images) -->
+  <section class="section">
+    <div class="section-label">Os Nossos Serviços</div>
+    <h2 class="section-title">Soluções integradas para<br>cada necessidade</h2>
+    <p class="section-desc">Oferecemos uma gama completa de serviços desenhados para simplificar a sua vida e conectar-lhe a oportunidades no mundo todo.</p>
+
+    <div class="angular-grid">
+      <!-- Card 1: Gray -->
+      <div class="angular-card bg-gray">
+        <div>
+          <div class="card-icon-wrap">
+            <img src="../public/assets/icons/viagem-aviao.webp" alt="Viagens">
+          </div>
+          <h3>Viagens & Turismo</h3>
+          <p>Parceiros de agências de viagens, oferecemos soluções completas de planeamento, reservas e assessoria de viagens internacionais.</p>
+        </div>
+        <a href="#" class="card-link">Saber mais →</a>
+      </div>
+
+      <!-- Card 2: Green Light -->
+      <div class="angular-card bg-green-light">
+        <div>
+          <div class="card-icon-wrap">
+            <img src="../public/assets/icons/licenciatura.webp" alt="Educação">
+          </div>
+          <h3>Educação na Europa</h3>
+          <p>Inscrições em escolas e universidades europeias, desde o ensino básico ao superior, com acompanhamento personalizado.</p>
+        </div>
+        <a href="#" class="card-link">Saber mais →</a>
+      </div>
+
+      <!-- Card 3: Green Dark -->
+      <div class="angular-card bg-green-dark">
+        <div>
+          <div class="card-icon-wrap">
+            <img src="../public/assets/icons/dinheiro-dolar.webp" alt="Finanças">
+          </div>
+          <h3>Transferências</h3>
+          <p>Serviços de transferência financeira internacionais seguros, rápidos e com as melhores taxas do mercado.</p>
+        </div>
+        <a href="#" class="card-link">Saber mais →</a>
+      </div>
+
+      <!-- Card 4: Green Dark -->
+      <div class="angular-card bg-green-dark">
+        <div>
+          <div class="card-icon-wrap">
+            <img src="../public/assets/icons/pasta-ficheiro.webp" alt="Administração">
+          </div>
+          <h3>Serviços Administrativos</h3>
+          <p>Gestão completa de processos burocráticos e documentais, poupando-lhe tempo e garantindo conformidade.</p>
+        </div>
+        <a href="#" class="card-link">Saber mais →</a>
+      </div>
+
+      <!-- Card 5: Gray -->
+      <div class="angular-card bg-gray">
+        <div>
+          <div class="card-icon-wrap">
+            <img src="../public/assets/icons/rosto.webp" alt="Consultoria">
+          </div>
+          <h3>Consultoria Personalizada</h3>
+          <p>Aconselhamento estratégico à medida, analisando as suas necessidades e propondo as melhores soluções.</p>
+        </div>
+        <a href="#" class="card-link">Saber mais →</a>
+      </div>
+
+      <!-- Card 6: Green Light -->
+      <div class="angular-card bg-green-light">
+        <div>
+          <div class="card-icon-wrap">
+            <img src="../public/assets/icons/lista.webp" alt="Processos">
+          </div>
+          <h3>Gestão de Processos</h3>
+          <p>Acompanhamento integral de processos complexos, coordenando cada etapa com eficiência e dedicação.</p>
+        </div>
+        <a href="#" class="card-link">Saber mais →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- WHY ISSENCIAL SECTION -->
+  <section class="section" style="padding-top:0">
+    <div class="why-grid">
+      <div class="why-left">
+        <div class="badge">Porquê a Issencial?</div>
+        <h2>Uma sociedade da qual pode<br><span>confiar</span></h2>
+        <p>Construímos relações sólidas e duradouras, sendo o parceiro de confiança que simplifica processos e conecta pessoas a oportunidades no mundo todo.</p>
+
+        <div class="reason-item">
+          <div class="reason-icon bg-accent">
+            <img src="../public/assets/icons/certo.webp" alt="">
+          </div>
+          <div>
+            <h4>Eficiência & Agilidade</h4>
+            <p>Processos otimizados que poupan o seu tempo e garantem resultados rápidos.</p>
+          </div>
+        </div>
+
+        <div class="reason-item">
+          <div class="reason-icon bg-primary">
+            <img src="../public/assets/icons/balanca-justica.webp" alt="">
+          </div>
+          <div>
+            <h4>Segurança & Confiança</h4>
+            <p>Cada processo é tratado com o máximo profissionalismo e sigilo.</p>
+          </div>
+        </div>
+
+        <div class="reason-item">
+          <div class="reason-icon bg-green">
+            <img src="../public/assets/icons/mapa-mundial.webp" alt="">
+          </div>
+          <div>
+            <h4>Alcance Global</h4>
+            <p>Presença em mais de 30 países, conectando-o a oportunidades em qualquer lugar.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="mission-card">
+        <div class="pattern-overlay"></div>
+        <div class="glow"></div>
+        <div class="card-top">
+          <div class="card-logo">
+            <img src="../public/logo/principal_branco.png" alt="Issencial">
+          </div>
+          <div class="card-label">A Nossa Missão</div>
+        </div>
+        <blockquote>Ser a sociedade de confiança à qual recorrem para cuidar dos seus processos e concretizar seus objetivos, em qualquer parte do mundo.</blockquote>
+        <div class="card-bottom">
+          <div class="avatar">
+            <img src="../public/logo/secundario_verde.png" alt="">
+          </div>
+          <div>
+            <div class="author-name">Issencial</div>
+            <div class="author-role">Serviços Integrados Globais</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-logo">
+        <img src="../public/logo/princiapal_branco.webp" alt="Issencial">
+      </div>
+      <div class="footer-text">© 2024 Issencial. Todos os direitos reservados.</div>
+      <div class="footer-links">
+        <a href="#">LinkedIn</a>
+        <a href="#">Facebook</a>
+        <a href="#">Instagram</a>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>

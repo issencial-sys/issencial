@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hero Overlay · Issencial</title>
+<style>
+  :root {
+    --primary: #002e35;
+    --primary-light: #004a54;
+    --primary-dark: #001a1f;
+    --accent: #d7de6a;
+    --accent-light: #e3e88f;
+    --neutral: #d9dad3;
+    --neutral-light: #ebeceb;
+    --dark: #151e28;
+    --light: #f1f1f1;
+    --white: #ffffff;
+    --font: "OverusedGrotesk", "Inter", system-ui, -apple-system, sans-serif;
+  }
+
+  @font-face {
+    font-family: "OverusedGrotesk";
+    src: url("../public/fonts/overused grotesk/variable/OverusedGrotesk-VF.woff2") format("woff2");
+    font-weight: 100 900;
+    font-display: swap;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: var(--font);
+    background: var(--white);
+    color: var(--dark);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ─── Hero ─── */
+  .hero {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ─── Full-bleed background panel ─── */
+  .hero-bg {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(160deg, var(--primary) 0%, var(--primary-light) 50%, var(--primary-dark) 100%);
+    overflow: hidden;
+  }
+
+  .hero-bg-pattern {
+    position: absolute;
+    inset: 0;
+    opacity: 0.06;
+    background-image:
+      radial-gradient(circle at 25% 25%, #d7de6a 1px, transparent 1px),
+      radial-gradient(circle at 75% 75%, #d7de6a 1px, transparent 1px);
+    background-size: 50px 50px;
+  }
+
+  /* Accent shape bottom-right */
+  .hero-bg::after {
+    content: "";
+    position: absolute;
+    bottom: -10%;
+    right: -5%;
+    width: 50%;
+    height: 60%;
+    background: radial-gradient(ellipse at center, rgba(215,222,106,0.08) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+
+  /* Floating icons in background */
+  .float-icon {
+    position: absolute;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.06);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(215,222,106,0.4);
+  }
+
+  .float-icon svg { width: 22px; height: 22px; }
+
+  .fi-1 { top: 15%; left: 8%; rotate: -8deg; }
+  .fi-2 { top: 40%; right: 6%; rotate: 12deg; }
+  .fi-3 { bottom: 25%; left: 5%; rotate: -5deg; }
+  .fi-4 { bottom: 12%; right: 12%; rotate: 7deg; }
+
+  /* ─── Content ─── */
+  .hero-content {
+    position: relative;
+    z-index: 2;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 100px 24px 48px;
+  }
+
+  .hero-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid rgba(215,222,106,0.3);
+    background: rgba(215,222,106,0.1);
+    padding: 6px 14px;
+    border-radius: 9999px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 20px;
+    width: fit-content;
+  }
+
+  .hero-tag svg { width: 10px; height: 10px; }
+
+  .hero-title {
+    font-size: 2.4rem;
+    font-weight: 700;
+    line-height: 1.1;
+    color: var(--white);
+    margin-bottom: 16px;
+  }
+
+  .hero-title .highlight {
+    color: var(--accent);
+  }
+
+  .hero-desc {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: rgba(255,255,255,0.7);
+    max-width: 480px;
+    margin-bottom: 32px;
+  }
+
+  .hero-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 28px;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s ease;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: var(--primary);
+  }
+
+  .btn-primary:hover {
+    background: var(--accent-light);
+    transform: translateY(-1px);
+  }
+
+  .btn-outline-light {
+    background: transparent;
+    color: var(--white);
+    border: 1px solid rgba(255,255,255,0.25);
+  }
+
+  .btn-outline-light:hover {
+    background: rgba(255,255,255,0.08);
+    border-color: rgba(255,255,255,0.4);
+    transform: translateY(-1px);
+  }
+
+  /* ─── Service grid on desktop ─── */
+  .service-grid {
+    display: none;
+  }
+
+  /* Stats row */
+  .hero-stats {
+    display: flex;
+    gap: 24px;
+    margin-top: 40px;
+    padding-top: 24px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .stat-item {
+    text-align: left;
+  }
+
+  .stat-value {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  .stat-label {
+    font-size: 0.7rem;
+    color: rgba(255,255,255,0.5);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  /* ─── Desktop ─── */
+  @media (min-width: 1024px) {
+    .hero {
+      flex-direction: row;
+    }
+
+    .hero-bg {
+      clip-path: polygon(0 0, 55% 0, 45% 100%, 0 100%);
+    }
+
+    .hero-content {
+      padding: 80px 48px 80px 64px;
+      max-width: 55%;
+    }
+
+    .hero-title {
+      font-size: 3rem;
+    }
+
+    /* Right side - service cards grid */
+    .service-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      position: relative;
+      z-index: 2;
+      width: 45%;
+      padding: 80px 48px;
+      align-content: center;
+    }
+
+    .service-card {
+      background: rgba(255,255,255,0.95);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(0,46,53,0.06);
+      border-radius: 16px;
+      padding: 20px;
+      transition: all 0.3s ease;
+      cursor: default;
+    }
+
+    .service-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 32px rgba(0,46,53,0.08);
+    }
+
+    .service-card-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: rgba(0,46,53,0.05);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 10px;
+    }
+
+    .service-card-icon svg {
+      width: 18px;
+      height: 18px;
+      color: var(--primary);
+    }
+
+    .service-card-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--dark);
+      margin-bottom: 4px;
+    }
+
+    .service-card-desc {
+      font-size: 0.72rem;
+      color: #888;
+      line-height: 1.4;
+    }
+
+    .float-icon { display: none; }
+    .hero-stats { display: flex; }
+  }
+
+  @media (max-width: 1023px) {
+    .hero-stats { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<section class="hero">
+  <!-- Full-bleed background -->
+  <div class="hero-bg">
+    <div class="hero-bg-pattern"></div>
+    <!-- Floating icons -->
+    <div class="float-icon fi-1">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20z"/><path d="M2 12h20"/></svg>
+    </div>
+    <div class="float-icon fi-2">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 1.1 2.7 2 6 2s6-.9 6-2v-5"/></svg>
+    </div>
+    <div class="float-icon fi-3">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M6 12h12"/></svg>
+    </div>
+    <div class="float-icon fi-4">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20z"/></svg>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="hero-content">
+    <div class="hero-tag">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+      Serviços Integrados Globais
+    </div>
+
+    <h1 class="hero-title">
+      Simplificamos processos.<br>
+      <span class="highlight">Conectamos oportunidades.</span>
+    </h1>
+
+    <p class="hero-desc">
+      A sua sociedade de confiança para cuidar de processos a todos os níveis — desde viagens e educação até serviços administrativos — em qualquer parte do mundo.
+    </p>
+
+    <div class="hero-buttons">
+      <a href="#" class="btn btn-primary">Explorar Serviços →</a>
+      <a href="#" class="btn btn-outline-light">Sobre Nós</a>
+    </div>
+
+    <div class="hero-stats">
+      <div class="stat-item">
+        <div class="stat-value">15+</div>
+        <div class="stat-label">Anos</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value">30+</div>
+        <div class="stat-label">Países</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value">98%</div>
+        <div class="stat-label">Satisfação</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Service cards grid (desktop right side) -->
+  <div class="service-grid">
+    <div class="service-card">
+      <div class="service-card-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20z"/><path d="M2 12h20"/></svg>
+      </div>
+      <div class="service-card-title">Viagens & Turismo</div>
+      <div class="service-card-desc">Planeamento e reservas internacionais</div>
+    </div>
+    <div class="service-card">
+      <div class="service-card-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 1.1 2.7 2 6 2s6-.9 6-2v-5"/></svg>
+      </div>
+      <div class="service-card-title">Educação na Europa</div>
+      <div class="service-card-desc">Inscrições em escolas e universidades</div>
+    </div>
+    <div class="service-card">
+      <div class="service-card-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M6 12h12"/></svg>
+      </div>
+      <div class="service-card-title">Transferências</div>
+      <div class="service-card-desc">Internacionais seguras e rápidas</div>
+    </div>
+    <div class="service-card">
+      <div class="service-card-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20z"/></svg>
+      </div>
+      <div class="service-card-title">Administrativos</div>
+      <div class="service-card-desc">Gestão de processos e documentação</div>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>

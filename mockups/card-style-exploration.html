@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Issencial — Exploração de Cards</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Overused+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #002e35;
+      --primary-light: #004a54;
+      --accent: #d7de6a;
+      --accent-light: #e3e88f;
+      --neutral: #d9dad3;
+      --neutral-light: #ebeceb;
+      --dark: #151e28;
+      --light: #f1f1f1;
+      --white: #ffffff;
+      --card-gray: #e8e9e4;
+      --card-green-light: #c8d4a0;
+      --card-green-dark: #3a5a40;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Overused Grotesk', system-ui, sans-serif;
+      background: var(--light);
+      color: var(--dark);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .section {
+      padding: 80px 40px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--primary);
+      margin-bottom: 12px;
+      opacity: 0.6;
+    }
+
+    .section-title {
+      font-size: 36px;
+      font-weight: 700;
+      line-height: 1.15;
+      margin-bottom: 16px;
+      color: var(--primary);
+    }
+
+    .section-desc {
+      font-size: 17px;
+      line-height: 1.6;
+      color: #666;
+      max-width: 560px;
+      margin-bottom: 48px;
+    }
+
+    /* === VARIATION A: Cards with clipped corner (logo geometry) === */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+
+    .card-a {
+      position: relative;
+      background: var(--white);
+      padding: 36px 28px 32px;
+      min-height: 220px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      /* The signature shape: clipped top-right corner */
+      clip-path: polygon(0 0, 75% 0, 100% 25%, 100% 100%, 0 100%);
+    }
+
+    .card-a:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 40px rgba(0, 46, 53, 0.12);
+    }
+
+    .card-a .icon-wrap {
+      width: 52px;
+      height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .card-a .icon-wrap img {
+      width: 40px;
+      height: 40px;
+      object-fit: contain;
+    }
+
+    .card-a h3 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--primary);
+    }
+
+    .card-a p {
+      font-size: 14px;
+      line-height: 1.55;
+      color: #777;
+    }
+
+    .card-a .accent-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background: var(--accent);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.3s ease;
+    }
+
+    .card-a:hover .accent-bar {
+      transform: scaleX(1);
+    }
+
+    /* Card color variants */
+    .card-a.variant-gray { background: var(--card-gray); }
+    .card-a.variant-gray h3 { color: var(--primary); }
+    .card-a.variant-green-light { background: var(--card-green-light); }
+    .card-a.variant-green-light h3 { color: var(--primary); }
+    .card-a.variant-green-dark { background: var(--card-green-dark); }
+    .card-a.variant-green-dark h3 { color: var(--white); }
+    .card-a.variant-green-dark p { color: rgba(255,255,255,0.7); }
+
+    /* === VARIATION B: Cards with rounded corner accent === */
+    .card-b {
+      position: relative;
+      background: var(--white);
+      border-radius: 20px;
+      padding: 36px 28px 32px;
+      min-height: 220px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      border: 1px solid rgba(0,46,53,0.06);
+      overflow: hidden;
+    }
+
+    .card-b::before {
+      content: '';
+      position: absolute;
+      top: -30px;
+      right: -30px;
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: var(--accent);
+      opacity: 0.15;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+
+    .card-b:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 40px rgba(0, 46, 53, 0.12);
+    }
+
+    .card-b:hover::before {
+      opacity: 0.25;
+      transform: scale(1.2);
+    }
+
+    .card-b .icon-wrap {
+      width: 52px;
+      height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 14px;
+      margin-bottom: 20px;
+    }
+
+    .card-b .icon-wrap img {
+      width: 36px;
+      height: 36px;
+      object-fit: contain;
+    }
+
+    .card-b .icon-wrap.blue { background: rgba(0,46,53,0.08); }
+    .card-b .icon-wrap.green { background: rgba(58,90,64,0.1); }
+    .card-b .icon-wrap.gold { background: rgba(215,222,106,0.2); }
+
+    .card-b h3 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--primary);
+    }
+
+    .card-b p {
+      font-size: 14px;
+      line-height: 1.55;
+      color: #777;
+    }
+
+    /* === VARIATION C: Cards with gradient background === */
+    .card-c {
+      position: relative;
+      border-radius: 20px;
+      padding: 36px 28px 32px;
+      min-height: 220px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      overflow: hidden;
+    }
+
+    .card-c::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 20px;
+      border: 1px solid rgba(255,255,255,0.1);
+      pointer-events: none;
+    }
+
+    .card-c:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 40px rgba(0, 46, 53, 0.2);
+    }
+
+    .card-c.gradient-primary {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+    }
+
+    .card-c.gradient-green {
+      background: linear-gradient(135deg, var(--card-green-dark) 0%, #4a7a52 100%);
+    }
+
+    .card-c.gradient-neutral {
+      background: linear-gradient(135deg, #b8b9b2 0%, var(--neutral) 100%);
+    }
+
+    .card-c .icon-wrap {
+      width: 52px;
+      height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.12);
+      margin-bottom: 20px;
+    }
+
+    .card-c .icon-wrap img {
+      width: 36px;
+      height: 36px;
+      object-fit: contain;
+      filter: brightness(0) invert(1);
+    }
+
+    .card-c h3 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--white);
+    }
+
+    .card-c p {
+      font-size: 14px;
+      line-height: 1.55;
+      color: rgba(255,255,255,0.7);
+    }
+
+    .divider {
+      height: 1px;
+      background: rgba(0,46,53,0.08);
+      margin: 60px 0;
+    }
+
+    .variation-label {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      background: var(--primary);
+      padding: 4px 12px;
+      border-radius: 4px;
+      margin-bottom: 24px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- VARIATION A: Clipped corner cards -->
+  <section class="section">
+    <div class="variation-label">Variação A</div>
+    <div class="section-label">Estilo de Cards</div>
+    <h2 class="section-title">Forma com corte angular<br>inspirada no logo</h2>
+    <p class="section-desc">
+      O corte no canto superior direito remete à geometria do logótipo Issencial.
+      Cards neutros, com variantes de cor cinza, verde claro e verde escuro.
+    </p>
+
+    <div class="cards-grid">
+      <div class="card-a">
+        <div>
+          <div class="icon-wrap">
+            <img src="../public/assets/icons/viagem-aviao.webp" alt="Viagens">
+          </div>
+          <h3>Viagens & Turismo</h3>
+          <p>Soluções completas de planeamento e reservas de viagens internacionais.</p>
+        </div>
+        <div class="accent-bar"></div>
+      </div>
+
+      <div class="card-a variant-gray">
+        <div>
+          <div class="icon-wrap">
+            <img src="../public/assets/icons/licenciatura.webp" alt="Educação">
+          </div>
+          <h3>Educação na Europa</h3>
+          <p>Inscrições em escolas e universidades europeias com acompanhamento.</p>
+        </div>
+        <div class="accent-bar"></div>
+      </div>
+
+      <div class="card-a variant-green-light">
+        <div>
+          <div class="icon-wrap">
+            <img src="../public/assets/icons/dinheiro-dolar.webp" alt="Finanças">
+          </div>
+          <h3>Transferências</h3>
+          <p>Serviços de transferência financeira internacionais seguros e rápidos.</p>
+        </div>
+        <div class="accent-bar"></div>
+      </div>
+
+      <div class="card-a variant-green-dark">
+        <div>
+          <div class="icon-wrap">
+            <img src="../public/assets/icons/pasta-ficheiro.webp" alt="Administração">
+          </div>
+          <h3>Serviços Administrativos</h3>
+          <p>Gestão completa de processos burocráticos e documentais.</p>
+        </div>
+        <div class="accent-bar"></div>
+      </div>
+
+      <div class="card-a">
+        <div>
+          <div class="icon-wrap">
+            <img src="../public/assets/icons/rosto.webp" alt="Consultoria">
+          </div>
+          <h3>Consultoria</h3>
+          <p>Aconselhamento estratégico à medida para cada necessidade.</p>
+        </div>
+        <div class="accent-bar"></div>
+      </div>
+
+      <div class="card-a variant-gray">
+        <div>
+          <div class="icon-wrap">
+            <img src="../public/assets/icons/lista.webp" alt="Processos">
+          </div>
+          <h3>Gestão de Processos</h3>
+          <p>Acompanhamento integral de processos complexos.</p>
+        </div>
+        <div class="accent-bar"></div>
+      </div>
+    </div>
+  </section>
+
+  <div style="max-width:1200px;margin:0 auto;padding:0 40px"><div class="divider"></div></div>
+
+  <!-- VARIATION B: Rounded cards with accent circle -->
+  <section class="section">
+    <div class="variation-label">Variação B</div>
+    <div class="section-label">Estilo de Cards</div>
+    <h2 class="section-title">Cards arredondados com<br>círculo de destaque</h2>
+    <p class="section-desc">
+      Formato mais suave com círculo decorativo no canto. Fundo branco limpo,
+      ícones com fundo colorido subtílio.
+    </p>
+
+    <div class="cards-grid">
+      <div class="card-b">
+        <div>
+          <div class="icon-wrap blue">
+            <img src="../public/assets/icons/viagem-aviao.webp" alt="Viagens">
+          </div>
+          <h3>Viagens & Turismo</h3>
+          <p>Soluções completas de planeamento e reservas de viagens internacionais.</p>
+        </div>
+      </div>
+
+      <div class="card-b">
+        <div>
+          <div class="icon-wrap green">
+            <img src="../public/assets/icons/licenciatura.webp" alt="Educação">
+          </div>
+          <h3>Educação na Europa</h3>
+          <p>Inscrições em escolas e universidades europeias com acompanhamento.</p>
+        </div>
+      </div>
+
+      <div class="card-b">
+        <div>
+          <div class="icon-wrap gold">
+            <img src="../public/assets/icons/dinheiro-dolar.webp" alt="Finanças">
+          </div>
+          <h3>Transferências</h3>
+          <p>Serviços de transferência financeira internacionais seguros e rápidos.</p>
+        </div>
+      </div>
+
+      <div class="card-b">
+        <div>
+          <div class="icon-wrap blue">
+            <img src="../public/assets/icons/pasta-ficheiro.webp" alt="Administração">
+          </div>
+          <h3>Serviços Administrativos</h3>
+          <p>Gestão completa de processos burocráticos e documentais.</p>
+        </div>
+      </div>
+
+      <div class="card-b">
+        <div>
+          <div class="icon-wrap green">
+            <img src="../public/assets/icons/rosto.webp" alt="Consultoria">
+          </div>
+          <h3>Consultoria</h3>
+          <p>Aconselhamento estratégico à medida para cada necessidade.</p>
+        </div>
+      </div>
+
+      <div class="card-b">
+        <div>
+          <div class="icon-wrap gold">
+            <img src="../public/assets/icons/lista.webp" alt="Processos">
+          </div>
+          <h3>Gestão de Processos</h3>
+          <p>Acompanhamento integral de processos complexos.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div style="max-width:1200px;margin:0 auto;padding:0 40px"><div class="divider"></div></div>
+
+  <!-- VARIATION C: Gradient background cards -->
+  <section class="section">
+    <div class="variation-label">Variação C</div>
+    <div class="section-label">Estilo de Cards</div>
+    <h2 class="section-title">Cards com fundo gradiente<br>nas cores da marca</h2>
+    <p class="section-desc">
+      Fundos com gradiente usando as cores da paleta Issencial — primary, verde escuro e neutro.
+      Ícones invertidos para contraste.
+    </p>
+
+    <div class="cards-grid">
+      <div class="card-c gradient-primary">
+        <div>
+          <div class="icon-wrap">
+            <img src="../public/assets/icons/viagem-aviao.webp" alt="Viagens">
+          </div>
+          <h3>Viagens & Turismo</h3>
+          <p>Soluções completas de planeamento e reservas de viagens internacionais.</p>
+        </div>
+      </div>
+
+      <div class="card-c gradient-green">
+        <div>
+          <div class="icon-wrap">
+            <img src="../public/assets/icons/licenciatura.webp" alt="Educação">
+          </div>
+          <h3>Educação na Europa</h3>
+          <p>Inscrições em escolas e universidades europeias com acompanhamento.</p>
+        </div>
+      </div>
+
+      <div class="card-c gradient-neutral">
+        <div>
+          <div class="icon-wrap">
+            <img src="../public/assets/icons/dinheiro-dolar.webp" alt="Finanças">
+          </div>
+          <h3>Transferências</h3>
+          <p>Serviços de transferência financeira internacionais seguros e rápidos.</p>
+        </div>
+      </div>
+
+      <div class="card-c gradient-green">
+        <div>
+          <div class="icon-wrap">
+            <img src="../public/assets/icons/pasta-ficheiro.webp" alt="Administração">
+          </div>
+          <h3>Serviços Administrativos</h3>
+          <p>Gestão completa de processos burocráticos e documentais.</p>
+        </div>
+      </div>
+
+      <div class="card-c gradient-primary">
+        <div>
+          <div class="icon-wrap">
+            <img src="../public/assets/icons/rosto.webp" alt="Consultoria">
+          </div>
+          <h3>Consultoria</h3>
+          <p>Aconselhamento estratégico à medida para cada necessidade.</p>
+        </div>
+      </div>
+
+      <div class="card-c gradient-neutral">
+        <div>
+          <div class="icon-wrap">
+            <img src="../public/assets/icons/lista.webp" alt="Processos">
+          </div>
+          <h3>Gestão de Processos</h3>
+          <p>Acompanhamento integral de processos complexos.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</body>
+</html>

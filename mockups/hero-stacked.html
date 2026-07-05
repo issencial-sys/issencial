@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hero Stacked · Issencial</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<style>
+  /* ─── Design System ─── */
+  :root {
+    --primary: #002e35;
+    --primary-light: #004a54;
+    --primary-dark: #001a1f;
+    --accent: #d7de6a;
+    --accent-light: #e3e88f;
+    --neutral: #d9dad3;
+    --neutral-light: #ebeceb;
+    --dark: #151e28;
+    --light: #f1f1f1;
+    --white: #ffffff;
+    --font: "OverusedGrotesk", "Inter", system-ui, -apple-system, sans-serif;
+  }
+
+  /* ─── OverusedGrotesk via local TTF ─── */
+  @font-face {
+    font-family: "OverusedGrotesk";
+    src: url("../public/fonts/overused grotesk/variable/OverusedGrotesk-VF.woff2") format("woff2");
+    font-weight: 100 900;
+    font-display: swap;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: var(--font);
+    background: var(--white);
+    color: var(--dark);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ─── Hero ─── */
+  .hero {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    overflow: hidden;
+  }
+
+  /* ─── Top decorative section (pattern card on mobile, becomes left panel on desktop) ─── */
+  .hero-visual {
+    position: relative;
+    width: 100%;
+    min-height: 240px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-light), var(--primary-dark));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  /* Dot pattern */
+  .hero-visual::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    opacity: 0.08;
+    background-image:
+      radial-gradient(circle at 20% 30%, #d7de6a 1px, transparent 1px),
+      radial-gradient(circle at 80% 70%, #d7de6a 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  .hero-visual-inner {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    padding: 32px 24px;
+  }
+
+  .hero-logo {
+    width: 48px;
+    height: 48px;
+    margin: 0 auto 16px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .hero-logo svg {
+    width: 28px;
+    height: 28px;
+    color: var(--accent);
+  }
+
+  .hero-visual-title {
+    color: var(--white);
+    font-size: 1.25rem;
+    font-weight: 700;
+    line-height: 1.3;
+    margin-bottom: 6px;
+  }
+
+  .hero-visual-sub {
+    color: rgba(255,255,255,0.6);
+    font-size: 0.8rem;
+  }
+
+  /* Icon row inside visual */
+  .icon-row {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 20px;
+  }
+
+  .icon-dot {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .icon-dot svg {
+    width: 20px;
+    height: 20px;
+    color: rgba(255,255,255,0.9);
+  }
+
+  /* ─── Content panel ─── */
+  .hero-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 40px 24px 48px;
+  }
+
+  .hero-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid rgba(0,46,53,0.12);
+    background: rgba(0,46,53,0.03);
+    padding: 6px 14px;
+    border-radius: 9999px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--primary);
+    margin-bottom: 20px;
+    width: fit-content;
+  }
+
+  .hero-tag svg {
+    width: 10px;
+    height: 10px;
+  }
+
+  .hero-title {
+    font-size: 2.2rem;
+    font-weight: 700;
+    line-height: 1.1;
+    color: var(--primary);
+    margin-bottom: 16px;
+  }
+
+  .hero-title .gradient {
+    background: linear-gradient(135deg, var(--primary), #3a5a40);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero-desc {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: #666;
+    max-width: 440px;
+    margin-bottom: 32px;
+  }
+
+  .hero-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 28px;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s ease;
+  }
+
+  .btn-primary {
+    background: var(--primary);
+    color: var(--white);
+  }
+
+  .btn-primary:hover {
+    background: var(--primary-light);
+    transform: translateY(-1px);
+  }
+
+  .btn-outline {
+    background: transparent;
+    color: var(--primary);
+    border: 1px solid rgba(0,46,53,0.15);
+  }
+
+  .btn-outline:hover {
+    border-color: rgba(0,46,53,0.3);
+    background: rgba(0,46,53,0.03);
+    transform: translateY(-1px);
+  }
+
+  /* ─── Floating service badges ─── */
+  .service-badges {
+    display: none;
+  }
+
+  /* ─── Desktop (≥1024px) ─── */
+  @media (min-width: 1024px) {
+    .hero {
+      flex-direction: row;
+    }
+
+    .hero-visual {
+      flex: 1;
+      min-height: 100vh;
+      width: auto;
+    }
+
+    .hero-content {
+      flex: 1;
+      padding: 80px 48px 80px 64px;
+    }
+
+    .hero-title {
+      font-size: 2.8rem;
+    }
+
+    /* Floating badges on desktop */
+    .service-badges {
+      display: block;
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .badge {
+      position: absolute;
+      background: #c8d4a0;
+      border-radius: 8px;
+      padding: 8px 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--primary);
+      box-shadow: 0 8px 24px rgba(0,46,53,0.12);
+      pointer-events: auto;
+      transition: transform 0.3s ease;
+    }
+
+    .badge:hover {
+      transform: scale(1.05) translateY(-2px);
+    }
+
+    .badge svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .badge-1 { top: 12%; right: 5%; rotate: 6deg; }
+    .badge-2 { top: 5%; left: 8%; rotate: -3deg; }
+    .badge-3 { bottom: 15%; left: 3%; rotate: -5deg; }
+    .badge-4 { bottom: 8%; right: 8%; rotate: 4deg; }
+  }
+</style>
+</head>
+<body>
+
+<section class="hero">
+  <!-- Visual / Pattern panel (top on mobile, left on desktop) -->
+  <div class="hero-visual">
+    <div class="hero-visual-inner">
+      <div class="hero-logo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+          <path d="M2 17l10 5 10-5"/>
+          <path d="M2 12l10 5 10-5"/>
+        </svg>
+      </div>
+      <div class="hero-visual-title">Soluções integradas<br>para cada necessidade</div>
+      <div class="hero-visual-sub">Serviços em +30 países</div>
+      <div class="icon-row">
+        <div class="icon-dot">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20z"/><path d="M2 12h20"/></svg>
+        </div>
+        <div class="icon-dot">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 1.1 2.7 2 6 2s6-.9 6-2v-5"/></svg>
+        </div>
+        <div class="icon-dot">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M6 12h12"/></svg>
+        </div>
+        <div class="icon-dot">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20z"/></svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- Floating badges (desktop only) -->
+    <div class="service-badges">
+      <div class="badge badge-1">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20z"/><path d="M2 12h20"/></svg>
+        Viagens
+      </div>
+      <div class="badge badge-2">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 1.1 2.7 2 6 2s6-.9 6-2v-5"/></svg>
+        Educação
+      </div>
+      <div class="badge badge-3">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M6 12h12"/></svg>
+        Câmbios
+      </div>
+      <div class="badge badge-4">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20z"/></svg>
+        Serviços
+      </div>
+    </div>
+  </div>
+
+  <!-- Content panel -->
+  <div class="hero-content">
+    <div class="hero-tag">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+      Serviços Integrados Globais
+    </div>
+
+    <h1 class="hero-title">
+      Simplificamos<br>
+      processos.<br>
+      <span class="gradient">Conectamos<br>oportunidades.</span>
+    </h1>
+
+    <p class="hero-desc">
+      A sua sociedade de confiança para cuidar de processos a todos os níveis — desde viagens e educação até serviços administrativos — em qualquer parte do mundo.
+    </p>
+
+    <div class="hero-buttons">
+      <a href="#" class="btn btn-primary">Explorar Serviços →</a>
+      <a href="#" class="btn btn-outline">Sobre Nós</a>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>

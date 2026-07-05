@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Detalhe do Serviço — Direção 2 · Split Layout</title>
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap");
+
+    @font-face {
+      font-family: "OverusedGrotesk";
+      src: url("../public/fonts/overused%20grotesk/variable/OverusedGrotesk-VF.woff2") format("woff2");
+      font-weight: 100 900;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    :root {
+      --primary: #002e35;
+      --primary-light: #004a54;
+      --accent: #d7de6a;
+      --accent-light: #e3e88f;
+      --neutral: #d9dad3;
+      --neutral-light: #ebeceb;
+      --dark: #151e28;
+      --light: #f1f1f1;
+      --white: #ffffff;
+      --font: "OverusedGrotesk", "Inter", system-ui, sans-serif;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: var(--font);
+      color: var(--dark);
+      background: var(--white);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ─── HEADER ─── */
+    .header {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+      background: rgba(255,255,255,0.95);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--neutral-light);
+      height: 64px;
+    }
+    .header-inner {
+      max-width: 100%; margin: 0 auto; padding: 0 32px;
+      height: 100%; display: flex; align-items: center; justify-content: space-between;
+    }
+    .header-logo { font-size: 18px; font-weight: 700; color: var(--primary); letter-spacing: -0.02em; }
+    .header-actions { display: flex; gap: 12px; align-items: center; }
+    .header-back {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 13px; color: #999; text-decoration: none;
+      padding: 6px 12px; border-radius: 6px; transition: all 0.2s;
+    }
+    .header-back:hover { color: var(--primary); background: var(--light); }
+
+    /* ─── SPLIT LAYOUT ─── */
+    .split {
+      display: flex;
+      padding-top: 64px;
+      min-height: 100vh;
+    }
+
+    /* ─── SIDEBAR ─── */
+    .sidebar {
+      width: 280px; flex-shrink: 0;
+      border-right: 1px solid var(--neutral-light);
+      padding: 40px 24px;
+      position: sticky; top: 64px; height: calc(100vh - 64px);
+      overflow-y: auto;
+      background: var(--white);
+    }
+    .sidebar-label {
+      font-size: 11px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.1em; color: #bbb;
+      margin-bottom: 16px;
+    }
+    .sidebar-nav { display: flex; flex-direction: column; gap: 4px; }
+    .sidebar-link {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 16px; border-radius: 10px;
+      text-decoration: none; color: #666;
+      font-size: 14px; font-weight: 500;
+      transition: all 0.2s;
+      border-left: 3px solid transparent;
+    }
+    .sidebar-link:hover {
+      background: var(--light);
+      color: var(--primary);
+    }
+    .sidebar-link.active {
+      background: rgba(215,222,106,0.1);
+      color: var(--primary);
+      border-left-color: var(--accent);
+      font-weight: 600;
+    }
+    .sidebar-link-icon {
+      width: 32px; height: 32px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .sidebar-link-icon svg { width: 16px; height: 16px; }
+    .sidebar-link.active .sidebar-link-icon {
+      background: rgba(215,222,106,0.2);
+    }
+
+    /* ─── CONTENT ─── */
+    .content {
+      flex: 1;
+      max-width: 880px;
+      padding: 48px 56px 80px;
+    }
+
+    /* Hero mini */
+    .content-hero {
+      margin-bottom: 48px;
+    }
+    .content-hero-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 12px; border-radius: 999px;
+      background: rgba(215,222,106,0.1);
+      color: var(--accent-dark);
+      font-size: 11px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.08em; margin-bottom: 16px;
+    }
+    .content-hero h1 {
+      font-size: 40px; font-weight: 700; color: var(--primary);
+      line-height: 1.1; margin-bottom: 12px;
+    }
+    .content-hero p {
+      font-size: 16px; line-height: 1.6; color: #888;
+      max-width: 600px;
+    }
+
+    /* Section */
+    .section { margin-bottom: 56px; }
+    .section:last-child { margin-bottom: 0; }
+    .section h2 {
+      font-size: 24px; font-weight: 700; color: var(--primary);
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid var(--neutral-light);
+    }
+    .section h2 small {
+      font-size: 14px; font-weight: 400; color: #bbb;
+      margin-left: 8px;
+    }
+    .section p {
+      font-size: 15px; line-height: 1.7; color: #666;
+      margin-bottom: 16px;
+    }
+
+    /* Feature rows */
+    .feature-rows { display: flex; flex-direction: column; gap: 12px; }
+    .feature-row {
+      display: flex; align-items: center; gap: 16px;
+      padding: 16px 20px;
+      border-radius: 12px;
+      background: var(--light);
+      transition: all 0.2s;
+    }
+    .feature-row:hover {
+      background: rgba(215,222,106,0.06);
+      transform: translateX(4px);
+    }
+    .feature-row-icon {
+      width: 40px; height: 40px; border-radius: 10px;
+      background: var(--white);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+    .feature-row-icon svg { width: 20px; height: 20px; }
+    .feature-row-text { flex: 1; }
+    .feature-row-text h4 { font-size: 15px; font-weight: 600; color: var(--primary); margin-bottom: 2px; }
+    .feature-row-text p { font-size: 13px; color: #888; margin-bottom: 0; }
+    .feature-row-check {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: rgba(215,222,106,0.15);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .feature-row-check svg { width: 14px; height: 14px; }
+
+    /* Badge grid */
+    .badge-grid {
+      display: flex; flex-wrap: wrap; gap: 12px;
+      margin-top: 16px;
+    }
+    .badge-item {
+      display: flex; align-items: center; gap: 6px;
+      padding: 8px 16px; border-radius: 999px;
+      background: var(--neutral-light);
+      font-size: 13px; font-weight: 500; color: var(--primary);
+    }
+    .badge-item-accent {
+      background: rgba(215,222,106,0.12);
+    }
+
+    /* Stats row */
+    .stats-row {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 24px; margin-bottom: 48px;
+    }
+    .stat-card {
+      padding: 20px; border-radius: 12px;
+      border: 1px solid var(--neutral-light);
+      text-align: center;
+    }
+    .stat-card-num { font-size: 28px; font-weight: 700; color: var(--primary); }
+    .stat-card-label { font-size: 12px; color: #999; margin-top: 4px; }
+
+    /* Testimonial */
+    .testimonial {
+      padding: 32px; border-radius: 16px;
+      background: var(--primary);
+      color: var(--white);
+      margin-bottom: 48px;
+      position: relative;
+    }
+    .testimonial::before {
+      content: """;
+      position: absolute; top: 16px; left: 24px;
+      font-size: 64px; line-height: 1;
+      color: rgba(215,222,106,0.15);
+      font-family: Georgia, serif;
+    }
+    .testimonial-text {
+      font-size: 16px; line-height: 1.7; color: rgba(255,255,255,0.85);
+      margin-bottom: 16px; font-style: italic;
+    }
+    .testimonial-author {
+      font-size: 13px; font-weight: 600; color: var(--accent);
+    }
+
+    /* CTA */
+    .cta-card {
+      padding: 40px; border-radius: 16px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-light));
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 32px;
+    }
+    .cta-card h3 {
+      font-size: 22px; font-weight: 700; color: var(--primary);
+      margin-bottom: 8px;
+    }
+    .cta-card p {
+      font-size: 14px; color: rgba(0,46,53,0.7);
+      margin-bottom: 0;
+    }
+    .cta-card-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 14px 28px; border-radius: 10px;
+      background: var(--primary); color: var(--white);
+      font-size: 14px; font-weight: 600; text-decoration: none;
+      white-space: nowrap; transition: all 0.2s;
+    }
+    .cta-card-btn:hover { background: var(--primary-light); transform: translateY(-2px); }
+
+    @media (max-width: 900px) {
+      .sidebar { width: 220px; padding: 32px 16px; }
+      .content { padding: 32px 24px 60px; }
+      .stats-row { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 768px) {
+      .split { flex-direction: column; }
+      .sidebar {
+        width: 100%; position: relative; top: 0; height: auto;
+        border-right: none; border-bottom: 1px solid var(--neutral-light);
+        padding: 16px 20px;
+        overflow-x: auto;
+      }
+      .sidebar-label { display: none; }
+      .sidebar-nav { flex-direction: row; gap: 8px; }
+      .sidebar-link {
+        padding: 8px 14px; border-left: none;
+        border-bottom: 3px solid transparent;
+        font-size: 13px; white-space: nowrap;
+      }
+      .sidebar-link.active { border-left: none; border-bottom-color: var(--accent); }
+      .sidebar-link-icon { display: none; }
+      .content { padding: 24px 16px 48px; }
+      .content-hero h1 { font-size: 28px; }
+      .stats-row { grid-template-columns: 1fr; }
+      .cta-card { flex-direction: column; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-inner">
+      <div class="header-logo">Issencial</div>
+      <div class="header-actions">
+        <a href="#" class="header-back">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+          Todos os Serviços
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- SPLIT LAYOUT -->
+  <div class="split">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sidebar-label">Serviços</div>
+      <nav class="sidebar-nav">
+        <a href="#" class="sidebar-link active">
+          <div class="sidebar-link-icon" style="background:rgba(0,46,53,0.06)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#002e35" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 22h14"/><path d="M19.78 18.22l-3-3a3.46 3.46 0 0 1-1.78-.78l-6-6A4 4 0 0 0 6 7H2l4 4 1 1-4 4 4 4 2-2 2 2"/><circle cx="19.5" cy="7.5" r="2.5"/></svg>
+          </div>
+          Viagens & Turismo
+        </a>
+        <a href="#" class="sidebar-link">
+          <div class="sidebar-link-icon" style="background:rgba(0,46,53,0.06)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#002e35" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
+          </div>
+          Educação na Europa
+        </a>
+        <a href="#" class="sidebar-link">
+          <div class="sidebar-link-icon" style="background:rgba(0,46,53,0.06)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#002e35" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 2v4"/><path d="M12 18v4"/></svg>
+          </div>
+          Transferências
+        </a>
+        <a href="#" class="sidebar-link">
+          <div class="sidebar-link-icon" style="background:rgba(0,46,53,0.06)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#002e35" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          </div>
+          Serv. Administrativos
+        </a>
+      </nav>
+    </aside>
+
+    <!-- CONTENT -->
+    <main class="content">
+
+      <!-- Hero -->
+      <div class="content-hero">
+        <div class="content-hero-badge">Serviço</div>
+        <h1>Viagens &amp; Turismo</h1>
+        <p>Planeamento, reservas e assessoria de viagens internacionais com soluções completas para cada destino.</p>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-card-num">50+</div>
+          <div class="stat-card-label">Destinos</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-num">98%</div>
+          <div class="stat-card-label">Satisfação</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-num">24/7</div>
+          <div class="stat-card-label">Suporte</div>
+        </div>
+      </div>
+
+      <!-- Sobre -->
+      <div class="section">
+        <h2>Sobre este serviço <small>— o que fazemos</small></h2>
+        <p>A Issencial estabeleceu parcerias com as melhores agências de viagens para oferecer soluções completas de planeamento, reservas de voos, alojamento e experiências turísticas personalizadas. Desde viagens de negócios a férias em família, cuidamos de cada detalhe para que possa focar-se no que realmente importa.</p>
+        <div class="badge-grid">
+          <span class="badge-item badge-item-accent">Voos nacionais e internacionais</span>
+          <span class="badge-item badge-item-accent">Hotéis e resorts</span>
+          <span class="badge-item badge-item-accent">Seguros de viagem</span>
+          <span class="badge-item badge-item-accent">Transfers</span>
+          <span class="badge-item badge-item-accent">Experiências locais</span>
+          <span class="badge-item badge-item-accent">Apoio 24/7</span>
+        </div>
+      </div>
+
+      <!-- Features -->
+      <div class="section">
+        <h2>O que está incluído</h2>
+        <div class="feature-rows">
+          <div class="feature-row">
+            <div class="feature-row-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#002e35" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 22h14"/><path d="M19.78 18.22l-3-3a3.46 3.46 0 0 1-1.78-.78l-6-6A4 4 0 0 0 6 7H2l4 4 1 1-4 4 4 4 2-2 2 2"/><circle cx="19.5" cy="7.5" r="2.5"/></svg>
+            </div>
+            <div class="feature-row-text">
+              <h4>Reservas de Voos</h4>
+              <p>Voos nacionais e internacionais com as melhores companhias aéreas e tarifas exclusivas.</p>
+            </div>
+            <div class="feature-row-check">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#bcc44e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+          </div>
+          <div class="feature-row">
+            <div class="feature-row-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#002e35" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg>
+            </div>
+            <div class="feature-row-text">
+              <h4>Alojamento Premium</h4>
+              <p>Hotéis, resorts e alojamento local selecionados com os mais altos padrões de qualidade.</p>
+            </div>
+            <div class="feature-row-check">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#bcc44e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+          </div>
+          <div class="feature-row">
+            <div class="feature-row-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#002e35" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="10" r="3"/><path d="M12 21.7C17.3 17 20 13 20 10a8 8 0 1 0-16 0c0 3 2.7 7 8 11.7z"/></svg>
+            </div>
+            <div class="feature-row-text">
+              <h4>Pacotes Turísticos</h4>
+              <p>Experiências curadas, transfers personalizados e seguros de viagem completos.</p>
+            </div>
+            <div class="feature-row-check">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#bcc44e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+          </div>
+          <div class="feature-row">
+            <div class="feature-row-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#002e35" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+            </div>
+            <div class="feature-row-text">
+              <h4>Apoio Contínuo</h4>
+              <p>Assistência permanente antes, durante e depois da viagem. Estamos sempre ao seu lado.</p>
+            </div>
+            <div class="feature-row-check">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#bcc44e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Testimonial -->
+      <div class="testimonial">
+        <div class="testimonial-text">A Issencial tratou de toda a nossa viagem de 15 dias pelo Sudeste Asiático. Cada detalhe foi pensado ao pormenor — desde os voos às experiências locais. Recomendo a todos os que querem viajar sem preocupações.</div>
+        <div class="testimonial-author">— Maria Santos, Cliente</div>
+      </div>
+
+      <!-- Process Compact -->
+      <div class="section">
+        <h2>Como funciona <small>— 4 passos simples</small></h2>
+        <div class="feature-rows">
+          <div class="feature-row">
+            <div class="feature-row-icon" style="background:rgba(215,222,106,0.15);font-weight:700;font-size:16px;color:var(--primary)">1</div>
+            <div class="feature-row-text">
+              <h4>Contacto</h4>
+              <p>Conte-nos o seu destino e preferências de viagem.</p>
+            </div>
+          </div>
+          <div class="feature-row">
+            <div class="feature-row-icon" style="background:rgba(215,222,106,0.15);font-weight:700;font-size:16px;color:var(--primary)">2</div>
+            <div class="feature-row-text">
+              <h4>Proposta</h4>
+              <p>Receba um plano personalizado com orçamento detalhado.</p>
+            </div>
+          </div>
+          <div class="feature-row">
+            <div class="feature-row-icon" style="background:rgba(215,222,106,0.15);font-weight:700;font-size:16px;color:var(--primary)">3</div>
+            <div class="feature-row-text">
+              <h4>Reserva</h4>
+              <p>Tratamos de todas as reservas e documentação.</p>
+            </div>
+          </div>
+          <div class="feature-row">
+            <div class="feature-row-icon" style="background:rgba(215,222,106,0.15);font-weight:700;font-size:16px;color:var(--primary)">4</div>
+            <div class="feature-row-text">
+              <h4>Viaje</h4>
+              <p>Desfrute com o nosso apoio contínuo 24/7.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CTA -->
+      <div class="cta-card">
+        <div>
+          <h3>Pronto para começar?</h3>
+          <p>Solicite um orçamento personalizado sem compromisso.</p>
+        </div>
+        <a href="#" class="cta-card-btn">Solicitar Orçamento →</a>
+      </div>
+
+    </main>
+  </div>
+
+</body>
+</html>

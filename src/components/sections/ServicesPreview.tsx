@@ -67,8 +67,8 @@ export default function ServicesPreview() {
               <ChevronCard
                 key={service.title}
                 color={service.color}
-                className="group overflow-hidden cursor-pointer transition-transform duration-300 hover:scale-[1.015]"
-                contentClassName="flex-col items-start justify-center gap-1.5 py-4"
+                className="group overflow-hidden cursor-pointer transition-transform duration-300 hover:scale-[1.015] max-lg:min-h-[150px]"
+                contentClassName="flex-col items-start justify-center gap-1.5 max-lg:py-3 py-4"
               >
                 {/* Hover line — anima da esquerda para a direita */}
                 <div className="absolute top-0 h-[3px] bg-accent scale-x-0 origin-left transition-transform duration-500 ease-out group-hover:scale-x-100" style={{ left: '3.7%', width: '79.6%' }} />

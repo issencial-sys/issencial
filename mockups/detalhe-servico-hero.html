@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Detalhe do Serviço — Direção 1 · Hero + Conteúdo</title>
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap");
+
+    @font-face {
+      font-family: "OverusedGrotesk";
+      src: url("../public/fonts/overused%20grotesk/variable/OverusedGrotesk-VF.woff2") format("woff2");
+      font-weight: 100 900;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    :root {
+      --primary: #002e35;
+      --primary-light: #004a54;
+      --primary-dark: #001a1f;
+      --accent: #d7de6a;
+      --accent-light: #e3e88f;
+      --accent-dark: #bcc44e;
+      --neutral: #d9dad3;
+      --neutral-light: #ebeceb;
+      --neutral-dark: #b8b9b2;
+      --dark: #151e28;
+      --light: #f1f1f1;
+      --white: #ffffff;
+      --font: "OverusedGrotesk", "Inter", system-ui, sans-serif;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: var(--font);
+      color: var(--dark);
+      background: var(--white);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .container { max-width: 1280px; margin: 0 auto; padding: 0 40px; }
+
+    /* ─── HEADER ─── */
+    .header {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+      background: rgba(255,255,255,0.95);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--neutral-light);
+      height: 72px;
+    }
+    .header-inner {
+      max-width: 1280px; margin: 0 auto; padding: 0 40px;
+      height: 100%; display: flex; align-items: center; justify-content: space-between;
+    }
+    .header-logo { font-size: 20px; font-weight: 700; color: var(--primary); letter-spacing: -0.02em; }
+    .header-nav { display: flex; gap: 8px; }
+    .header-nav a {
+      padding: 8px 12px; border-radius: 8px;
+      font-size: 14px; font-weight: 500; color: #666;
+      text-decoration: none; transition: all 0.2s;
+    }
+    .header-nav a:hover { color: var(--primary); background: rgba(0,46,53,0.04); }
+    .header-cta {
+      padding: 10px 20px; border-radius: 8px;
+      background: var(--accent); color: var(--primary);
+      font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;
+      text-decoration: none; transition: all 0.2s;
+    }
+    .header-cta:hover { background: var(--accent-light); transform: translateY(-1px); }
+
+    /* ─── HERO ─── */
+    .hero {
+      padding-top: 72px;
+      background: var(--primary);
+      position: relative; overflow: hidden;
+    }
+    .hero::before {
+      content: "";
+      position: absolute; inset: 0;
+      opacity: 0.04;
+      background-image:
+        radial-gradient(circle at 20% 30%, #d7de6a 1px, transparent 1px),
+        radial-gradient(circle at 80% 70%, #d7de6a 1px, transparent 1px);
+      background-size: 50px 50px;
+    }
+    .hero-inner {
+      position: relative; z-index: 2;
+      max-width: 1280px; margin: 0 auto; padding: 80px 40px;
+      display: flex; align-items: center; gap: 80px;
+    }
+    .hero-content { flex: 1; }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 6px 14px; border-radius: 999px;
+      border: 1px solid rgba(215,222,106,0.25);
+      background: rgba(215,222,106,0.08);
+      color: var(--accent);
+      font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em;
+      margin-bottom: 24px;
+    }
+    .hero-icon {
+      width: 28px; height: 28px; border-radius: 6px;
+      background: rgba(215,222,106,0.15);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .hero-icon svg { width: 16px; height: 16px; }
+    .hero h1 {
+      font-size: 48px; font-weight: 700; line-height: 1.1;
+      color: var(--white); margin-bottom: 16px;
+    }
+    .hero p {
+      font-size: 17px; line-height: 1.6;
+      color: rgba(255,255,255,0.7);
+      max-width: 540px; margin-bottom: 32px;
+    }
+    .hero-actions { display: flex; gap: 12px; }
+    .hero-btn-primary, .hero-btn-secondary {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 14px 28px; border-radius: 12px;
+      font-size: 14px; font-weight: 600;
+      text-decoration: none; transition: all 0.2s;
+    }
+    .hero-btn-primary {
+      background: var(--accent); color: var(--primary);
+    }
+    .hero-btn-primary:hover { background: var(--accent-light); transform: translateY(-2px); }
+    .hero-btn-secondary {
+      background: transparent; color: var(--white);
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+    .hero-btn-secondary:hover { background: rgba(255,255,255,0.08); transform: translateY(-2px); }
+
+    .hero-visual {
+      flex: 0 0 340px; height: 380px;
+      border-radius: 24px;
+      background: linear-gradient(135deg, var(--primary-light), var(--dark));
+      position: relative; overflow: hidden;
+      box-shadow: 0 40px 80px rgba(0,46,53,0.3);
+    }
+    .hero-visual-inner {
+      position: relative; z-index: 2;
+      padding: 32px; height: 100%;
+      display: flex; flex-direction: column; justify-content: space-between;
+    }
+    .hero-visual-dots {
+      position: absolute; inset: 0;
+      opacity: 0.06;
+      background-image: radial-gradient(circle at 50% 50%, var(--accent) 1px, transparent 1px);
+      background-size: 30px 30px;
+    }
+    .hero-visual-icon {
+      width: 48px; height: 48px; border-radius: 14px;
+      background: rgba(255,255,255,0.1);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .hero-visual-icon svg { width: 24px; height: 24px; opacity: 0.8; }
+    .hero-visual h3 {
+      font-size: 22px; font-weight: 700; color: var(--white);
+      line-height: 1.2;
+    }
+    .hero-visual-stats { display: flex; gap: 20px; }
+    .hero-visual-stat { text-align: center; }
+    .hero-visual-stat-num { font-size: 24px; font-weight: 700; color: var(--accent); }
+    .hero-visual-stat-label { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 2px; }
+
+    /* ─── BREADCRUMB ─── */
+    .breadcrumb {
+      padding: 20px 0;
+      border-bottom: 1px solid var(--neutral-light);
+    }
+    .breadcrumb-inner {
+      max-width: 1280px; margin: 0 auto; padding: 0 40px;
+      display: flex; align-items: center; gap: 8px;
+      font-size: 13px; color: #999;
+    }
+    .breadcrumb a { color: #999; text-decoration: none; }
+    .breadcrumb a:hover { color: var(--primary); }
+    .breadcrumb span { color: var(--primary); font-weight: 500; }
+
+    /* ─── OVERVIEW ─── */
+    .overview {
+      padding: 80px 0;
+    }
+    .overview-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 80px; align-items: start;
+    }
+    .overview-text h2 {
+      font-size: 32px; font-weight: 700; color: var(--primary);
+      margin-bottom: 20px; line-height: 1.2;
+    }
+    .overview-text p {
+      font-size: 16px; line-height: 1.7; color: #666;
+      margin-bottom: 24px;
+    }
+    .overview-highlights {
+      display: flex; flex-direction: column; gap: 16px;
+    }
+    .overview-highlight {
+      display: flex; align-items: flex-start; gap: 14px;
+      padding: 16px 20px;
+      border-radius: 12px;
+      background: var(--light);
+      transition: all 0.3s;
+    }
+    .overview-highlight:hover {
+      transform: translateX(4px);
+    }
+    .overview-highlight-icon {
+      width: 36px; height: 36px; border-radius: 8px;
+      background: rgba(215,222,106,0.2);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .overview-highlight-icon svg { width: 18px; height: 18px; }
+    .overview-highlight h4 { font-size: 15px; font-weight: 600; color: var(--primary); margin-bottom: 2px; }
+    .overview-highlight p { font-size: 13px; color: #888; margin-bottom: 0; }
+
+    /* ─── FEATURES ─── */
+    .features {
+      padding: 80px 0;
+      background: var(--light);
+    }
+    .features-header {
+      text-align: center; margin-bottom: 56px;
+    }
+    .features-header h2 {
+      font-size: 32px; font-weight: 700; color: var(--primary);
+      margin-bottom: 12px;
+    }
+    .features-header p {
+      font-size: 16px; color: #888;
+      max-width: 560px; margin: 0 auto;
+    }
+    .features-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 24px;
+    }
+    .feature-card {
+      background: var(--white);
+      border-radius: 16px; padding: 32px 24px;
+      border: 1px solid var(--neutral-light);
+      text-align: center;
+      transition: all 0.3s;
+    }
+    .feature-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(0,46,53,0.08);
+      border-color: rgba(215,222,106,0.3);
+    }
+    .feature-card-icon {
+      width: 52px; height: 52px; border-radius: 14px;
+      background: rgba(215,222,106,0.12);
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 16px;
+    }
+    .feature-card-icon svg { width: 26px; height: 26px; }
+    .feature-card h4 {
+      font-size: 16px; font-weight: 600; color: var(--primary);
+      margin-bottom: 8px;
+    }
+    .feature-card p {
+      font-size: 13px; color: #888; line-height: 1.6;
+    }
+
+    /* ─── PROCESS ─── */
+    .process {
+      padding: 80px 0;
+    }
+    .process-header {
+      text-align: center; margin-bottom: 56px;
+    }
+    .process-header h2 {
+      font-size: 32px; font-weight: 700; color: var(--primary);
+      margin-bottom: 12px;
+    }
+    .process-header p {
+      font-size: 16px; color: #888;
+      max-width: 560px; margin: 0 auto;
+    }
+    .process-timeline {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 24px; position: relative;
+    }
+    .process-step {
+      text-align: center;
+    }
+    .process-step-num {
+      width: 56px; height: 56px; border-radius: 50%;
+      background: rgba(215,222,106,0.12);
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 16px;
+      font-size: 20px; font-weight: 700; color: var(--accent-dark);
+      border: 2px solid rgba(215,222,106,0.2);
+    }
+    .process-step h4 {
+      font-size: 16px; font-weight: 600; color: var(--primary);
+      margin-bottom: 8px;
+    }
+    .process-step p {
+      font-size: 13px; color: #888; line-height: 1.6;
+    }
+
+    /* ─── FAQ ─── */
+    .faq {
+      padding: 80px 0;
+      background: var(--primary);
+      color: var(--white);
+    }
+    .faq-inner {
+      max-width: 800px; margin: 0 auto; padding: 0 40px;
+    }
+    .faq h2 {
+      font-size: 32px; font-weight: 700; text-align: center;
+      margin-bottom: 48px;
+    }
+    .faq-item {
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      padding: 20px 0;
+    }
+    .faq-item:last-child { border-bottom: none; }
+    .faq-q {
+      font-size: 16px; font-weight: 600;
+      display: flex; justify-content: space-between; align-items: center;
+      cursor: pointer;
+    }
+    .faq-q::after {
+      content: "+";
+      font-size: 20px; color: var(--accent);
+    }
+    .faq-a {
+      font-size: 14px; line-height: 1.6;
+      color: rgba(255,255,255,0.6);
+      margin-top: 12px;
+    }
+
+    /* ─── CTA ─── */
+    .cta {
+      padding: 100px 0;
+      background: var(--accent);
+      text-align: center;
+    }
+    .cta h2 {
+      font-size: 36px; font-weight: 700; color: var(--primary);
+      margin-bottom: 12px;
+    }
+    .cta p {
+      font-size: 17px; color: rgba(0,46,53,0.7);
+      margin-bottom: 32px;
+    }
+    .cta-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 16px 36px; border-radius: 12px;
+      background: var(--primary); color: var(--white);
+      font-size: 15px; font-weight: 600;
+      text-decoration: none; transition: all 0.2s;
+    }
+    .cta-btn:hover { background: var(--primary-light); transform: translateY(-2px); }
+
+    /* ─── FOOTER ─── */
+    .footer {
+      padding: 60px 0;
+      background: var(--primary);
+    }
+    .footer-inner {
+      max-width: 1280px; margin: 0 auto; padding: 0 40px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .footer-logo { font-size: 18px; font-weight: 700; color: var(--neutral); }
+    .footer-links { display: flex; gap: 24px; }
+    .footer-links a {
+      font-size: 13px; color: rgba(217,218,211,0.6);
+      text-decoration: none; transition: color 0.2s;
+    }
+    .footer-links a:hover { color: var(--neutral); }
+
+    @media (max-width: 1024px) {
+      .hero-inner { flex-direction: column; padding: 60px 24px; gap: 48px; }
+      .hero-visual { flex: none; width: 100%; max-width: 340px; }
+      .overview-grid { grid-template-columns: 1fr; gap: 40px; }
+      .features-grid { grid-template-columns: repeat(2, 1fr); }
+      .process-timeline { grid-template-columns: repeat(2, 1fr); }
+      .container { padding: 0 24px; }
+      .hero h1 { font-size: 36px; }
+    }
+    @media (max-width: 640px) {
+      .features-grid { grid-template-columns: 1fr; }
+      .process-timeline { grid-template-columns: 1fr; max-width: 320px; margin: 0 auto; }
+      .header-nav, .header-cta { display: none; }
+      .footer-inner { flex-direction: column; gap: 20px; }
+      .container { padding: 0 16px; }
+      .hero-inner { padding: 40px 16px; }
+      .hero h1 { font-size: 28px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-inner">
+      <div class="header-logo">Issencial</div>
+      <nav class="header-nav">
+        <a href="#">Início</a>
+        <a href="#">Serviços</a>
+        <a href="#">Sobre Nós</a>
+        <a href="#">Contacto</a>
+      </nav>
+      <a href="#" class="header-cta">Portal do Cliente</a>
+    </div>
+  </header>
+
+  <!-- BREADCRUMB -->
+  <div class="breadcrumb">
+    <div class="breadcrumb-inner">
+      <a href="#">Início</a>
+      <span>›</span>
+      <a href="#">Serviços</a>
+      <span>›</span>
+      <span>Viagens & Turismo</span>
+    </div>
+  </div>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-inner">
+      <div class="hero-content">
+        <div class="hero-badge">
+          <div class="hero-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#d7de6a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 22h14"/><path d="M19.78 18.22l-3-3a3.46 3.46 0 0 1-1.78-.78l-6-6A4 4 0 0 0 6 7H2l4 4 1 1-4 4 4 4 2-2 2 2"/><circle cx="19.5" cy="7.5" r="2.5"/></svg>
+          </div>
+          Serviço
+        </div>
+        <h1>Viagens &amp; Turismo</h1>
+        <p>Planeamento, reservas e assessoria de viagens internacionais com soluções completas para cada destino. Cuidamos de cada detalhe da sua viagem.</p>
+        <div class="hero-actions">
+          <a href="#" class="hero-btn-primary">Solicitar Orçamento →</a>
+          <a href="#" class="hero-btn-secondary">Saber Mais</a>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <div class="hero-visual-dots"></div>
+        <div class="hero-visual-inner">
+          <div class="hero-visual-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 22h14"/><path d="M19.78 18.22l-3-3a3.46 3.46 0 0 1-1.78-.78l-6-6A4 4 0 0 0 6 7H2l4 4 1 1-4 4 4 4 2-2 2 2"/><circle cx="19.5" cy="7.5" r="2.5"/></svg>
+          </div>
+          <h3>Soluções completas para cada destino</h3>
+          <div class="hero-visual-stats">
+            <div class="hero-visual-stat">
+              <div class="hero-visual-stat-num">50+</div>
+              <div class="hero-visual-stat-label">Destinos</div>
+            </div>
+            <div class="hero-visual-stat">
+              <div class="hero-visual-stat-num">98%</div>
+              <div class="hero-visual-stat-label">Satisfação</div>
+            </div>
+            <div class="hero-visual-stat">
+              <div class="hero-visual-stat-num">24/7</div>
+              <div class="hero-visual-stat-label">Suporte</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- OVERVIEW -->
+  <section class="overview">
+    <div class="container">
+      <div class="overview-grid">
+        <div class="overview-text">
+          <h2>O que oferecemos</h2>
+          <p>A Issencial estabeleceu parcerias com as melhores agências de viagens para oferecer soluções completas de planeamento, reservas de voos, alojamento e experiências turísticas personalizadas.</p>
+          <p>Desde viagens de negócios a férias em família, cuidamos de cada detalhe para que possa focar-se no que realmente importa.</p>
+          <a href="#" style="display:inline-flex;align-items:center;gap:6px;color:var(--primary);font-weight:600;font-size:14px;text-decoration:none;">
+            Saber mais sobre parcerias →
+          </a>
+        </div>
+        <div class="overview-highlights">
+          <div class="overview-highlight">
+            <div class="overview-highlight-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#002e35" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"/><circle cx="12" cy="10" r="3"/></svg>
+            </div>
+            <div>
+              <h4>Assistência 24/7</h4>
+              <p>Suporte telefónico e digital disponível 24 horas por dia, 7 dias por semana, em qualquer fuso horário.</p>
+            </div>
+          </div>
+          <div class="overview-highlight">
+            <div class="overview-highlight-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#002e35" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5h12"/><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+            </div>
+            <div>
+              <h4>Itinerários Personalizados</h4>
+              <p>Cada viagem é desenhada à medida, com recomendações baseadas nas suas preferências e necessidades.</p>
+            </div>
+          </div>
+          <div class="overview-highlight">
+            <div class="overview-highlight-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#002e35" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20"/></svg>
+            </div>
+            <div>
+              <h4>Melhores Preços Garantidos</h4>
+              <p>Acesso a tarifas exclusivas através das nossas parcerias com companhias aéreas e redes hoteleiras.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="features">
+    <div class="container">
+      <div class="features-header">
+        <h2>O que está incluído</h2>
+        <p>Um conjunto completo de serviços para tornar a sua viagem inesquecível.</p>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-card-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#002e35" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 22h14"/><path d="M19.78 18.22l-3-3a3.46 3.46 0 0 1-1.78-.78l-6-6A4 4 0 0 0 6 7H2l4 4 1 1-4 4 4 4 2-2 2 2"/><circle cx="19.5" cy="7.5" r="2.5"/></svg>
+          </div>
+          <h4>Reservas de Voos</h4>
+          <p>Voos nacionais e internacionais com as melhores companhias aéreas e tarifas exclusivas.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-card-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#002e35" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg>
+          </div>
+          <h4>Alojamento</h4>
+          <p>Hotéis, resorts e alojamento local selecionados com os mais altos padrões de qualidade.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-card-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#002e35" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="10" r="3"/><path d="M12 21.7C17.3 17 20 13 20 10a8 8 0 1 0-16 0c0 3 2.7 7 8 11.7z"/></svg>
+          </div>
+          <h4>Experiências</h4>
+          <p>Pacotes turísticos, transfers, seguros de viagem e experiências locais autênticas.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-card-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#002e35" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          </div>
+          <h4>Apoio Contínuo</h4>
+          <p>Assistência permanente antes, durante e depois da viagem. Estamos sempre ao seu lado.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROCESS -->
+  <section class="process">
+    <div class="container">
+      <div class="process-header">
+        <h2>Como funciona</h2>
+        <p>Um processo simples e transparente em 4 passos.</p>
+      </div>
+      <div class="process-timeline">
+        <div class="process-step">
+          <div class="process-step-num">1</div>
+          <h4>Contacto</h4>
+          <p>Entre em contacto e conte-nos o seu destino e preferências de viagem.</p>
+        </div>
+        <div class="process-step">
+          <div class="process-step-num">2</div>
+          <h4>Proposta</h4>
+          <p>Apresentamos um plano de viagem personalizado com orçamento detalhado.</p>
+        </div>
+        <div class="process-step">
+          <div class="process-step-num">3</div>
+          <h4>Reserva</h4>
+          <p>Cuidamos de todas as reservas e documentação necessária.</p>
+        </div>
+        <div class="process-step">
+          <div class="process-step-num">4</div>
+          <h4>Viaje</h4>
+          <p>Desfrute da sua viagem com o nosso apoio contínuo 24/7.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="faq">
+    <div class="faq-inner">
+      <h2>Perguntas frequentes</h2>
+      <div class="faq-item">
+        <div class="faq-q">Quanto tempo demora a preparar uma viagem?</div>
+        <div class="faq-a">O prazo depende da complexidade do itinerário. Para viagens simples, podemos ter tudo pronto em 24-48 horas. Para roteiros mais complexos, recomendamos um planeamento com 1-2 semanas de antecedência.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">Posso cancelar ou alterar a reserva?</div>
+        <div class="faq-a">Sim, mas as condições de cancelamento variam conforme os fornecedores (companhias aéreas, hotéis, etc). Apresentamos sempre as políticas antes de confirmar qualquer reserva.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">Oferecem seguros de viagem?</div>
+        <div class="faq-a">Sim, temos parceria com as principais seguradoras e podemos incluir seguro de viagem completo no seu pacote, com cobertura médica, bagagem e cancelamento.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta">
+    <div class="container">
+      <h2>Pronto para a sua próxima viagem?</h2>
+      <p>Solicite um orçamento personalizado sem compromisso.</p>
+      <a href="#" class="cta-btn">Solicitar Orçamento →</a>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-logo">Issencial</div>
+      <div class="footer-links">
+        <a href="#">Serviços</a>
+        <a href="#">Sobre Nós</a>
+        <a href="#">Contacto</a>
+        <a href="#">FAQ</a>
+        <a href="#">Privacidade</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Interaction: FAQ accordion -->
+  <script>
+    document.querySelectorAll('.faq-q').forEach(q => {
+      q.addEventListener('click', () => {
+        const answer = q.nextElementSibling;
+        const isOpen = answer.style.display === 'block';
+        answer.style.display = isOpen ? 'none' : 'block';
+      });
+    });
+  </script>
+
+</body>
+</html>

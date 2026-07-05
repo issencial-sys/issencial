@@ -4,33 +4,7 @@ import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import Image from "next/image";
 import { ArrowRight } from "lucide-react";
-
-const services = [
-  {
-    icon: "/assets/icons/viagem-aviao.webp",
-    title: "Viagens & Turismo",
-    description: "Parceria com agências de viagens para oferecer soluções completas de planeamento, reservas de voos, alojamento e experiências turísticas. Cuidamos de cada detalhe da sua viagem.",
-    features: ["Planeamento de viagens", "Reservas de voos e hotel", "Pacotes turísticos", "Assistência 24/7"],
-  },
-  {
-    icon: "/assets/icons/licenciatura.webp",
-    title: "Educação na Europa",
-    description: "Inscrições em escolas e universidades europeias com acompanhamento completo. Do ensino básico ao pós-graduado, orientamos cada etapa do processo educativo.",
-    features: ["Inscrições escolares", "Universidades e pós-graduação", "Documentação necessária", "Acompanhamento contínuo"],
-  },
-  {
-    icon: "/assets/icons/dinheiro-dolar.webp",
-    title: "Transferências Internacionais",
-    description: "Serviços de transferência financeira internacionais seguros e rápidos. Melhores taxas do mercado com total transparência e segurança bancária.",
-    features: ["Transferências SEPA", "SWIFT internacional", "Melhores câmbios", "Rastreamento em tempo real"],
-  },
-  {
-    icon: "/assets/icons/www.webp",
-    title: "Serviços Administrativos",
-    description: "Gestão completa de processos burocráticos e documentais. Poupamos-lhe tempo e garantimos conformidade com todas as regulamentações.",
-    features: ["Tradução e certificação", "Documentação oficial", "Processos legais", "Assessoria burocrática"],
-  },
-];
+import { services } from "@/data/services";
 
 const steps = [
   { num: "1", title: "Contacto", desc: "Entre em contacto connosco e conte-nos a sua necessidade." },
@@ -73,7 +47,10 @@ export default function ServicosPage() {
                       </li>
                     ))}
                   </ul>
-                  <Button href="/contacto" size="sm">Solicitar Orçamento</Button>
+                  <div className="flex flex-wrap gap-3">
+                    <Button href="/contacto" size="sm">Solicitar Orçamento</Button>
+                    <Button href={`/servicos/${s.slug}`} variant="outline-light" size="sm">Ver Detalhes</Button>
+                  </div>
                 </div>
               ))}
             </div>

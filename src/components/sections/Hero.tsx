@@ -5,7 +5,7 @@ export default function Hero() {
   return (
     <section className="relative min-h-screen flex flex-col lg:flex-row items-center bg-white overflow-hidden">
       {/* ─── LADO ESQUERDO — Texto ─── */}
-      <div className="flex-1 flex flex-col justify-center pl-20 pr-12 py-20 relative z-[2]">
+      <div className="flex-1 flex flex-col justify-center px-4 sm:px-6 lg:px-10 lg:pl-20 lg:pr-12 pt-28 pb-8 lg:py-20 relative z-[2]">
         {/* Tag */}
         <div className="inline-flex items-center gap-1.5 rounded-full border border-primary/[0.12] bg-primary/[0.03] px-3.5 py-1.5 text-xs font-semibold uppercase tracking-[0.1em] text-primary mb-5 w-fit">
           <Image
@@ -55,8 +55,8 @@ export default function Hero() {
       </div>
 
       {/* ─── LADO DIREITO — Pattern Card ─── */}
-      <div className="flex-1 relative min-h-screen flex items-center justify-center">
-        <div className="w-[340px] h-[420px] rounded-2xl bg-gradient-to-br from-primary via-primary-light to-dark relative overflow-hidden shadow-[0_40px_80px_rgba(0,46,53,0.2)] -rotate-3 transition-transform duration-[400ms] ease-out hover:rotate-0">
+      <div className="flex-1 relative min-h-0 lg:min-h-screen flex items-center justify-center pb-12 lg:pb-0">
+        <div className="w-[340px] h-[420px] rounded-2xl bg-gradient-to-br from-primary via-primary-light to-dark relative overflow-hidden shadow-[0_40px_80px_rgba(0,46,53,0.2)]">
           {/* Dot pattern overlay */}
           <div className="absolute inset-0 opacity-[0.08] bg-[radial-gradient(circle_at_20%_30%,#d7de6a_1px,transparent_1px),radial-gradient(circle_at_80%_70%,#d7de6a_1px,transparent_1px)] bg-[length:40px_40px]" />
 

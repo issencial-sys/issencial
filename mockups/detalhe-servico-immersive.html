@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Detalhe do Serviço — Direção 3 · Visual Immersive</title>
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap");
+
+    @font-face {
+      font-family: "OverusedGrotesk";
+      src: url("../public/fonts/overused%20grotesk/variable/OverusedGrotesk-VF.woff2") format("woff2");
+      font-weight: 100 900;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    :root {
+      --primary: #002e35;
+      --primary-light: #004a54;
+      --accent: #d7de6a;
+      --accent-light: #e3e88f;
+      --accent-dark: #bcc44e;
+      --neutral: #d9dad3;
+      --dark: #151e28;
+      --light: #f1f1f1;
+      --white: #ffffff;
+      --font: "OverusedGrotesk", "Inter", system-ui, sans-serif;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: var(--font);
+      color: var(--dark);
+      background: var(--white);
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+
+    /* ─── HERO FULL ─── */
+    .hero {
+      position: relative;
+      min-height: 100vh;
+      display: flex; align-items: center;
+      background: var(--primary);
+      overflow: hidden;
+    }
+
+    /* Floating geometric elements */
+    .hero-geo {
+      position: absolute; inset: 0;
+      pointer-events: none;
+    }
+    .hero-geo-circle {
+      position: absolute;
+      border-radius: 50%;
+      border: 1px solid rgba(215,222,106,0.08);
+    }
+    .hero-geo-circle-1 {
+      width: 600px; height: 600px;
+      top: -200px; right: -100px;
+    }
+    .hero-geo-circle-2 {
+      width: 400px; height: 400px;
+      bottom: -100px; left: -80px;
+    }
+    .hero-geo-circle-3 {
+      width: 200px; height: 200px;
+      top: 30%; right: 15%;
+      border-color: rgba(215,222,106,0.04);
+      background: rgba(215,222,106,0.02);
+    }
+
+    /* Floating service icons */
+    .hero-float-icon {
+      position: absolute;
+      width: 64px; height: 64px;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.04);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.06);
+      display: flex; align-items: center; justify-content: center;
+      animation: float 6s ease-in-out infinite;
+    }
+    .hero-float-icon svg { width: 28px; height: 28px; opacity: 0.6; }
+    .hero-float-icon-1 { top: 18%; left: 6%; animation-delay: 0s; }
+    .hero-float-icon-2 { top: 60%; left: 4%; animation-delay: 1.5s; }
+    .hero-float-icon-3 { top: 25%; right: 6%; animation-delay: 3s; }
+    .hero-float-icon-4 { top: 65%; right: 4%; animation-delay: 4.5s; }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-12px) rotate(2deg); }
+    }
+
+    /* Dot pattern overlay */
+    .hero-dots {
+      position: absolute; inset: 0;
+      opacity: 0.035;
+      background-image:
+        radial-gradient(circle at 50% 50%, var(--accent) 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+
+    .hero-inner {
+      position: relative; z-index: 3;
+      max-width: 1200px; margin: 0 auto; padding: 120px 24px 80px;
+      display: flex; flex-direction: column; align-items: center; text-align: center;
+    }
+
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 8px 18px;
+      border-radius: 999px;
+      background: rgba(215,222,106,0.08);
+      border: 1px solid rgba(215,222,106,0.15);
+      color: var(--accent);
+      font-size: 12px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.12em; margin-bottom: 32px;
+    }
+
+    .hero h1 {
+      font-size: 64px; font-weight: 800; line-height: 1.05;
+      color: var(--white);
+      margin-bottom: 20px;
+      letter-spacing: -0.02em;
+    }
+    .hero h1 span {
+      background: linear-gradient(135deg, var(--accent), var(--accent-light));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero p {
+      font-size: 18px; line-height: 1.7;
+      color: rgba(255,255,255,0.55);
+      max-width: 520px; margin-bottom: 40px;
+    }
+
+    .hero-actions {
+      display: flex; gap: 16px; flex-wrap: wrap; justify-content: center;
+    }
+    .hero-btn {
+      display: inline-flex; align-items: center; gap: 10px;
+      padding: 16px 36px; border-radius: 14px;
+      font-size: 15px; font-weight: 600; text-decoration: none;
+      transition: all 0.3s;
+    }
+    .hero-btn-primary {
+      background: var(--accent); color: var(--primary);
+      box-shadow: 0 8px 32px rgba(215,222,106,0.2);
+    }
+    .hero-btn-primary:hover {
+      background: var(--accent-light);
+      transform: translateY(-3px);
+      box-shadow: 0 12px 40px rgba(215,222,106,0.3);
+    }
+    .hero-btn-secondary {
+      background: rgba(255,255,255,0.06);
+      color: var(--white);
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .hero-btn-secondary:hover {
+      background: rgba(255,255,255,0.1);
+      transform: translateY(-3px);
+    }
+
+    /* Scroll indicator */
+    .scroll-indicator {
+      position: absolute; bottom: 40px; left: 50%;
+      transform: translateX(-50%);
+      display: flex; flex-direction: column; align-items: center;
+      gap: 8px; color: rgba(255,255,255,0.3);
+      font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+    }
+    .scroll-line {
+      width: 1px; height: 40px;
+      background: linear-gradient(to bottom, rgba(255,255,255,0.3), transparent);
+      animation: scrollPulse 2s ease-in-out infinite;
+    }
+    @keyframes scrollPulse {
+      0%, 100% { opacity: 0.3; transform: scaleY(1); }
+      50% { opacity: 1; transform: scaleY(1.2); }
+    }
+
+    /* ─── SECTION BASE ─── */
+    section { position: relative; }
+    .section-header {
+      text-align: center; margin-bottom: 56px;
+    }
+    .section-header h2 {
+      font-size: 36px; font-weight: 700; color: var(--primary);
+      margin-bottom: 12px; letter-spacing: -0.01em;
+    }
+    .section-header p {
+      font-size: 16px; color: #999;
+      max-width: 480px; margin: 0 auto;
+    }
+    .section-accent-line {
+      width: 40px; height: 3px;
+      background: var(--accent);
+      margin: 16px auto 0;
+      border-radius: 999px;
+    }
+
+    /* ─── DETAILS ─── */
+    .details {
+      padding: 100px 0;
+    }
+    .details-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 80px;
+      align-items: start;
+    }
+    .details-text p {
+      font-size: 16px; line-height: 1.8; color: #666;
+      margin-bottom: 20px;
+    }
+    .details-highlight {
+      padding: 24px; border-radius: 16px;
+      background: rgba(215,222,106,0.06);
+      border-left: 4px solid var(--accent);
+      margin-top: 32px;
+    }
+    .details-highlight h4 { font-size: 16px; font-weight: 600; color: var(--primary); margin-bottom: 6px; }
+    .details-highlight p { font-size: 14px; color: #888; margin-bottom: 0; }
+
+    /* Stats vertical */
+    .details-stats { display: flex; flex-direction: column; gap: 20px; }
+    .details-stat {
+      padding: 24px; border-radius: 16px;
+      border: 1px solid var(--neutral-light);
+      display: flex; align-items: center; gap: 20px;
+      transition: all 0.3s;
+    }
+    .details-stat:hover {
+      border-color: var(--accent);
+      box-shadow: 0 8px 24px rgba(215,222,106,0.08);
+    }
+    .details-stat-num {
+      font-size: 40px; font-weight: 800; color: var(--primary);
+      line-height: 1;
+    }
+    .details-stat-num span { color: var(--accent-dark); }
+    .details-stat-label { font-size: 13px; color: #999; margin-top: 2px; }
+
+    /* ─── FEATURES (timeline) ─── */
+    .features {
+      padding: 100px 0;
+      background: var(--light);
+      overflow: hidden;
+    }
+    .features-timeline {
+      position: relative;
+      max-width: 640px; margin: 0 auto;
+    }
+    .features-timeline::before {
+      content: "";
+      position: absolute; top: 0; left: 28px;
+      width: 2px; height: 100%;
+      background: rgba(215,222,106,0.2);
+    }
+    .feature-tl-item {
+      display: flex; gap: 24px;
+      margin-bottom: 40px;
+      position: relative;
+    }
+    .feature-tl-item:last-child { margin-bottom: 0; }
+    .feature-tl-icon {
+      width: 58px; height: 58px; border-radius: 50%;
+      background: var(--white);
+      border: 2px solid var(--accent);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      z-index: 2;
+      position: relative;
+      transition: all 0.3s;
+    }
+    .feature-tl-item:hover .feature-tl-icon {
+      background: var(--accent);
+    }
+    .feature-tl-item:hover .feature-tl-icon svg {
+      stroke: var(--primary);
+    }
+    .feature-tl-icon svg { width: 24px; height: 24px; }
+    .feature-tl-content {
+      padding-top: 10px;
+    }
+    .feature-tl-content h4 {
+      font-size: 17px; font-weight: 600; color: var(--primary);
+      margin-bottom: 6px;
+    }
+    .feature-tl-content p {
+      font-size: 14px; line-height: 1.6; color: #888;
+    }
+
+    /* ─── PRICING / PLANS ─── */
+    .pricing {
+      padding: 100px 0;
+    }
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      max-width: 960px; margin: 0 auto;
+    }
+    .plan-card {
+      padding: 40px 32px;
+      border-radius: 20px;
+      border: 1px solid var(--neutral-light);
+      text-align: center;
+      transition: all 0.3s;
+      position: relative;
+    }
+    .plan-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 20px 60px rgba(0,46,53,0.08);
+    }
+    .plan-card-featured {
+      border-color: var(--accent);
+      box-shadow: 0 8px 32px rgba(215,222,106,0.12);
+    }
+    .plan-card-featured::before {
+      content: "Mais Popular";
+      position: absolute; top: -12px; left: 50%;
+      transform: translateX(-50%);
+      padding: 4px 16px;
+      border-radius: 999px;
+      background: var(--accent);
+      color: var(--primary);
+      font-size: 11px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.05em;
+      white-space: nowrap;
+    }
+    .plan-name {
+      font-size: 14px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.1em; color: #bbb;
+      margin-bottom: 12px;
+    }
+    .plan-price {
+      font-size: 42px; font-weight: 800; color: var(--primary);
+      margin-bottom: 8px;
+    }
+    .plan-price small {
+      font-size: 16px; font-weight: 400; color: #bbb;
+    }
+    .plan-desc {
+      font-size: 13px; color: #999;
+      margin-bottom: 24px;
+    }
+    .plan-features {
+      list-style: none; text-align: left;
+      margin-bottom: 32px;
+    }
+    .plan-features li {
+      padding: 8px 0;
+      font-size: 14px; color: #666;
+      display: flex; align-items: center; gap: 10px;
+      border-bottom: 1px solid var(--light);
+    }
+    .plan-features li:last-child { border-bottom: none; }
+    .plan-features li::before {
+      content: "";
+      width: 18px; height: 18px; border-radius: 50%;
+      background: rgba(215,222,106,0.12);
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='none' stroke='%23bcc44e' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E");
+      background-size: 10px; background-position: center; background-repeat: no-repeat;
+      flex-shrink: 0;
+    }
+    .plan-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 12px 28px; border-radius: 10px;
+      font-size: 13px; font-weight: 600;
+      text-decoration: none; transition: all 0.2s;
+    }
+    .plan-btn-primary {
+      background: var(--primary); color: var(--white);
+    }
+    .plan-btn-primary:hover { background: var(--primary-light); transform: translateY(-2px); }
+    .plan-btn-outline {
+      background: transparent; color: var(--primary);
+      border: 1px solid var(--neutral-light);
+    }
+    .plan-btn-outline:hover { border-color: var(--primary); }
+
+    /* ─── FAQ ACCORDION ─── */
+    .faq-section {
+      padding: 100px 0;
+      background: var(--primary);
+    }
+    .faq-section-inner {
+      max-width: 720px; margin: 0 auto;
+    }
+    .faq-section .section-header h2 { color: var(--white); }
+    .faq-section .section-header p { color: rgba(255,255,255,0.5); }
+    .faq-item {
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 20px 0;
+    }
+    .faq-q {
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 16px; font-weight: 500; color: var(--white);
+      cursor: pointer;
+      gap: 16px;
+    }
+    .faq-q-arrow {
+      width: 32px; height: 32px; border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.1);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      transition: transform 0.3s;
+    }
+    .faq-q.open .faq-q-arrow { transform: rotate(180deg); }
+    .faq-q-arrow svg { width: 14px; height: 14px; }
+    .faq-a {
+      font-size: 14px; line-height: 1.7;
+      color: rgba(255,255,255,0.5);
+      margin-top: 12px; display: none;
+    }
+    .faq-a.open { display: block; }
+
+    /* ─── CTA BANNER ─── */
+    .cta-banner {
+      padding: 120px 0;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .cta-banner::before {
+      content: "";
+      position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(215,222,106,0.03) 0%, transparent 50%);
+    }
+    .cta-banner h2 {
+      font-size: 42px; font-weight: 700; color: var(--primary);
+      margin-bottom: 16px;
+    }
+    .cta-banner p {
+      font-size: 17px; color: #888;
+      max-width: 480px; margin: 0 auto 36px;
+    }
+    .cta-banner-btn {
+      display: inline-flex; align-items: center; gap: 10px;
+      padding: 18px 44px; border-radius: 14px;
+      background: var(--primary); color: var(--white);
+      font-size: 16px; font-weight: 600; text-decoration: none;
+      transition: all 0.3s;
+      box-shadow: 0 8px 32px rgba(0,46,53,0.15);
+    }
+    .cta-banner-btn:hover {
+      background: var(--primary-light);
+      transform: translateY(-3px);
+      box-shadow: 0 12px 48px rgba(0,46,53,0.2);
+    }
+    .cta-banner-btn svg { transition: transform 0.3s; }
+    .cta-banner-btn:hover svg { transform: translateX(4px); }
+
+    /* ─── FOOTER ─── */
+    .footer {
+      padding: 60px 0;
+      background: var(--dark);
+    }
+    .footer-inner {
+      max-width: 1200px; margin: 0 auto; padding: 0 24px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .footer-logo { font-size: 18px; font-weight: 700; color: var(--neutral); }
+    .footer-links { display: flex; gap: 24px; }
+    .footer-links a {
+      font-size: 13px; color: rgba(217,218,211,0.4);
+      text-decoration: none; transition: color 0.2s;
+    }
+    .footer-links a:hover { color: var(--neutral); }
+
+    @media (max-width: 1024px) {
+      .hero h1 { font-size: 44px; }
+      .details-grid { grid-template-columns: 1fr; gap: 48px; }
+      .pricing-grid { grid-template-columns: 1fr; max-width: 400px; }
+      .hero-float-icon { display: none; }
+    }
+    @media (max-width: 640px) {
+      .hero h1 { font-size: 32px; }
+      .hero p { font-size: 16px; }
+      .hero-inner { padding: 100px 16px 60px; }
+      .details { padding: 60px 0; }
+      .features { padding: 60px 0; }
+      .pricing { padding: 60px 0; }
+      .faq-section { padding: 60px 0; }
+      .cta-banner { padding: 60px 0; }
+      .cta-banner h2 { font-size: 28px; }
+      .details-stat { padding: 16px; }
+      .details-stat-num { font-size: 28px; }
+      .footer-inner { flex-direction: column; gap: 20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ─── HERO ─── -->
+  <section class="hero">
+    <div class="hero-geo">
+      <div class="hero-geo-circle hero-geo-circle-1"></div>
+      <div class="hero-geo-circle hero-geo-circle-2"></div>
+      <div class="hero-geo-circle hero-geo-circle-3"></div>
+    </div>
+    <div class="hero-dots"></div>
+
+    <div class="hero-float-icon hero-float-icon-1">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#d7de6a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 22h14"/><path d="M19.78 18.22l-3-3a3.46 3.46 0 0 1-1.78-.78l-6-6A4 4 0 0 0 6 7H2l4 4 1 1-4 4 4 4 2-2 2 2"/><circle cx="19.5" cy="7.5" r="2.5"/></svg>
+    </div>
+    <div class="hero-float-icon hero-float-icon-2">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#d7de6a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 2v4"/><path d="M12 18v4"/></svg>
+    </div>
+    <div class="hero-float-icon hero-float-icon-3">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#d7de6a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg>
+    </div>
+    <div class="hero-float-icon hero-float-icon-4">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#d7de6a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+    </div>
+
+    <div class="hero-inner">
+      <div class="hero-badge">✈️ Serviço</div>
+      <h1>Viagens &amp;<br /><span>Turismo</span></h1>
+      <p>Planeamento, reservas e assessoria de viagens internacionais. Cuidamos de cada detalhe para que possa focar-se no que realmente importa.</p>
+      <div class="hero-actions">
+        <a href="#" class="hero-btn hero-btn-primary">
+          Solicitar Orçamento
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+        </a>
+        <a href="#" class="hero-btn hero-btn-secondary">Saber Mais</a>
+      </div>
+    </div>
+
+    <div class="scroll-indicator">
+      <span>Explorar</span>
+      <div class="scroll-line"></div>
+    </div>
+  </section>
+
+  <!-- ─── DETAILS ─── -->
+  <section class="details">
+    <div class="container">
+      <div class="details-grid">
+        <div class="details-text">
+          <div class="section-header" style="text-align:left;margin-bottom:24px">
+            <h2>Viagens sem preocupações</h2>
+            <div class="section-accent-line" style="margin:12px 0 0"></div>
+          </div>
+          <p>A Issencial estabeleceu parcerias com as melhores agências de viagens para oferecer soluções completas de planeamento, reservas de voos, alojamento e experiências turísticas personalizadas.</p>
+          <p>Desde viagens de negócios a férias em família, cuidamos de cada detalhe — voos, hotéis, transfers, seguros e experiências — para que possa focar-se no que realmente importa: aproveitar cada momento.</p>
+          <div class="details-highlight">
+            <h4>🌍 Parcerias Exclusivas</h4>
+            <p>Aceda a tarifas e experiências privilegiadas através das nossas parcerias com companhias aéreas, redes hoteleiras e operadores turísticos em mais de 50 destinos.</p>
+          </div>
+        </div>
+        <div class="details-stats">
+          <div class="details-stat">
+            <div class="details-stat-num">50<span>+</span></div>
+            <div>
+              <div class="details-stat-label">Destinos disponíveis em todo o mundo</div>
+            </div>
+          </div>
+          <div class="details-stat">
+            <div class="details-stat-num">98<span>%</span></div>
+            <div>
+              <div class="details-stat-label">Clientes satisfeitos com os nossos serviços</div>
+            </div>
+          </div>
+          <div class="details-stat">
+            <div class="details-stat-num">24/7</div>
+            <div>
+              <div class="details-stat-label">Suporte permanente em qualquer fuso horário</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── FEATURES TIMELINE ─── -->
+  <section class="features">
+    <div class="container">
+      <div class="section-header">
+        <h2>O que está incluído</h2>
+        <p>Cada serviço é desenhado para oferecer a melhor experiência possível.</p>
+        <div class="section-accent-line"></div>
+      </div>
+      <div class="features-timeline">
+        <div class="feature-tl-item">
+          <div class="feature-tl-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#002e35" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 22h14"/><path d="M19.78 18.22l-3-3a3.46 3.46 0 0 1-1.78-.78l-6-6A4 4 0 0 0 6 7H2l4 4 1 1-4 4 4 4 2-2 2 2"/><circle cx="19.5" cy="7.5" r="2.5"/></svg>
+          </div>
+          <div class="feature-tl-content">
+            <h4>Reservas de Voos</h4>
+            <p>Voos nacionais e internacionais com as melhores companhias aéreas e tarifas exclusivas, incluindo classe executiva e primeira classe.</p>
+          </div>
+        </div>
+        <div class="feature-tl-item">
+          <div class="feature-tl-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#002e35" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg>
+          </div>
+          <div class="feature-tl-content">
+            <h4>Alojamento Premium</h4>
+            <p>Hotéis, resorts e alojamento local criteriosamente selecionados com os mais altos padrões de qualidade e conforto.</p>
+          </div>
+        </div>
+        <div class="feature-tl-item">
+          <div class="feature-tl-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#002e35" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="10" r="3"/><path d="M12 21.7C17.3 17 20 13 20 10a8 8 0 1 0-16 0c0 3 2.7 7 8 11.7z"/></svg>
+          </div>
+          <div class="feature-tl-content">
+            <h4>Experiências Curadas</h4>
+            <p>Pacotes turísticos exclusivos, transfers personalizados, seguros de viagem completos e experiências locais autênticas.</p>
+          </div>
+        </div>
+        <div class="feature-tl-item">
+          <div class="feature-tl-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#002e35" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          </div>
+          <div class="feature-tl-content">
+            <h4>Apoio Permanente</h4>
+            <p>Assistência contínua antes, durante e depois da viagem. Estamos sempre disponíveis para qualquer imprevisto ou questão.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── PLANS ─── -->
+  <section class="pricing">
+    <div class="container">
+      <div class="section-header">
+        <h2>Escolha o seu plano</h2>
+        <p>Soluções adaptadas a diferentes necessidades e orçamentos.</p>
+        <div class="section-accent-line"></div>
+      </div>
+      <div class="pricing-grid">
+        <div class="plan-card">
+          <div class="plan-name">Essencial</div>
+          <div class="plan-price">€49 <small>/viagem</small></div>
+          <div class="plan-desc">Para viajantes individuais que precisam de ajuda com reservas.</div>
+          <ul class="plan-features">
+            <li>Reserva de voos</li>
+            <li>Alojamento standard</li>
+            <li>Seguro de viagem básico</li>
+            <li>Apoio por email</li>
+          </ul>
+          <a href="#" class="plan-btn plan-btn-outline">Selecionar</a>
+        </div>
+        <div class="plan-card plan-card-featured">
+          <div class="plan-name">Profissional</div>
+          <div class="plan-price">€99 <small>/viagem</small></div>
+          <div class="plan-desc">Para famílias e grupos que procuram uma experiência completa.</div>
+          <ul class="plan-features">
+            <li>Tudo do Essencial</li>
+            <li>Hotéis premium</li>
+            <li>Transfers incluídos</li>
+            <li>Experiências curadas</li>
+            <li>Apoio prioritário 24/7</li>
+          </ul>
+          <a href="#" class="plan-btn plan-btn-primary">Selecionar</a>
+        </div>
+        <div class="plan-card">
+          <div class="plan-name">Empresarial</div>
+          <div class="plan-price">Sob <small>consulta</small></div>
+          <div class="plan-desc">Para empresas com necessidades de viagens frequentes.</div>
+          <ul class="plan-features">
+            <li>Tudo do Profissional</li>
+            <li>Gestão de frotas</li>
+            <li>Relatórios mensais</li>
+            <li>Faturação centralizada</li>
+            <li>Gestor dedicado</li>
+          </ul>
+          <a href="#" class="plan-btn plan-btn-outline">Contactar</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── FAQ ─── -->
+  <section class="faq-section">
+    <div class="container">
+      <div class="faq-section-inner">
+        <div class="section-header">
+          <h2>Perguntas frequentes</h2>
+          <p>Tire as suas dúvidas sobre este serviço.</p>
+          <div class="section-accent-line"></div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q" onclick="toggleFaq(this)">
+            <span>Quanto tempo demora a preparar uma viagem?</span>
+            <div class="faq-q-arrow">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#d7de6a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+          </div>
+          <div class="faq-a">Para viagens simples, podemos ter tudo pronto em 24-48 horas. Para roteiros mais complexos, recomendamos 1-2 semanas de planeamento.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q" onclick="toggleFaq(this)">
+            <span>Posso cancelar ou alterar a reserva?</span>
+            <div class="faq-q-arrow">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#d7de6a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+          </div>
+          <div class="faq-a">Sim, as condições variam por fornecedor. Apresentamos sempre as políticas antes de confirmar qualquer reserva.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q" onclick="toggleFaq(this)">
+            <span>Oferecem seguro de viagem?</span>
+            <div class="faq-q-arrow">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#d7de6a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+          </div>
+          <div class="faq-a">Sim, temos parceria com as principais seguradoras. Incluímos seguro de viagem completo com cobertura médica, bagagem e cancelamento.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── CTA ─── -->
+  <section class="cta-banner">
+    <div class="container">
+      <h2>Vamos planear a sua<br />próxima viagem?</h2>
+      <p>Solicite um orçamento personalizado sem compromisso. Respondemos em até 24 horas.</p>
+      <a href="#" class="cta-banner-btn">
+        Solicitar Orçamento
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+      </a>
+    </div>
+  </section>
+
+  <!-- ─── FOOTER ─── -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-logo">Issencial</div>
+      <div class="footer-links">
+        <a href="#">Serviços</a>
+        <a href="#">Sobre Nós</a>
+        <a href="#">Contacto</a>
+        <a href="#">FAQ</a>
+        <a href="#">Privacidade</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    function toggleFaq(el) {
+      const answer = el.nextElementSibling;
+      const isOpen = answer.classList.contains('open');
+      el.classList.toggle('open');
+      answer.classList.toggle('open');
+    }
+  </script>
+
+</body>
+</html>

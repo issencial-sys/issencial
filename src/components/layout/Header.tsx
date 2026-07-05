@@ -80,37 +80,48 @@ export default function Header() {
         </div>
       </div>
 
-      {/* Mobile Menu */}
-      {mobileOpen && (
-        <div className="border-t border-neutral-light bg-white px-6 py-6 lg:hidden">
-          <div className="flex flex-col gap-1">
-            {navLinks.map((link) => {
-              const active = isActive(link.href);
-              return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  onClick={() => setMobileOpen(false)}
-                  className={`rounded-lg px-4 py-3 text-lg font-medium transition-colors ${
-                    active
-                      ? "bg-primary text-white shadow-sm"
-                      : "text-gray-800 hover:bg-light"
-                  }`}
-                >
-                  {link.label}
-                </Link>
-              );
-            })}
-            <Link
-              href="/portal"
-              onClick={() => setMobileOpen(false)}
-              className="mt-4 rounded-lg bg-accent px-4 py-3 text-center text-sm font-semibold text-primary"
-            >
-              Portal do Cliente
-            </Link>
-          </div>
+      {/* Mobile overlay */}
+      <div
+        className={`fixed inset-0 top-[72px] z-40 bg-black/20 transition-opacity duration-500 ease-out lg:hidden ${
+          mobileOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+        }`}
+        onClick={() => setMobileOpen(false)}
+        aria-hidden="true"
+      />
+
+      {/* Mobile Drawer — slide da direita */}
+      <div
+        className={`fixed top-[72px] right-0 z-50 h-[calc(100vh-72px)] w-80 max-w-[85vw] bg-white shadow-2xl border-l border-neutral-light transition-all duration-[800ms] ease-out lg:hidden ${
+          mobileOpen ? "translate-x-0" : "translate-x-full"
+        }`}
+      >
+        <div className="flex flex-col gap-1 p-6">
+          {navLinks.map((link) => {
+            const active = isActive(link.href);
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={() => setMobileOpen(false)}
+                className={`rounded-lg px-4 py-3 text-lg font-medium transition-colors ${
+                  active
+                    ? "bg-primary text-white shadow-sm"
+                    : "text-gray-800 hover:bg-light"
+                }`}
+              >
+                {link.label}
+              </Link>
+            );
+          })}
+          <Link
+            href="/portal"
+            onClick={() => setMobileOpen(false)}
+            className="mt-4 rounded-lg bg-accent px-4 py-3 text-center text-sm font-semibold text-primary"
+          >
+            Portal do Cliente
+          </Link>
         </div>
-      )}
+      </div>
     </nav>
   );
 }

@@ -41,7 +41,6 @@ export function ChevronCard({
       className={className}
       style={{
         position: "relative",
-        aspectRatio: "2806 / 884",
         width: "100%",
         ...style,
       }}

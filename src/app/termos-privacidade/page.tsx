@@ -1,7 +1,9 @@
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import Badge from "@/components/ui/Badge";
-import Link from "next/link";
+import Button from "@/components/ui/Button";
+import FadeIn from "@/components/ui/FadeIn";
+import { MessageCircle, ArrowRight } from "lucide-react";
 
 const sections = [
   {
@@ -109,14 +111,24 @@ export default function TermosPrivacidadePage() {
       <Header />
       <main>
         {/* Hero */}
-        <section className="relative bg-primary pt-24 pb-16 md:pb-20 overflow-hidden">
+        <section className="relative bg-primary py-28 min-h-[50vh] overflow-hidden flex flex-col items-center justify-center">
           <div className="absolute inset-0 opacity-[0.03] bg-[radial-gradient(circle_at_25%_25%,#d7de6a_1px,transparent_1px),radial-gradient(circle_at_75%_75%,#d7de6a_1px,transparent_1px)] bg-[length:60px_60px]" />
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute w-[400px] h-[400px] rounded-full border border-accent/8 -top-[150px] -right-[80px]" />
+            <div className="absolute w-[250px] h-[250px] rounded-full border border-accent/6 -bottom-[80px] -left-[60px]" />
+          </div>
           <div className="relative z-10 mx-auto max-w-2xl px-4 sm:px-6 lg:px-10 text-center">
-            <Badge variant="accent">Legal</Badge>
-            <h1 className="mt-4 text-3xl md:text-4xl font-bold text-white">Termos, Privacidade e Cookies</h1>
-            <p className="mt-4 text-lg text-white/70">
-              Conheça os termos que regem a utilização dos nossos serviços e como protegemos os seus dados.
-            </p>
+            <FadeIn delay={0.1}>
+              <Badge variant="accent">Legal</Badge>
+            </FadeIn>
+            <FadeIn delay={0.2}>
+              <h1 className="mt-6 text-3xl md:text-5xl font-bold text-white leading-tight">Termos, Privacidade e Cookies</h1>
+            </FadeIn>
+            <FadeIn delay={0.3}>
+              <p className="mt-6 text-lg md:text-xl text-white/70 max-w-xl mx-auto">
+                Conheça os termos que regem a utilização dos nossos serviços e como protegemos os seus dados.
+              </p>
+            </FadeIn>
           </div>
         </section>
 
@@ -138,47 +150,49 @@ export default function TermosPrivacidadePage() {
         {/* Content sections */}
         <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-10 py-16 md:py-20">
           {sections.map((section, idx) => (
-            <section key={section.id} id={section.id} className="mb-16 last:mb-0 scroll-mt-28">
-              <Badge className="mb-4">{section.badge}</Badge>
-              <h2 className="text-2xl md:text-3xl font-bold text-dark mb-8">
-                {section.title}
-              </h2>
-              <div className="flex flex-col gap-8">
-                {section.content.map((block) => (
-                  <div key={block.heading}>
-                    <h3 className="text-base font-semibold text-dark mb-2">
-                      {block.heading}
-                    </h3>
-                    <p className="text-[15px] leading-relaxed text-gray-500">
-                      {block.text}
-                    </p>
-                  </div>
-                ))}
-              </div>
+            <FadeIn key={section.id}>
+              <section id={section.id} className="mb-16 last:mb-0 scroll-mt-28">
+                <Badge className="mb-4">{section.badge}</Badge>
+                <h2 className="text-2xl md:text-3xl font-bold text-dark mb-8">
+                  {section.title}
+                </h2>
+                <div className="flex flex-col gap-8">
+                  {section.content.map((block) => (
+                    <div key={block.heading}>
+                      <h3 className="text-base font-semibold text-dark mb-2">
+                        {block.heading}
+                      </h3>
+                      <p className="text-[15px] leading-relaxed text-gray-500">
+                        {block.text}
+                      </p>
+                    </div>
+                  ))}
+                </div>
 
-              {/* Separator between major sections */}
-              {idx < sections.length - 1 && (
-                <div className="mt-16 border-t border-gray-100" />
-              )}
-            </section>
+                {/* Separator between major sections */}
+                {idx < sections.length - 1 && (
+                  <div className="mt-16 border-t border-gray-100" />
+                )}
+              </section>
+            </FadeIn>
           ))}
 
           {/* Contact CTA */}
-          <div className="rounded-2xl bg-light p-8 md:p-10 text-center mt-12">
-            <h3 className="text-lg font-semibold text-dark mb-2">
-              Ainda tem dúvidas?
-            </h3>
-            <p className="text-sm text-gray-500 mb-6 max-w-md mx-auto">
-              Se tiver alguma questão sobre os nossos Termos ou Política de Privacidade, estamos aqui para ajudar.
-            </p>
-            <Link
-              href="/contacto"
-              className="inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-white transition-all hover:bg-primary-light hover:-translate-y-0.5"
-            >
-              Fale Connosco
-              <span aria-hidden="true">→</span>
-            </Link>
-          </div>
+          <FadeIn>
+            <div className="rounded-2xl bg-primary p-8 md:p-10 text-center mt-12">
+              <h3 className="text-lg font-semibold text-white mb-2">
+                Ainda tem dúvidas?
+              </h3>
+              <p className="text-sm text-white/70 mb-6 max-w-md mx-auto">
+                Se tiver alguma questão sobre os nossos Termos ou Política de Privacidade, estamos aqui para ajudar.
+              </p>
+              <Button href="/contacto" size="lg">
+                <MessageCircle size={16} />
+                Fale Connosco
+                <ArrowRight size={16} />
+              </Button>
+            </div>
+          </FadeIn>
         </div>
       </main>
       <Footer />

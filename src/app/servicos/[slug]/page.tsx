@@ -6,15 +6,56 @@ import Footer from "@/components/layout/Footer";
 import Button from "@/components/ui/Button";
 import Badge from "@/components/ui/Badge";
 import { services } from "@/data/services";
-import { ArrowRight, Plane, GraduationCap, DollarSign, Globe, ChevronDown, Check, Star, Shield, Clock } from "lucide-react";
-import { useState } from "react";
+import { ArrowRight, Plane, GraduationCap, DollarSign, Globe, ChevronDown, Check, Star, Shield, Clock, FileText, Users, Zap, Target, Search, X as XIcon } from "lucide-react";
+import QuoteForm from "@/components/sections/QuoteForm";
+import { useState, useMemo } from "react";
 
-const featureIcons = [Star, Shield, Clock, Check];
+// Map feature text keywords to specific icons for each service
+function getFeatureIcon(feature: string, index: number): typeof Star {
+  const lower = feature.toLowerCase();
+  if (lower.includes("doc") || lower.includes("document") || lower.includes("prepara") || lower.includes("certif")) return FileText;
+  if (lower.includes("visto") || lower.includes("consular")) return Plane;
+  if (lower.includes("pagament") || lower.includes("transf") || lower.includes("câmbio") || lower.includes("moeda") || lower.includes("envio")) return DollarSign;
+  if (lower.includes("inscri") || lower.includes("matr") || lower.includes("escola") || lower.includes("univers") || lower.includes("estud")) return GraduationCap;
+  if (lower.includes("acompanh") || lower.includes("orient") || lower.includes("gestor") || lower.includes("dedicad")) return Users;
+  if (lower.includes("praz") || lower.includes("temp") || lower.includes("rápid") || lower.includes("urgen")) return Clock;
+  if (lower.includes("seguran") || lower.includes("confid") || lower.includes("rgpd") || lower.includes("dados")) return Shield;
+  if (lower.includes("efic") || lower.includes("garant")) return Zap;
+  if (lower.includes("sucess") || lower.includes("conclu") || lower.includes("aprova")) return Check;
+  // Fallback based on index
+  const fallbacks = [Star, Shield, Clock, Check, FileText, Target];
+  return fallbacks[index % fallbacks.length];
+}
+
+// Icons for stats by service
+function getStatIcon(statLabel: string): typeof Star {
+  const lower = statLabel.toLowerCase();
+  if (lower.includes("processo") || lower.includes("concluído")) return FileText;
+  if (lower.includes("document") || lower.includes("aprova")) return Check;
+  if (lower.includes("ano") || lower.includes("experiência")) return Star;
+  if (lower.includes("país") || lower.includes("institui") || lower.includes("europa")) return Globe;
+  if (lower.includes("taxa") || lower.includes("sucess")) return Target;
+  if (lower.includes("hora") || lower.includes("temp") || lower.includes("processamento")) return Clock;
+  if (lower.includes("comissão") || lower.includes("oculta")) return Shield;
+  return Star;
+}
 
 export default function ServicoDetalhePage() {
   const params = useParams();
   const slug = params.slug as string;
   const service = services.find((s) => s.slug === slug);
+
+  const [faqSearch, setFaqSearch] = useState("");
+
+  const filteredFaq = useMemo(() => {
+    if (!faqSearch.trim()) return service?.faq ?? [];
+    const q = faqSearch.toLowerCase();
+    return (service?.faq ?? []).filter(
+      (item) =>
+        item.q.toLowerCase().includes(q) ||
+        item.a.toLowerCase().includes(q)
+    );
+  }, [faqSearch, service?.faq]);
 
   if (!service) {
     return (
@@ -105,9 +146,11 @@ export default function ServicoDetalhePage() {
                   </h2>
                   <div className="w-10 h-[3px] bg-accent rounded-full mb-6" />
                 </div>
-                <p className="text-base leading-relaxed text-gray-500 mb-5">
-                  {service.longDescription}
-                </p>
+                <div className="text-base leading-relaxed text-gray-500 mb-5 space-y-4">
+                  {service.longDescription.split('\n\n').map((paragraph, i) => (
+                    <p key={i}>{paragraph}</p>
+                  ))}
+                </div>
                 <div className="p-6 rounded-2xl bg-accent/[0.04] border-l-4 border-accent mt-8">
                   <div className="flex items-center gap-3 mb-2">
                     <div className="w-9 h-9 rounded-lg bg-accent/10 flex items-center justify-center">
@@ -121,19 +164,37 @@ export default function ServicoDetalhePage() {
 
               {/* Stats */}
               <div className="flex flex-col gap-5">
-                {service.stats.map((stat) => (
-                  <div key={stat.value} className="p-6 rounded-2xl border border-neutral-light flex items-center gap-5 transition-all duration-300 hover:border-accent hover:shadow-[0_8px_24px_rgba(215,222,106,0.08)]">
-                    <div className="text-4xl font-extrabold text-primary leading-none">
-                      {stat.value.replace("+", "")}
-                      {stat.value.includes("+") && <span className="text-accent-dark">+</span>}
-                      {stat.value.includes("%") && <span className="text-accent-dark">%</span>}
-                      {stat.value.includes("h") && <span className="text-accent-dark">h</span>}
+                {service.stats.map((stat) => {
+                  const StatIcon = getStatIcon(stat.label);
+                  // Extract numeric value for visual treatment
+                  const numValue = stat.value.replace(/[^0-9.,]/g, '');
+                  const suffix = stat.value.replace(/[0-9.,]/g, '');
+
+                  return (
+                    <div key={stat.value} className="group p-6 rounded-2xl border border-neutral-light transition-all duration-300 hover:border-accent hover:shadow-[0_8px_24px_rgba(215,222,106,0.08)] hover:-translate-y-0.5 relative overflow-hidden">
+                      {/* Hover accent bar */}
+                      <div className="absolute top-0 left-0 w-full h-0.5 bg-accent scale-x-0 origin-left transition-transform duration-300 group-hover:scale-x-100" />
+
+                      <div className="flex items-center gap-5">
+                        {/* Icon */}
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-accent/10 text-primary transition-all duration-300 group-hover:bg-accent group-hover:text-primary">
+                          <StatIcon size={22} />
+                        </div>
+
+                        {/* Value */}
+                        <div className="flex-1 min-w-0">
+                          <div className="text-3xl font-extrabold text-primary leading-none mb-1">
+                            {numValue}
+                            {suffix && (
+                              <span className="text-accent-dark text-2xl ml-0.5">{suffix}</span>
+                            )}
+                          </div>
+                          <div className="text-sm text-gray-400 leading-tight">{stat.label}</div>
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <div className="text-sm text-gray-400">{stat.label}</div>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -154,10 +215,11 @@ export default function ServicoDetalhePage() {
 
               <div className="flex flex-col gap-10">
                 {service.features.map((feature, i) => {
-                  const IconComponent = featureIcons[i % featureIcons.length];
+                  const IconComponent = getFeatureIcon(feature, i);
                   return (
                     <div key={feature} className="flex gap-6 relative group">
-                      <div className="w-14 h-14 rounded-full bg-white border-2 border-accent flex items-center justify-center flex-shrink-0 z-10 transition-all duration-300 group-hover:bg-accent relative">
+                      {/* Icon circle */}
+                      <div className="w-14 h-14 rounded-full bg-white border-2 border-accent flex items-center justify-center flex-shrink-0 z-10 transition-all duration-500 group-hover:bg-accent group-hover:scale-110 group-hover:shadow-[0_0_24px_rgba(215,222,106,0.3)] relative">
                         <IconComponent size={22} className="text-primary transition-all duration-300 group-hover:text-primary" />
                       </div>
                       <div className="pt-3">
@@ -171,41 +233,100 @@ export default function ServicoDetalhePage() {
           </div>
         </section>
 
+        {/* ─── LOSS AVERSION / URGENCY MICROCOPY ─── */}
+        <section className="py-16 md:py-20 bg-accent/5 border-y border-accent/10">
+          <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-10 text-center">
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-accent/20 text-accent-dark">
+                <Clock size={20} />
+              </div>
+              <span className="text-sm font-semibold uppercase tracking-widest text-accent-dark">Não espere demasiado</span>
+            </div>
+            <h3 className="text-2xl md:text-3xl font-bold text-primary mb-3">
+              {service.slug === "educacao-europa"
+                ? "As inscrições para o próximo ano letivo estão a decorrer"
+                : service.slug === "tratamento-passaporte"
+                ? "Os prazos de emissão podem variar — quanto mais cedo iniciar, melhor"
+                : "Garanta o seu lugar e evite contratempos de última hora"}
+            </h3>
+            <p className="text-base text-gray-500 max-w-lg mx-auto mb-8">
+              {service.slug === "educacao-europa"
+                ? "As vagas nas melhores instituições são limitadas. Garanta a sua candidatura atempadamente e aumente as suas hipóteses de sucesso."
+                : service.slug === "transferencias"
+                ? "As taxas de câmbio flutuam diariamente. Bloqueie a taxa ideal agora e evite surpresas."
+                : "Cada dia de espera é um dia perdido. A nossa equipa está pronta para começar a tratar do seu processo hoje."}
+            </p>
+            <Button href="/contacto" size="lg" variant="primary" className="shadow-[0_8px_32px_rgba(215,222,106,0.2)] hover:shadow-[0_12px_40px_rgba(215,222,106,0.3)]">
+              Começar Agora
+              <ArrowRight size={18} />
+            </Button>
+          </div>
+        </section>
+
         {/* ─── FAQ ─── */}
         <section className="py-24 lg:py-32 bg-primary">
           <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-10">
-            <div className="text-center mb-16">
+            <div className="text-center mb-12">
               <h2 className="text-3xl sm:text-4xl font-bold text-white mb-3">Perguntas frequentes</h2>
               <p className="text-base text-white/50 max-w-[480px] mx-auto">Tire as suas dúvidas sobre este serviço.</p>
               <div className="w-10 h-[3px] bg-accent rounded-full mx-auto mt-4" />
             </div>
-            <div className="space-y-0">
-              {service.faq.map((item) => (
-                <FaqItem key={item.q} question={item.q} answer={item.a} />
-              ))}
+
+            {/* Search */}
+            <div className="mb-10">
+              <div className="relative">
+                <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30 pointer-events-none" />
+                <input
+                  type="text"
+                  placeholder="Pesquisar perguntas..."
+                  value={faqSearch}
+                  onChange={(e) => setFaqSearch(e.target.value)}
+                  className="w-full rounded-xl border border-white/10 bg-white/5 py-3.5 pl-11 pr-10 text-sm text-white outline-none transition-all placeholder:text-white/30 focus:border-accent/50 focus:bg-white/10 focus:ring-1 focus:ring-accent/30"
+                />
+                {faqSearch && (
+                  <button
+                    onClick={() => setFaqSearch("")}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors"
+                    aria-label="Limpar pesquisa"
+                  >
+                    <XIcon size={14} />
+                  </button>
+                )}
+              </div>
             </div>
+
+            {/* FAQ Items */}
+            {filteredFaq.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-white/40 text-sm">Nenhuma pergunta encontrada para &quot;{faqSearch}&quot;.</p>
+                <button
+                  onClick={() => setFaqSearch("")}
+                  className="mt-3 text-sm font-medium text-accent hover:text-accent-light transition-colors underline underline-offset-4"
+                >
+                  Limpar pesquisa
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-0">
+                {filteredFaq.map((item) => (
+                  <FaqItem key={item.q} question={item.q} answer={item.a} />
+                ))}
+              </div>
+            )}
           </div>
         </section>
 
-        {/* ─── CTA ─── */}
-        <section className="py-28 lg:py-36 text-center relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-accent/[0.02] to-transparent" />
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 relative z-10">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-primary mb-4 leading-tight">
-              Vamos planear a sua<br />
-              próxima experiência?
-            </h2>
-            <p className="text-base sm:text-lg text-gray-400 max-w-[480px] mx-auto mb-10">
-              Solicite um orçamento personalizado sem compromisso. Respondemos em até 24 horas.
-            </p>
-            <Button
-              href="/contacto"
-              size="xl"
-              className="shadow-[0_8px_32px_rgba(0,46,53,0.15)] hover:shadow-[0_12px_48px_rgba(0,46,53,0.2)]"
-            >
-              Solicitar Orçamento
-              <ArrowRight size={20} />
-            </Button>
+        {/* ─── QUOTE FORM ─── */}
+        <section className="py-24 lg:py-32">
+          <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-10">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl sm:text-4xl font-bold text-primary mb-3">Solicitar Orçamento</h2>
+              <p className="text-base text-gray-400 max-w-[480px] mx-auto">
+                Preencha o formulário abaixo e receba um orçamento personalizado para este serviço.
+              </p>
+              <div className="w-10 h-[3px] bg-accent rounded-full mx-auto mt-4" />
+            </div>
+            <QuoteForm defaultService={slug} />
           </div>
         </section>
       </main>

@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Issencial · Admin</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+  @font-face {
+    font-family: 'OverusedGrotesk';
+    src: url('../public/fonts/overused grotesk/variable/OverusedGrotesk-VF.woff2') format('woff2'),
+         url('../public/fonts/overused grotesk/ttf/OverusedGrotesk-Roman.ttf') format('truetype');
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: swap;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'OverusedGrotesk', system-ui, sans-serif;
+    background: #f5f5f0;
+    color: #151e28;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.12); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.2); }
+
+  .root { display: flex; min-height: 100vh; }
+
+  /* ─── Admin Sidebar ─── */
+  .sidebar {
+    width: 260px;
+    background: #002e35;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    position: fixed;
+    top: 0; left: 0;
+    height: 100vh;
+    z-index: 100;
+    transition: transform 0.3s ease;
+  }
+  .sidebar-header {
+    padding: 20px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    flex-shrink: 0;
+  }
+  .sidebar-logo { display: flex; align-items: center; }
+  .sidebar-logo img { height: 24px; width: auto; display: block; }
+  .sidebar-nav {
+    flex: 1;
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    overflow-y: auto;
+  }
+  .nav-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 12px; border-radius: 10px;
+    color: rgba(255,255,255,0.5);
+    font-size: 13px; font-weight: 500;
+    cursor: pointer; transition: all 0.2s;
+    text-decoration: none;
+  }
+  .nav-item:hover { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.85); }
+  .nav-item.active { background: rgba(215,222,106,0.12); color: #d7de6a; }
+  .nav-item .icon { width: 18px; height: 18px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+  .nav-item .icon svg { width: 18px; height: 18px; }
+  .nav-item .badge {
+    margin-left: auto;
+    background: #d7de6a; color: #002e35;
+    font-size: 10px; font-weight: 700;
+    padding: 2px 7px; border-radius: 999px;
+    min-width: 18px; text-align: center;
+  }
+  .sidebar-footer {
+    padding: 14px 16px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+  }
+  .user-card {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .user-avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: rgba(215,222,106,0.2);
+    color: #d7de6a;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700;
+  }
+  .user-info { flex: 1; min-width: 0; }
+  .user-name { color: #fff; font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .user-email { color: rgba(255,255,255,0.3); font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .logout-btn {
+    background: none; border: none; color: rgba(255,255,255,0.3);
+    cursor: pointer; padding: 6px; border-radius: 8px;
+    transition: all 0.2s; display: flex;
+  }
+  .logout-btn:hover { color: #fff; background: rgba(255,255,255,0.08); }
+
+  /* ─── Main ─── */
+  .main-area {
+    flex: 1;
+    margin-left: 260px;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+  .admin-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 28px;
+    background: #fff;
+    border-bottom: 1px solid rgba(0,0,0,0.04);
+    position: sticky;
+    top: 0;
+    z-index: 40;
+  }
+  .admin-header h1 { font-size: 18px; font-weight: 700; color: #151e28; }
+  .admin-header .h-left { display: flex; align-items: center; gap: 16px; }
+  .admin-header .hamburger { display: none; background: none; border: none; cursor: pointer; color: #151e28; padding: 4px; }
+  .admin-header .hamburger svg { width: 22px; height: 22px; }
+  .admin-header .h-right { display: flex; align-items: center; gap: 12px; }
+  .admin-header .h-right .notification-btn {
+    background: none; border: none; cursor: pointer; color: #999; padding: 6px; border-radius: 8px; transition: all 0.2s; position: relative; display: flex;
+  }
+  .admin-header .h-right .notification-btn:hover { background: #f5f5f0; color: #151e28; }
+  .admin-header .h-right .notif-dot {
+    position: absolute; top: 4px; right: 4px;
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #d7de6a; border: 2px solid #fff;
+  }
+  .page-content { flex: 1; padding: 24px 28px; max-width: 1200px; width: 100%; margin: 0 auto; padding-bottom: 60px; }
+
+  /* ─── Mobile Overlay ─── */
+  .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 99; }
+  .sidebar-overlay.open { display: block; }
+
+  /* ─── Stats ─── */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+  .stat-card {
+    background: #fff;
+    border-radius: 14px;
+    padding: 18px;
+    border: 1px solid rgba(0,0,0,0.04);
+    cursor: pointer;
+    transition: all 0.25s;
+    position: relative;
+    overflow: hidden;
+  }
+  .stat-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,46,53,0.06); }
+  .stat-card .accent-bar { position: absolute; top: 0; left: 0; right: 0; height: 3px; background: #d7de6a; transform: scaleX(0); transform-origin: left; transition: transform 0.3s; }
+  .stat-card:hover .accent-bar { transform: scaleX(1); }
+  .stat-card .stat-icon {
+    width: 36px; height: 36px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 10px;
+  }
+  .stat-card .stat-icon svg { width: 18px; height: 18px; }
+  .stat-card .stat-label { font-size: 11px; color: #999; font-weight: 500; margin-bottom: 2px; }
+  .stat-card .stat-value { font-size: 24px; font-weight: 700; color: #151e28; line-height: 1.1; }
+  .stat-card .stat-desc { font-size: 11px; color: #bbb; margin-top: 4px; }
+  .stat-card.highlight { border-color: rgba(215,222,106,0.25); background: rgba(215,222,106,0.03); }
+
+  /* ─── Chat-style Contact List ─── */
+  .contact-list { display: flex; flex-direction: column; gap: 6px; }
+  .contact-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 14px;
+    background: #fff;
+    border-radius: 12px;
+    border: 1px solid rgba(0,0,0,0.04);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .contact-item:hover { box-shadow: 0 2px 12px rgba(0,0,0,0.04); }
+  .contact-item.unread { border-left: 3px solid #d7de6a; }
+  .contact-avatar {
+    width: 44px; height: 44px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    font-weight: 600; font-size: 14px;
+  }
+  .contact-info { flex: 1; min-width: 0; }
+  .contact-name { font-size: 13px; font-weight: 600; color: #151e28; }
+  .contact-preview { font-size: 12px; color: #999; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
+  .contact-right { text-align: right; flex-shrink: 0; }
+  .contact-time { font-size: 10px; color: #bbb; }
+  .contact-unread {
+    width: 18px; height: 18px; border-radius: 50%;
+    background: #d7de6a; color: #002e35;
+    font-size: 9px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    margin-top: 4px; margin-left: auto;
+  }
+
+  /* ─── WhatsApp Chat View ─── */
+  .chat-container {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 180px);
+    min-height: 400px;
+    background: #fff;
+    border-radius: 14px;
+    border: 1px solid rgba(0,0,0,0.04);
+    overflow: hidden;
+  }
+  .chat-topbar {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 18px;
+    background: #002e35;
+    color: #fff;
+    flex-shrink: 0;
+  }
+  .chat-topbar .back-btn {
+    background: none; border: none; color: #fff; cursor: pointer; padding: 4px; display: flex;
+    display: none;
+  }
+  .chat-topbar .back-btn svg { width: 20px; height: 20px; }
+  .chat-topbar .chat-avatar {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: rgba(215,222,106,0.2);
+    color: #d7de6a;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700;
+    flex-shrink: 0;
+  }
+  .chat-topbar .chat-name { font-size: 14px; font-weight: 600; }
+  .chat-topbar .chat-status { font-size: 10px; color: rgba(255,255,255,0.6); }
+  .chat-messages {
+    flex: 1; overflow-y: auto; padding: 20px;
+    display: flex; flex-direction: column; gap: 10px;
+    background: #f8f8f4;
+  }
+  .chat-message {
+    max-width: 75%;
+    padding: 10px 14px;
+    border-radius: 14px;
+    font-size: 13px;
+    line-height: 1.5;
+    animation: msgIn 0.3s ease;
+  }
+  @keyframes msgIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+  .chat-message.received {
+    align-self: flex-start;
+    background: #fff;
+    color: #151e28;
+    border-bottom-left-radius: 4px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  }
+  .chat-message.sent {
+    align-self: flex-end;
+    background: #d7de6a;
+    color: #002e35;
+    border-bottom-right-radius: 4px;
+  }
+  .chat-message .msg-time {
+    font-size: 10px; opacity: 0.5; margin-top: 4px; text-align: right;
+  }
+  .chat-message .msg-sender { font-size: 10px; font-weight: 600; opacity: 0.6; margin-bottom: 3px; }
+  .chat-message .msg-check svg { width: 12px; height: 12px; vertical-align: middle; }
+  .chat-input-area {
+    display: flex; gap: 8px; padding: 12px 16px;
+    background: #fff; border-top: 1px solid #f0f0f0;
+    flex-shrink: 0;
+  }
+  .chat-input-area textarea {
+    flex: 1;
+    border: 1px solid #e0e0e0;
+    border-radius: 24px;
+    padding: 10px 16px;
+    font-size: 13px;
+    font-family: inherit;
+    resize: none;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .chat-input-area textarea:focus { border-color: #d7de6a; }
+  .chat-input-area .send-btn {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    background: #d7de6a;
+    border: none;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .chat-input-area .send-btn:hover { background: #c8cf5a; transform: scale(1.05); }
+  .chat-input-area .send-btn svg { width: 18px; height: 18px; color: #002e35; }
+  .chat-input-area .send-btn:disabled { opacity: 0.4; cursor: default; transform: none; }
+
+  /* ─── Table ─── */
+  .table-container {
+    background: #fff;
+    border-radius: 14px;
+    border: 1px solid rgba(0,0,0,0.04);
+    overflow: hidden;
+  }
+  .table-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 18px; border-bottom: 1px solid #f0f0f0;
+  }
+  .table-header h3 { font-size: 14px; font-weight: 600; }
+  .table-header .table-actions { display: flex; gap: 8px; }
+  .table-header .table-actions button {
+    padding: 6px 14px; border-radius: 8px; border: 1px solid #e0e0e0;
+    background: #fff; font-size: 12px; font-weight: 500; cursor: pointer;
+    transition: all 0.2s;
+  }
+  .table-header .table-actions button:hover { border-color: #002e35; color: #002e35; }
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; padding: 10px 18px; font-size: 11px; font-weight: 600; color: #999; text-transform: uppercase; letter-spacing: 0.04em; background: #fafaf8; }
+  td { padding: 12px 18px; font-size: 13px; border-top: 1px solid #f5f5f0; }
+  tr:hover td { background: rgba(215,222,106,0.04); }
+  .status-tag {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 11px; font-weight: 600;
+    padding: 3px 10px; border-radius: 999px;
+  }
+  .status-tag svg { width: 12px; height: 12px; }
+
+  /* ─── Section title ─── */
+  .section-title { font-size: 14px; font-weight: 700; color: #151e28; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+
+  /* ─── Quick actions panel ─── */
+  .actions-panel {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+  .action-btn {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 14px; background: #fff;
+    border-radius: 12px; border: 1px solid rgba(0,0,0,0.04);
+    cursor: pointer; transition: all 0.2s;
+    text-decoration: none;
+  }
+  .action-btn:hover { box-shadow: 0 2px 12px rgba(0,0,0,0.04); }
+  .action-btn .ab-icon {
+    width: 36px; height: 36px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .action-btn .ab-icon svg { width: 18px; height: 18px; }
+  .action-btn .ab-label { font-size: 12px; font-weight: 600; color: #151e28; }
+  .action-btn .ab-sub { font-size: 10px; color: #bbb; }
+
+  /* ─── Responsive ─── */
+  @media (max-width: 900px) {
+    .sidebar { transform: translateX(-100%); }
+    .sidebar.open { transform: translateX(0); }
+    .main-area { margin-left: 0; }
+    .admin-header .hamburger { display: block; }
+    .admin-header { padding: 12px 16px; }
+    .page-content { padding: 16px; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .chat-message { max-width: 88%; }
+    .chat-container { height: calc(100vh - 200px); }
+    .chat-topbar .back-btn { display: block; }
+    table { font-size: 12px; }
+    th, td { padding: 8px 12px; }
+  }
+  @media (max-width: 600px) {
+    .stats-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+    .stat-card { padding: 14px; }
+    .stat-card .stat-value { font-size: 20px; }
+  }
+
+  /* ─── Search ─── */
+  .search-bar {
+    display: flex; align-items: center; gap: 8px;
+    background: #fff; border: 1px solid rgba(0,0,0,0.06);
+    border-radius: 10px; padding: 8px 14px;
+    margin-bottom: 16px;
+  }
+  .search-bar svg { width: 16px; height: 16px; color: #bbb; flex-shrink: 0; }
+  .search-bar input {
+    border: none; background: none; flex: 1;
+    font-size: 13px; font-family: inherit; outline: none;
+  }
+  .search-bar input::placeholder { color: #bbb; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+  const { useState } = React;
+
+  const Icons = {
+    dashboard: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>,
+    messageSquare: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>,
+    fileText: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>,
+    users: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
+    receipt: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1-2-1z"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="11" x2="14" y2="11"/><line x1="8" y1="15" x2="12" y2="15"/></svg>,
+    settings: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>,
+    arrowRight: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>,
+    arrowLeft: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>,
+    clock: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>,
+    checkCircle: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>,
+    send: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>,
+    chevronRight: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>,
+    bell: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>,
+    search: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>,
+    logout: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>,
+    menu: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>,
+    checkDouble: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="2 12 7 17 13 7"/><polyline points="9 17 15 7 22 12"/></svg>,
+  };
+
+  const MOCK_ADMIN = { name: 'Admin Issencial', email: 'admin@issencial.pt', initial: 'A' };
+
+  const MOCK_CONTACTS = [
+    { id: 'c1', name: 'Maria Fernandes', preview: 'Já enviei o documento! Confirma receção?', time: '14:20', unread: 2, avatarColor: '#002e35', initials: 'MF' },
+    { id: 'c2', name: 'Ana Silva', preview: 'Bom dia, gostaria de saber quais os documentos...', time: '10:15', unread: 1, avatarColor: '#8a9030', initials: 'AS' },
+    { id: 'c3', name: 'Carlos Mendes', preview: 'Preciso de fazer uma transferência de €15.000', time: 'Ontem', unread: 0, avatarColor: '#004a54', initials: 'CM' },
+    { id: 'c4', name: 'Marisa Costa', preview: 'Estou interessada em candidatar-me...', time: 'Ontem', unread: 0, avatarColor: '#bcc44e', initials: 'MC' },
+  ];
+
+  const MOCK_CHAT = [
+    { id: 'ch1', content: 'Olá Maria! Recebemos o seu pedido de renovação de passaporte.', sender: 'admin', time: '10:00' },
+    { id: 'ch2', content: 'Olá! Obrigada. Quanto tempo demora o processo?', sender: 'client', name: 'Maria Fernandes', time: '10:15' },
+    { id: 'ch3', content: 'Aproximadamente 15 a 20 dias úteis. Precisamos do certificado de residência.', sender: 'admin', time: '10:18' },
+    { id: 'ch4', content: 'Ok, vou enviar o documento ainda hoje. Obrigado!', sender: 'client', name: 'Maria Fernandes', time: '10:22' },
+    { id: 'ch5', content: 'Perfeito! Assim que recebermos, damos continuidade.', sender: 'admin', time: '10:25' },
+    { id: 'ch6', content: 'Já enviei o documento! Confirmam receção?', sender: 'client', name: 'Maria Fernandes', time: '14:20' },
+  ];
+
+  const MOCK_INVOICES = [
+    { id: 'inv1', number: '2026/0001', client: 'Maria Fernandes', amount: '€150,00', status: 'pending', statusLabel: 'Pendente', due: '15 Fev 2026' },
+    { id: 'inv2', number: '2026/0002', client: 'Ana Silva', amount: '€450,00', status: 'paid', statusLabel: 'Pago', due: '10 Fev 2026' },
+    { id: 'inv3', number: '2026/0003', client: 'Carlos Mendes', amount: '€35,00', status: 'overdue', statusLabel: 'Vencido', due: '30 Jan 2026' },
+  ];
+
+  const MOCK_PROCESSES = [
+    { id: 'pp1', title: 'Renovação de Passaporte', client: 'Maria Fernandes', status: 'active', statusLabel: 'Ativo', date: '15 Jan', priority: 'Alta' },
+    { id: 'pp2', title: 'Candidatura Mestrado', client: 'Ana Silva', status: 'active', statusLabel: 'Ativo', date: '3 Fev', priority: 'Média' },
+    { id: 'pp3', title: 'Transferência Internacional', client: 'Carlos Mendes', status: 'completed', statusLabel: 'Concluído', date: '20 Dez', priority: 'Baixa' },
+  ];
+
+  // ─── Components ───
+  function Sidebar({ screen, setScreen, sidebarOpen, setSidebarOpen }) {
+    const items = [
+      { id: 'dashboard', icon: Icons.dashboard, label: 'Dashboard' },
+      { id: 'contactos', icon: Icons.messageSquare, label: 'Contactos', badge: 4 },
+      { id: 'processos', icon: Icons.fileText, label: 'Processos' },
+      { id: 'clientes', icon: Icons.users, label: 'Clientes' },
+      { id: 'faturas', icon: Icons.receipt, label: 'Faturas' },
+      { id: 'config', icon: Icons.settings, label: 'Configuração' },
+    ];
+    return (
+      <>
+        <div className={'sidebar' + (sidebarOpen ? ' open' : '')}>
+          <div className="sidebar-header">
+            <div className="sidebar-logo">
+              <img src="../public/logo/principal_branco.png" alt="Issencial" />
+            </div>
+          </div>
+          <nav className="sidebar-nav">
+            {items.map(item => (
+              <div key={item.id}
+                className={'nav-item' + (screen === item.id ? ' active' : '')}
+                onClick={() => { setScreen(item.id); setSidebarOpen(false); }}>
+                <span className="icon">{item.icon}</span>
+                <span>{item.label}</span>
+                {item.badge && <span className="badge">{item.badge}</span>}
+              </div>
+            ))}
+          </nav>
+          <div className="sidebar-footer">
+            <div className="user-card">
+              <div className="user-avatar">{MOCK_ADMIN.initial}</div>
+              <div className="user-info">
+                <div className="user-name">{MOCK_ADMIN.name}</div>
+                <div className="user-email">{MOCK_ADMIN.email}</div>
+              </div>
+              <button className="logout-btn" title="Sair">{Icons.logout}</button>
+            </div>
+          </div>
+        </div>
+        <div className={'sidebar-overlay' + (sidebarOpen ? ' open' : '')} onClick={() => setSidebarOpen(false)} />
+      </>
+    );
+  }
+
+  function AdminHeader({ title, sidebarOpen, setSidebarOpen }) {
+    return (
+      <div className="admin-header">
+        <div className="h-left">
+          <button className="hamburger" onClick={() => setSidebarOpen(true)}>{Icons.menu}</button>
+          <h1>{title}</h1>
+        </div>
+        <div className="h-right">
+          <button className="notification-btn">
+            {Icons.bell}
+            <span className="notif-dot" />
+          </button>
+          <div className="user-avatar" style={{ width:34, height:34, fontSize:13, cursor:'pointer' }}>{MOCK_ADMIN.initial}</div>
+        </div>
+      </div>
+    );
+  }
+
+  // Screens
+  function Dashboard() {
+    const stats = [
+      { label: 'Novos Contactos', value: '4', desc: 'Por responder', icon: Icons.messageSquare, color: '#2563eb', bg: 'rgba(37,99,235,0.08)', highlight: true },
+      { label: 'Processos Ativos', value: '2', desc: 'Em andamento', icon: Icons.fileText, color: '#002e35', bg: 'rgba(0,46,53,0.08)' },
+      { label: 'Clientes', value: '4', desc: 'Total na plataforma', icon: Icons.users, color: '#7c3aed', bg: 'rgba(124,58,237,0.08)' },
+      { label: 'Faturas Pendentes', value: '2', desc: '€185,00 em aberto', icon: Icons.receipt, color: '#d97706', bg: 'rgba(217,119,6,0.08)' },
+    ];
+    return (
+      <div>
+        <div className="stats-grid">
+          {stats.map(s => (
+            <div key={s.label} className={'stat-card' + (s.highlight ? ' highlight' : '')}>
+              <div className="accent-bar" />
+              <div className="stat-icon" style={{ background: s.bg, color: s.color }}>{s.icon}</div>
+              <div className="stat-value">{s.value}</div>
+              <div className="stat-label">{s.label}</div>
+              <div className="stat-desc">{s.desc}</div>
+            </div>
+          ))}
+        </div>
+
+        <div className="section-title">{Icons.chevronRight}Ações Rápidas</div>
+        <div className="actions-panel">
+          <div className="action-btn">
+            <div className="ab-icon" style={{ background:'rgba(37,99,235,0.08)', color:'#2563eb' }}>{Icons.messageSquare}</div>
+            <div><div className="ab-label">Contactos</div><div className="ab-sub">4 por responder</div></div>
+          </div>
+          <div className="action-btn">
+            <div className="ab-icon" style={{ background:'rgba(0,46,53,0.08)', color:'#002e35' }}>{Icons.fileText}</div>
+            <div><div className="ab-label">Processos</div><div className="ab-sub">2 ativos</div></div>
+          </div>
+          <div className="action-btn">
+            <div className="ab-icon" style={{ background:'rgba(217,119,6,0.08)', color:'#d97706' }}>{Icons.receipt}</div>
+            <div><div className="ab-label">Faturas</div><div className="ab-sub">€185 pendentes</div></div>
+          </div>
+        </div>
+
+        <div className="section-title">{Icons.chevronRight}Contactos Recentes</div>
+        <div className="contact-list">
+          {MOCK_CONTACTS.slice(0, 3).map(c => (
+            <div key={c.id} className={'contact-item' + (c.unread > 0 ? ' unread' : '')}>
+              <div className="contact-avatar" style={{ background: c.avatarColor + '15', color: c.avatarColor }}>{c.initials}</div>
+              <div className="contact-info">
+                <div className="contact-name">{c.name}</div>
+                <div className="contact-preview">{c.preview}</div>
+              </div>
+              <div className="contact-right">
+                <div className="contact-time">{c.time}</div>
+                {c.unread > 0 && <div className="contact-unread">{c.unread}</div>}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  function AdminContactos({ setSubScreen }) {
+    const [selected, setSelected] = useState(null);
+    const [newMsg, setNewMsg] = useState('');
+
+    if (selected) {
+      const contact = MOCK_CONTACTS.find(c => c.id === selected);
+      return (
+        <div>
+          <div className="chat-container" style={{ height: 'calc(100vh - 160px)' }}>
+            <div className="chat-topbar">
+              <button className="back-btn" onClick={() => setSelected(null)}>{Icons.arrowLeft}</button>
+              <div className="chat-avatar">{contact.initials}</div>
+              <div>
+                <div className="chat-name">{contact.name}</div>
+                <div className="chat-status">Online • ativo agora</div>
+              </div>
+            </div>
+            <div className="chat-messages">
+              {MOCK_CHAT.map(msg => (
+                <div key={msg.id} className={'chat-message ' + (msg.sender === 'admin' ? 'sent' : 'received')}>
+                  {msg.sender === 'client' && <div className="msg-sender">{msg.name}</div>}
+                  {msg.content}
+                  <div className="msg-time">{msg.time} {msg.sender === 'admin' && <span className="msg-check">{Icons.checkDouble}</span>}</div>
+                </div>
+              ))}
+            </div>
+            <div className="chat-input-area">
+              <textarea value={newMsg} onChange={e => setNewMsg(e.target.value)} placeholder="Escreva a sua resposta..." rows={1} />
+              <button className="send-btn" disabled={!newMsg.trim()}>{Icons.send}</button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div>
+        <div className="search-bar">
+          {Icons.search}
+          <input type="text" placeholder="Pesquisar contactos..." />
+        </div>
+        <div className="contact-list">
+          {MOCK_CONTACTS.map(c => (
+            <div key={c.id} className={'contact-item' + (c.unread > 0 ? ' unread' : '')} onClick={() => setSelected(c.id)}>
+              <div className="contact-avatar" style={{ background: c.avatarColor + '15', color: c.avatarColor }}>{c.initials}</div>
+              <div className="contact-info">
+                <div className="contact-name">{c.name}</div>
+                <div className="contact-preview">{c.preview}</div>
+              </div>
+              <div className="contact-right">
+                <div className="contact-time">{c.time}</div>
+                {c.unread > 0 && <div className="contact-unread">{c.unread}</div>}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  function AdminProcessos() {
+    return (
+      <div>
+        <div className="table-container">
+          <div className="table-header">
+            <h3>Todos os Processos</h3>
+            <div className="table-actions">
+              <button>Filtrar</button>
+              <button>Novo Processo</button>
+            </div>
+          </div>
+          <table>
+            <thead><tr>
+              <th>Processo</th><th>Cliente</th><th>Prioridade</th><th>Estado</th><th>Data</th>
+            </tr></thead>
+            <tbody>
+              {MOCK_PROCESSES.map(p => {
+                const statusStyles = {
+                  active: { bg: 'rgba(0,46,53,0.08)', color: '#002e35' },
+                  completed: { bg: 'rgba(215,222,106,0.15)', color: '#8a9030' },
+                };
+                const ss = statusStyles[p.status] || statusStyles.active;
+                return (
+                  <tr key={p.id}>
+                    <td style={{ fontWeight: 500 }}>{p.title}</td>
+                    <td style={{ color: '#666' }}>{p.client}</td>
+                    <td><span className="status-tag" style={{ background: p.priority === 'Alta' ? 'rgba(239,68,68,0.08)' : 'rgba(0,46,53,0.06)', color: p.priority === 'Alta' ? '#ef4444' : '#002e35' }}>{p.priority}</span></td>
+                    <td><span className="status-tag" style={{ background: ss.bg, color: ss.color }}>{p.statusLabel}</span></td>
+                    <td style={{ color: '#999' }}>{p.date}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    );
+  }
+
+  function AdminFaturas() {
+    return (
+      <div>
+        <div className="table-container">
+          <div className="table-header">
+            <h3>Faturas</h3>
+            <div className="table-actions">
+              <button>Filtrar</button>
+              <button>Criar Fatura</button>
+            </div>
+          </div>
+          <table>
+            <thead><tr>
+              <th>Nº Fatura</th><th>Cliente</th><th>Valor</th><th>Estado</th><th>Vencimento</th>
+            </tr></thead>
+            <tbody>
+              {MOCK_INVOICES.map(inv => {
+                const st = {
+                  pending: { bg: 'rgba(217,119,6,0.08)', color: '#d97706' },
+                  paid: { bg: 'rgba(0,46,53,0.08)', color: '#002e35' },
+                  overdue: { bg: 'rgba(239,68,68,0.08)', color: '#ef4444' },
+                }[inv.status];
+                return (
+                  <tr key={inv.id}>
+                    <td style={{ fontWeight: 500 }}>{inv.number}</td>
+                    <td style={{ color: '#666' }}>{inv.client}</td>
+                    <td style={{ fontWeight: 600 }}>{inv.amount}</td>
+                    <td><span className="status-tag" style={{ background: st.bg, color: st.color }}>{inv.statusLabel}</span></td>
+                    <td style={{ color: '#999' }}>{inv.due}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    );
+  }
+
+  function AdminConfig() {
+    return (
+      <div className="table-container" style={{ padding: 24 }}>
+        <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 16 }}>Configuração</h3>
+        <p style={{ color: '#999', fontSize: 13 }}>Painel de definições do sistema. Em desenvolvimento.</p>
+      </div>
+    );
+  }
+
+  function AdminClientes() {
+    return (
+      <div>
+        <div className="search-bar">
+          {Icons.search}
+          <input type="text" placeholder="Pesquisar clientes..." />
+        </div>
+        <div className="contact-list">
+          {MOCK_CONTACTS.map(c => (
+            <div key={c.id} className="contact-item">
+              <div className="contact-avatar" style={{ background: c.avatarColor + '15', color: c.avatarColor }}>{c.initials}</div>
+              <div className="contact-info">
+                <div className="contact-name">{c.name}</div>
+                <div className="contact-preview">cliente@exemplo.pt</div>
+              </div>
+              <div className="contact-right">
+                <div style={{ fontSize: 11 }}>{c.unread > 0 ? c.unread + ' msg' : '—'}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // ─── App ───
+  function App() {
+    const [screen, setScreen] = useState('dashboard');
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [subScreen, setSubScreen] = useState(null);
+
+    const titles = {
+      dashboard: 'Dashboard',
+      contactos: 'Contactos',
+      processos: 'Processos',
+      clientes: 'Clientes',
+      faturas: 'Faturas',
+      config: 'Configuração',
+    };
+
+    const render = () => {
+      switch (screen) {
+        case 'dashboard': return <Dashboard />;
+        case 'contactos': return <AdminContactos setSubScreen={setSubScreen} />;
+        case 'processos': return <AdminProcessos />;
+        case 'clientes': return <AdminClientes />;
+        case 'faturas': return <AdminFaturas />;
+        case 'config': return <AdminConfig />;
+        default: return <Dashboard />;
+      }
+    };
+
+    return (
+      <div className="root">
+        <Sidebar screen={screen} setScreen={setScreen} sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+        <div className="main-area">
+          <AdminHeader title={titles[screen] || 'Admin'} sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+          <div className="page-content">{render()}</div>
+        </div>
+      </div>
+    );
+  }
+
+  ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

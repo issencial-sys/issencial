@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Menu, X } from "lucide-react";
 
 const navLinks = [
@@ -15,7 +15,28 @@ const navLinks = [
 
 export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const drawerRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
   const pathname = usePathname();
+
+  // Fechar drawer ao clicar fora
+  useEffect(() => {
+    if (!mobileOpen) return;
+
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        drawerRef.current &&
+        !drawerRef.current.contains(e.target as Node) &&
+        buttonRef.current &&
+        !buttonRef.current.contains(e.target as Node)
+      ) {
+        setMobileOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [mobileOpen]);
 
   const isActive = (href: string) => {
     if (href === "/") return pathname === "/";
@@ -64,12 +85,13 @@ export default function Header() {
           {/* CTA + Mobile Toggle */}
           <div className="flex items-center gap-4">
             <Link
-              href="/portal"
+              href="/login"
               className="hidden rounded-lg bg-accent px-5 py-2.5 text-xs font-semibold uppercase tracking-wider text-primary transition-all hover:bg-accent-light hover:-translate-y-0.5 hover:shadow-accent lg:inline-flex"
             >
               Portal do Cliente
             </Link>
             <button
+              ref={buttonRef}
               onClick={() => setMobileOpen(!mobileOpen)}
               className="flex h-11 w-11 items-center justify-center rounded-full text-primary lg:hidden"
               aria-label="Menu"
@@ -91,6 +113,7 @@ export default function Header() {
 
       {/* Mobile Drawer — slide da direita */}
       <div
+        ref={drawerRef}
         className={`fixed top-[72px] right-0 z-50 h-[calc(100vh-72px)] w-80 max-w-[85vw] bg-white shadow-2xl border-l border-neutral-light transition-all duration-[800ms] ease-out lg:hidden ${
           mobileOpen ? "translate-x-0" : "translate-x-full"
         }`}
@@ -103,18 +126,21 @@ export default function Header() {
                 key={link.href}
                 href={link.href}
                 onClick={() => setMobileOpen(false)}
-                className={`rounded-lg px-4 py-3 text-lg font-medium transition-colors ${
+                className={`relative rounded-lg px-4 py-3 text-lg font-medium transition-colors ${
                   active
-                    ? "bg-primary text-white shadow-sm"
-                    : "text-gray-800 hover:bg-light"
+                    ? "text-primary bg-primary/[0.06]"
+                    : "text-gray-800 hover:text-primary hover:bg-primary/[0.03]"
                 }`}
               >
                 {link.label}
+                {active && (
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 w-1 h-6 bg-accent rounded-full" />
+                )}
               </Link>
             );
           })}
           <Link
-            href="/portal"
+            href="/login"
             onClick={() => setMobileOpen(false)}
             className="mt-4 rounded-lg bg-accent px-4 py-3 text-center text-sm font-semibold text-primary"
           >

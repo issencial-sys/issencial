@@ -9,6 +9,7 @@ interface ButtonProps {
   className?: string;
   onClick?: () => void;
   type?: "button" | "submit" | "reset";
+  disabled?: boolean;
 }
 
 const variants = {
@@ -27,12 +28,13 @@ const sizes = {
   xl: "px-10 py-5 text-md",
 };
 
-export default function Button({ children, variant = "primary", size = "md", href, className = "", onClick, type = "button" }: ButtonProps) {
+export default function Button({ children, variant = "primary", size = "md", href, className = "", onClick, type = "button", disabled = false }: ButtonProps) {
   const base = "inline-flex items-center justify-center gap-2 rounded-lg font-semibold uppercase tracking-wider border-2 transition-all duration-200 cursor-pointer whitespace-nowrap active:scale-[0.98]";
-  const classes = `${base} ${variants[variant]} ${sizes[size]} ${className}`;
+  const disabledClasses = disabled ? "opacity-50 cursor-not-allowed pointer-events-none" : "";
+  const classes = `${base} ${variants[variant]} ${sizes[size]} ${className} ${disabledClasses}`;
 
   if (href) {
     return <Link href={href} className={classes}>{children}</Link>;
   }
-  return <button type={type} onClick={onClick} className={classes}>{children}</button>;
+  return <button type={type} onClick={onClick} className={classes} disabled={disabled}>{children}</button>;
 }

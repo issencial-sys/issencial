@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Issencial · Portal do Cliente</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+  @font-face {
+    font-family: 'OverusedGrotesk';
+    src: url('../public/fonts/overused grotesk/variable/OverusedGrotesk-VF.woff2') format('woff2'),
+         url('../public/fonts/overused grotesk/ttf/OverusedGrotesk-Roman.ttf') format('truetype');
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: swap;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'OverusedGrotesk', system-ui, sans-serif;
+    background: #f1f1f1;
+    color: #151e28;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+  /* Scrollbar WhatsApp-style */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.25); }
+
+  .root { display: flex; min-height: 100vh; }
+
+  /* ─── Sidebar ─── */
+  .sidebar {
+    width: 280px;
+    background: #002e35;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    position: fixed;
+    top: 0; left: 0;
+    height: 100vh;
+    z-index: 100;
+    transition: transform 0.3s ease;
+  }
+  .sidebar-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    flex-shrink: 0;
+  }
+  .sidebar-logo {
+    display: flex; align-items: center;
+  }
+  .sidebar-logo img { height: 28px; width: auto; display: block; }
+  .sidebar-nav {
+    flex: 1;
+    padding: 12px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    overflow-y: auto;
+  }
+  .nav-item {
+    display: flex; align-items: center; gap: 14px;
+    padding: 12px 14px; border-radius: 12px;
+    color: rgba(255,255,255,0.55);
+    font-size: 14px; font-weight: 500;
+    cursor: pointer; transition: all 0.2s;
+    text-decoration: none; position: relative;
+  }
+  .nav-item:hover { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.85); }
+  .nav-item.active {
+    background: rgba(215,222,106,0.12);
+    color: #d7de6a;
+  }
+  .nav-item .badge {
+    margin-left: auto;
+    background: #d7de6a;
+    color: #002e35;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 999px;
+    min-width: 20px;
+    text-align: center;
+  }
+  .nav-item .icon { width: 20px; height: 20px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+  .nav-item .icon svg { width: 20px; height: 20px; }
+  .sidebar-footer {
+    padding: 16px 20px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+  }
+  .user-card {
+    display: flex; align-items: center; gap: 12px;
+  }
+  .user-avatar {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: rgba(215,222,106,0.2);
+    color: #d7de6a;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700;
+  }
+  .user-info { flex: 1; min-width: 0; }
+  .user-name { color: #fff; font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .user-email { color: rgba(255,255,255,0.35); font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .logout-btn {
+    background: none; border: none; color: rgba(255,255,255,0.3);
+    cursor: pointer; padding: 6px; border-radius: 8px;
+    transition: all 0.2s; display: flex;
+  }
+  .logout-btn:hover { color: #fff; background: rgba(255,255,255,0.08); }
+
+  /* ─── Main Content ─── */
+  .main-area {
+    flex: 1;
+    margin-left: 280px;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+  .mobile-header {
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: #002e35;
+    color: #fff;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+  .mobile-header .hamburger {
+    background: none; border: none; color: #fff;
+    cursor: pointer; padding: 4px;
+  }
+  .mobile-header .hamburger svg { width: 24px; height: 24px; }
+  .mobile-header h1 { font-size: 16px; font-weight: 700; }
+  .mobile-header .user-avatar-sm {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: rgba(215,222,106,0.2);
+    color: #d7de6a;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700;
+  }
+  .page-content { flex: 1; padding: 24px; max-width: 1000px; width: 100%; margin: 0 auto; padding-bottom: 100px; }
+
+  /* ─── Mobile Overlay ─── */
+  .sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 99;
+  }
+  .sidebar-overlay.open { display: block; }
+
+  /* ─── Bottom Tab Bar (mobile) ─── */
+  .bottom-tabs {
+    display: none;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: #fff;
+    border-top: 1px solid #e8e8e8;
+    padding: 6px 0 env(safe-area-inset-bottom);
+    z-index: 50;
+    box-shadow: 0 -2px 20px rgba(0,0,0,0.06);
+  }
+  .tab-items { display: flex; }
+  .tab-item {
+    flex: 1;
+    display: flex; flex-direction: column;
+    align-items: center; gap: 2px;
+    padding: 6px 0;
+    background: none; border: none;
+    cursor: pointer;
+    color: #999;
+    font-size: 10px; font-weight: 500;
+    transition: color 0.2s;
+    text-decoration: none;
+    position: relative;
+  }
+  .tab-item svg { width: 22px; height: 22px; }
+  .tab-item.active { color: #002e35; }
+  .tab-item .tab-badge {
+    position: absolute; top: 2px; right: 50%;
+    transform: translateX(calc(50% + 14px));
+    background: #d7de6a;
+    color: #002e35;
+    font-size: 9px;
+    font-weight: 700;
+    padding: 1px 5px;
+    border-radius: 999px;
+    min-width: 16px;
+    text-align: center;
+    line-height: 1.3;
+  }
+
+  /* ─── Dashboard Cards ─── */
+  .dash-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .dash-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 20px;
+    border: 1px solid rgba(0,0,0,0.04);
+    cursor: pointer;
+    transition: all 0.25s;
+    position: relative;
+    overflow: hidden;
+  }
+  .dash-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 32px rgba(0,46,53,0.08);
+  }
+  .dash-card .card-top {
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;
+  }
+  .dash-card .card-icon {
+    width: 40px; height: 40px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .dash-card .card-icon svg { width: 20px; height: 20px; }
+  .dash-card .card-arrow { color: #ccc; transition: all 0.25s; }
+  .dash-card:hover .card-arrow { color: #002e35; transform: translateX(3px); }
+  .dash-card .card-label { font-size: 12px; color: #999; font-weight: 500; margin-bottom: 4px; }
+  .dash-card .card-value { font-size: 28px; font-weight: 700; color: #151e28; line-height: 1.1; }
+  .dash-card .card-desc { font-size: 12px; color: #b0b0b0; margin-top: 6px; }
+  .dash-card .card-accent {
+    position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: #d7de6a; transform: scaleX(0); transform-origin: left;
+    transition: transform 0.3s;
+  }
+  .dash-card:hover .card-accent { transform: scaleX(1); }
+  .dash-card.highlight {
+    border-color: rgba(215,222,106,0.3);
+    background: rgba(215,222,106,0.04);
+  }
+
+  /* ─── Quick Actions ─── */
+  .section-title {
+    font-size: 15px; font-weight: 700; color: #151e28;
+    margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
+  }
+  .quick-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .quick-btn {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 16px; background: #fff;
+    border-radius: 14px; border: 1px solid rgba(0,0,0,0.04);
+    cursor: pointer; transition: all 0.2s;
+    text-decoration: none;
+  }
+  .quick-btn:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+    transform: translateY(-1px);
+  }
+  .quick-btn .qb-icon {
+    width: 40px; height: 40px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .quick-btn .qb-icon svg { width: 20px; height: 20px; }
+  .quick-btn .qb-label { font-size: 13px; font-weight: 600; color: #151e28; }
+  .quick-btn .qb-sub { font-size: 11px; color: #b0b0b0; }
+
+  /* ─── WhatsApp Chat Style ─── */
+  .chat-container {
+    background: #fff;
+    border-radius: 16px;
+    border: 1px solid rgba(0,0,0,0.04);
+    overflow: hidden;
+  }
+  .chat-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  .chat-header h3 { font-size: 15px; font-weight: 700; color: #151e28; }
+  .chat-body {
+    padding: 20px;
+    max-height: 400px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .chat-empty {
+    padding: 48px 20px;
+    text-align: center;
+    color: #b0b0b0;
+    font-size: 13px;
+  }
+  .chat-message {
+    max-width: 80%;
+    padding: 10px 14px;
+    border-radius: 16px;
+    font-size: 14px;
+    line-height: 1.5;
+    position: relative;
+    animation: msgIn 0.3s ease;
+  }
+  @keyframes msgIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .chat-message.received {
+    align-self: flex-start;
+    background: #f0f0f0;
+    color: #151e28;
+    border-bottom-left-radius: 4px;
+  }
+  .chat-message.sent {
+    align-self: flex-end;
+    background: #d7de6a;
+    color: #002e35;
+    border-bottom-right-radius: 4px;
+  }
+  .chat-message .msg-sender {
+    font-size: 11px; font-weight: 600;
+    margin-bottom: 4px;
+    opacity: 0.7;
+  }
+  .chat-message .msg-time {
+    font-size: 10px;
+    opacity: 0.5;
+    margin-top: 6px;
+    text-align: right;
+  }
+  .chat-message .msg-read {
+    display: inline-block;
+    margin-left: 3px;
+  }
+  .chat-message .msg-read svg { width: 12px; height: 12px; vertical-align: middle; }
+
+  /* ─── Message Input ─── */
+  .chat-input-area {
+    display: flex; gap: 8px; padding: 12px 16px;
+    border-top: 1px solid #f0f0f0;
+    background: #fafafa;
+  }
+  .chat-input-area textarea {
+    flex: 1;
+    border: 1px solid #e0e0e0;
+    border-radius: 24px;
+    padding: 10px 16px;
+    font-size: 13px;
+    font-family: inherit;
+    resize: none;
+    outline: none;
+    transition: border-color 0.2s;
+    background: #fff;
+  }
+  .chat-input-area textarea:focus { border-color: #d7de6a; }
+  .chat-input-area .send-btn {
+    width: 42px; height: 42px;
+    border-radius: 50%;
+    background: #d7de6a;
+    border: none;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .chat-input-area .send-btn:hover { background: #c8cf5a; transform: scale(1.05); }
+  .chat-input-area .send-btn svg { width: 18px; height: 18px; color: #002e35; }
+  .chat-input-area .send-btn:disabled { opacity: 0.4; cursor: default; transform: none; }
+
+  /* ─── Process List (WhatsApp Chat Style) ─── */
+  .process-list { display: flex; flex-direction: column; gap: 8px; }
+  .process-item {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 16px;
+    background: #fff;
+    border-radius: 14px;
+    border: 1px solid rgba(0,0,0,0.04);
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+  }
+  .process-item:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+    transform: translateY(-1px);
+  }
+  .process-avatar {
+    width: 48px; height: 48px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .process-avatar svg { width: 22px; height: 22px; }
+  .process-item .p-info { flex: 1; min-width: 0; }
+  .process-item .p-title {
+    font-size: 14px; font-weight: 600; color: #151e28;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .process-item .p-desc {
+    font-size: 12px; color: #999;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    margin-top: 2px;
+  }
+  .process-item .p-right { text-align: right; flex-shrink: 0; }
+  .process-item .p-status {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 11px; font-weight: 600;
+    padding: 3px 10px; border-radius: 999px;
+  }
+  .process-item .p-status svg { width: 12px; height: 12px; }
+  .process-item .p-date {
+    font-size: 10px; color: #b0b0b0; margin-top: 4px;
+  }
+
+  /* ─── Process Detail ─── */
+  .process-detail-header {
+    display: flex; align-items: center; gap: 16px;
+    margin-bottom: 24px;
+  }
+  .process-detail-header .back-btn {
+    background: none; border: none;
+    cursor: pointer; color: #002e35;
+    padding: 8px; border-radius: 10px;
+    transition: background 0.2s; display: flex;
+  }
+  .process-detail-header .back-btn:hover { background: rgba(0,46,53,0.06); }
+  .process-detail-header h1 { font-size: 18px; font-weight: 700; color: #151e28; flex: 1; }
+  .stages-timeline {
+    display: flex; flex-direction: column; gap: 0;
+    position: relative; padding-left: 28px;
+  }
+  .stages-timeline::before {
+    content: ''; position: absolute; left: 10px; top: 12px; bottom: 12px;
+    width: 2px; background: #e0e0e0;
+  }
+  .stage-item {
+    position: relative; padding: 12px 16px 12px 0;
+    transition: all 0.2s;
+  }
+  .stage-item::before {
+    content: '';
+    position: absolute; left: -22px; top: 16px;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    border: 2px solid #e0e0e0;
+    background: #fff;
+    z-index: 1;
+    transition: all 0.3s;
+  }
+  .stage-item.completed::before {
+    background: #d7de6a;
+    border-color: #d7de6a;
+  }
+  .stage-item.in-progress::before {
+    background: #002e35;
+    border-color: #002e35;
+    box-shadow: 0 0 0 4px rgba(0,46,53,0.1);
+  }
+  .stage-title {
+    font-size: 13px; font-weight: 600; color: #151e28;
+  }
+  .stage-item.completed .stage-title { color: #999; }
+  .stage-desc {
+    font-size: 12px; color: #999; margin-top: 2px;
+  }
+  .stage-date {
+    font-size: 10px; color: #b0b0b0; margin-top: 4px;
+  }
+
+  /* ─── Profile ─── */
+  .profile-card {
+    background: #fff; border-radius: 16px;
+    border: 1px solid rgba(0,0,0,0.04);
+    padding: 24px;
+  }
+  .profile-header {
+    display: flex; align-items: center; gap: 16px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #f0f0f0;
+    margin-bottom: 20px;
+  }
+  .profile-avatar-lg {
+    width: 64px; height: 64px; border-radius: 50%;
+    background: rgba(215,222,106,0.15);
+    color: #d7de6a;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px; font-weight: 700;
+  }
+  .profile-field {
+    margin-bottom: 16px;
+  }
+  .profile-field label {
+    display: block; font-size: 11px; font-weight: 600;
+    color: #999; text-transform: uppercase; letter-spacing: 0.05em;
+    margin-bottom: 4px;
+  }
+  .profile-field .value {
+    font-size: 14px; color: #151e28; font-weight: 500;
+  }
+
+  /* ─── Title Bar ─── */
+  .page-title {
+    margin-bottom: 20px;
+  }
+  .page-title h1 {
+    font-size: 22px; font-weight: 700; color: #151e28;
+    letter-spacing: -0.02em;
+  }
+  .page-title p {
+    font-size: 13px; color: #999; margin-top: 4px;
+  }
+
+  /* ─── Empty states ─── */
+  .empty-state {
+    text-align: center; padding: 64px 24px;
+  }
+  .empty-state .empty-icon {
+    width: 64px; height: 64px; border-radius: 50%;
+    background: #f5f5f5;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 16px;
+  }
+  .empty-state .empty-icon svg { width: 28px; height: 28px; color: #ccc; }
+  .empty-state h3 { font-size: 16px; font-weight: 600; color: #151e28; margin-bottom: 6px; }
+  .empty-state p { font-size: 13px; color: #b0b0b0; max-width: 320px; margin: 0 auto 20px; }
+  .empty-state .cta-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 10px 20px;
+    background: #002e35;
+    color: #fff;
+    border-radius: 12px;
+    text-decoration: none;
+    font-size: 13px; font-weight: 600;
+    transition: all 0.2s;
+  }
+  .empty-state .cta-btn:hover { background: #004a54; }
+
+  /* ─── Responsive ─── */
+  @media (max-width: 768px) {
+    .sidebar { transform: translateX(-100%); }
+    .sidebar.open { transform: translateX(0); }
+    .main-area { margin-left: 0; }
+    .mobile-header { display: flex; }
+    .bottom-tabs { display: block; }
+    .page-content { padding: 16px; padding-bottom: 80px; }
+    .dash-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .dash-card { padding: 16px; }
+    .dash-card .card-value { font-size: 22px; }
+    .quick-grid { grid-template-columns: 1fr; }
+    .chat-message { max-width: 90%; }
+  }
+  @media (max-width: 480px) {
+    .dash-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+  const { useState, useEffect } = React;
+
+  // ─── Icons (inline SVG) ───
+  const Icons = {
+    dashboard: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>,
+    fileText: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>,
+    messageSquare: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>,
+    user: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
+    arrowRight: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>,
+    arrowLeft: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>,
+    clock: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>,
+    checkCircle: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>,
+    send: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>,
+    chevronRight: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>,
+    checkDouble: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="2 12 7 17 13 7"/><polyline points="9 17 15 7 22 12"/></svg>,
+    logout: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>,
+    menu: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>,
+  };
+
+  // ─── Mock Data ───
+  const MOCK_USER = { name: 'Maria Fernandes', email: 'maria@exemplo.pt', initial: 'M' };
+  const UNREAD = 3;
+
+  const MOCK_PROCESSES = [
+    { id: 'p1', title: 'Renovação de Passaporte', desc: 'Processo de renovação — fase de submissão', status: 'active', statusLabel: 'Ativo', date: '15 Jan 2026', stages: [
+      { title: 'Receção de Documentos', desc: 'Documentos recebidos e conferidos', status: 'completed', date: '10 Jan' },
+      { title: 'Preparação do Requerimento', desc: 'Requerimento oficial preparado', status: 'completed', date: '12 Jan' },
+      { title: 'Submissão do Pedido', desc: 'Pedido submetido à entidade emissora', status: 'in_progress', date: '14 Jan' },
+      { title: 'Emissão e Recolha', desc: 'Documento disponível para levantamento', status: 'pending', date: '—' },
+    ]},
+    { id: 'p2', title: 'Candidatura Mestrado — UC', desc: 'Mestrado em Design e Multimédia', status: 'active', statusLabel: 'Ativo', date: '3 Fev 2026', stages: [
+      { title: 'Análise de Perfil', desc: 'Reunião de alinhamento realizada', status: 'completed', date: '1 Fev' },
+      { title: 'Seleção de Curso', desc: 'Curso e instituição selecionados', status: 'completed', date: '3 Fev' },
+      { title: 'Preparação de Docs', desc: 'A reunir documentação necessária', status: 'in_progress', date: '5 Fev' },
+      { title: 'Submissão', desc: 'Candidatura através do portal', status: 'pending', date: '—' },
+    ]},
+    { id: 'p3', title: 'Transferência Internacional', desc: 'Pagamento de propina — Reino Unido', status: 'completed', statusLabel: 'Concluído', date: '20 Dez 2025', stages: [
+      { title: 'Verificação de Dados', desc: 'Dados do beneficiário verificados', status: 'completed', date: '15 Dez' },
+      { title: 'Processamento', desc: 'Transferência via SWIFT processada', status: 'completed', date: '18 Dez' },
+      { title: 'Confirmação', desc: 'Receção confirmada pelo beneficiário', status: 'completed', date: '20 Dez' },
+    ]},
+  ];
+
+  const MOCK_MESSAGES = [
+    { id: 'm1', content: 'Olá! Gostaria de saber qual o prazo estimado para o processo do passaporte.', sender: 'client', time: '10:32', date: '12 Jan' },
+    { id: 'm2', content: 'Olá Maria! O prazo é de 15 a 20 dias úteis após submissão. Precisa apenas do certificado de residência.', sender: 'support', name: 'Equipa Issencial', time: '10:45', date: '12 Jan' },
+    { id: 'm3', content: 'Ok, vou enviar o certificado por email hoje mesmo.', sender: 'client', time: '11:02', date: '12 Jan', read: true },
+    { id: 'm4', content: 'Perfeito! Assim que recebermos, damos seguimento ao processo.', sender: 'support', name: 'Equipa Issencial', time: '11:15', date: '12 Jan' },
+    { id: 'm5', content: 'Já enviei o documento! Confirmam receção?', sender: 'client', time: '14:20', date: '14 Jan' },
+    { id: 'm6', content: 'Sim, documento recebido e anexado ao processo ✅ Vamos submeter o pedido esta semana.', sender: 'support', name: 'Equipa Issencial', time: '15:00', date: '14 Jan', read: true },
+  ];
+
+  // ─── Components ───
+  function Sidebar({ screen, setScreen, sidebarOpen, setSidebarOpen }) {
+    const items = [
+      { id: 'dashboard', icon: Icons.dashboard, label: 'Dashboard' },
+      { id: 'processos', icon: Icons.fileText, label: 'Processos' },
+      { id: 'mensagens', icon: Icons.messageSquare, label: 'Mensagens', badge: UNREAD },
+      { id: 'perfil', icon: Icons.user, label: 'Perfil' },
+    ];
+    return (
+      <>
+        <div className={'sidebar' + (sidebarOpen ? ' open' : '')}>
+          <div className="sidebar-header">
+            <div className="sidebar-logo">
+              <img src="../public/logo/principal_branco.png" alt="Issencial" />
+            </div>
+          </div>
+          <nav className="sidebar-nav">
+            {items.map(item => (
+              <div key={item.id}
+                className={'nav-item' + (screen === item.id ? ' active' : '')}
+                onClick={() => { setScreen(item.id); setSidebarOpen(false); }}
+              >
+                <span className="icon">{item.icon}</span>
+                <span>{item.label}</span>
+                {item.badge && <span className="badge">{item.badge}</span>}
+              </div>
+            ))}
+          </nav>
+          <div className="sidebar-footer">
+            <div className="user-card">
+              <div className="user-avatar">{MOCK_USER.initial}</div>
+              <div className="user-info">
+                <div className="user-name">{MOCK_USER.name}</div>
+                <div className="user-email">{MOCK_USER.email}</div>
+              </div>
+              <button className="logout-btn" title="Sair">{Icons.logout}</button>
+            </div>
+          </div>
+        </div>
+        <div className={'sidebar-overlay' + (sidebarOpen ? ' open' : '')} onClick={() => setSidebarOpen(false)} />
+      </>
+    );
+  }
+
+  function BottomTabs({ screen, setScreen }) {
+    const tabs = [
+      { id: 'dashboard', icon: Icons.dashboard, label: 'Início' },
+      { id: 'processos', icon: Icons.fileText, label: 'Processos' },
+      { id: 'mensagens', icon: Icons.messageSquare, label: 'Chat', badge: UNREAD },
+      { id: 'perfil', icon: Icons.user, label: 'Perfil' },
+    ];
+    return (
+      <div className="bottom-tabs">
+        <div className="tab-items">
+          {tabs.map(tab => (
+            <div key={tab.id} className={'tab-item' + (screen === tab.id ? ' active' : '')}
+              onClick={() => setScreen(tab.id)}>
+              {tab.icon}
+              <span>{tab.label}</span>
+              {tab.badge && <span className="tab-badge">{tab.badge}</span>}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  function Dashboard() {
+    const stats = [
+      { label: 'Processos Ativos', value: '2', desc: '3 no total', icon: Icons.fileText, color: '#002e35', bg: 'rgba(0,46,53,0.08)' },
+      { label: 'Mensagens', value: String(UNREAD), desc: 'Por ler', icon: Icons.messageSquare, color: '#d7de6a', bg: 'rgba(215,222,106,0.15)', highlight: true },
+      { label: 'Faturas', value: '1', desc: '€150,00 — vence a 15 Fev', icon: Icons.clock, color: '#e67e22', bg: 'rgba(230,126,34,0.1)' },
+    ];
+    return (
+      <div>
+        <div className="page-title">
+          <h1>Dashboard</h1>
+          <p>Bem-vinda, {MOCK_USER.name} 👋 Aqui está o resumo dos seus processos.</p>
+        </div>
+        <div className="dash-grid">
+          {stats.map(s => (
+            <div key={s.label} className={'dash-card' + (s.highlight ? ' highlight' : '')}>
+              <div className="card-accent" />
+              <div className="card-top">
+                <div className="card-icon" style={{ background: s.bg, color: s.color }}>{s.icon}</div>
+                <span className="card-arrow">{Icons.arrowRight}</span>
+              </div>
+              <div className="card-label">{s.label}</div>
+              <div className="card-value">{s.value}</div>
+              <div className="card-desc">{s.desc}</div>
+            </div>
+          ))}
+        </div>
+
+        <div className="section-title">{Icons.chevronRight}Acesso Rápido</div>
+        <div className="quick-grid">
+          <div className="quick-btn" onClick={() => document.querySelector('[data-screen]')?.click()}>
+            <div className="qb-icon" style={{ background: 'rgba(0,46,53,0.08)', color: '#002e35' }}>{Icons.fileText}</div>
+            <div><div className="qb-label">Ver Processos</div><div className="qb-sub">Acompanhar etapas</div></div>
+          </div>
+          <div className="quick-btn" onClick={() => document.querySelector('[data-screen]')?.click()}>
+            <div className="qb-icon" style={{ background: 'rgba(215,222,106,0.15)', color: '#d7de6a' }}>{Icons.messageSquare}</div>
+            <div><div className="qb-label">Mensagens</div><div className="qb-sub">{UNREAD} por ler</div></div>
+          </div>
+          <div className="quick-btn">
+            <div className="qb-icon" style={{ background: 'rgba(0,46,53,0.08)', color: '#002e35' }}>{Icons.clock}</div>
+            <div><div className="qb-label">Pagamentos</div><div className="qb-sub">Fatura pendente</div></div>
+          </div>
+        </div>
+
+        <div className="section-title">{Icons.chevronRight}Atividade Recente</div>
+        <div className="chat-container">
+          <div className="chat-body" style={{ maxHeight: 240 }}>
+            <div className="chat-message received">
+              <div className="msg-sender">Equipa Issencial</div>
+              Processo de passaporte atualizado — Pedido submetido com sucesso ✅
+              <div className="msg-time">14 Jan, 15:00</div>
+            </div>
+            <div className="chat-message sent">
+              Documento enviado conforme solicitado!
+              <div className="msg-time">14 Jan, 14:20 <span className="msg-read">{Icons.checkDouble}</span></div>
+            </div>
+            <div className="chat-message received">
+              <div className="msg-sender">Equipa Issencial</div>
+              Candidatura de mestrado — faltam documentos para a fase de submissão
+              <div className="msg-time">12 Jan, 11:15</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  function Processos({ setSubScreen }) {
+    return (
+      <div>
+        <div className="page-title">
+          <h1>Os Meus Processos</h1>
+          <p>Acompanhe o estado de cada processo em tempo real.</p>
+        </div>
+        <div className="process-list">
+          {MOCK_PROCESSES.map(p => {
+            const statusColors = {
+              active: { bg: 'rgba(0,46,53,0.08)', color: '#002e35' },
+              completed: { bg: 'rgba(215,222,106,0.15)', color: '#8a9030' },
+            };
+            const sc = statusColors[p.status] || statusColors.active;
+            return (
+              <div key={p.id} className="process-item" onClick={() => setSubScreen('processo-' + p.id)}>
+                <div className="process-avatar" style={{ background: sc.bg }}>
+                  {p.status === 'completed' ? Icons.checkCircle : Icons.fileText}
+                </div>
+                <div className="p-info">
+                  <div className="p-title">{p.title}</div>
+                  <div className="p-desc">{p.desc}</div>
+                </div>
+                <div className="p-right">
+                  <div className="p-status" style={{ background: sc.bg, color: sc.color }}>
+                    {p.status === 'active' ? Icons.clock : Icons.checkCircle}
+                    {p.statusLabel}
+                  </div>
+                  <div className="p-date">{p.date}</div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  function ProcessoDetail({ processId, setSubScreen }) {
+    const p = MOCK_PROCESSES.find(x => x.id === processId);
+    if (!p) return null;
+
+    const stageStatus = {
+      completed: { dot: 'completed', label: 'Concluído' },
+      in_progress: { dot: 'in-progress', label: 'Em progresso' },
+      pending: { dot: '', label: 'Pendente' },
+    };
+
+    return (
+      <div>
+        <div className="process-detail-header">
+          <button className="back-btn" onClick={() => setSubScreen(null)}>{Icons.arrowLeft}</button>
+          <div>
+            <h1>{p.title}</h1>
+            <div className="p-desc" style={{ fontSize: 13, color: '#999' }}>{p.desc}</div>
+          </div>
+        </div>
+        <div className="chat-container" style={{ marginBottom: 20 }}>
+          <div className="chat-header"><h3>📋 Etapas do Processo</h3></div>
+          <div style={{ padding: '20px 20px 20px 24px' }}>
+            <div className="stages-timeline">
+              {p.stages.map((s, i) => (
+                <div key={i} className={'stage-item ' + s.status}>
+                  <div className="stage-title">{s.title}</div>
+                  <div className="stage-desc">{s.desc}</div>
+                  <div className="stage-date">{s.date} · {stageStatus[s.status]?.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+        <div className="chat-container">
+          <div className="chat-header"><h3>💬 Conversa deste Processo</h3></div>
+          <div className="chat-body">
+            <div className="chat-message sent">
+              Envio o certificado de residência conforme solicitado.
+              <div className="msg-time">14 Jan, 14:20</div>
+            </div>
+            <div className="chat-message received">
+              <div className="msg-sender">Equipa Issencial</div>
+              Documento recebido! Vamos dar seguimento ainda esta semana.
+              <div className="msg-time">14 Jan, 15:00</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  function Mensagens({ setSubScreen }) {
+    const [newMsg, setNewMsg] = useState('');
+    const [messages, setMessages] = useState(MOCK_MESSAGES);
+    const [showChat, setShowChat] = useState(false);
+
+    if (showChat) {
+      return (
+        <div>
+          <div className="process-detail-header">
+            <button className="back-btn" onClick={() => setShowChat(false)}>{Icons.arrowLeft}</button>
+            <div>
+              <h1>💬 Equipa Issencial</h1>
+              <div style={{ fontSize: 12, color: '#999' }}>Online • Resposta rápida</div>
+            </div>
+          </div>
+          <div className="chat-container">
+            <div className="chat-body" style={{ maxHeight: 'none', height: 'calc(100vh - 320px)', minHeight: 300 }}>
+              {messages.map(msg => (
+                <div key={msg.id} className={'chat-message ' + (msg.sender === 'client' ? 'sent' : 'received')}>
+                  {msg.sender === 'support' && <div className="msg-sender">{msg.name}</div>}
+                  {msg.content}
+                  <div className="msg-time">
+                    {msg.date} {msg.time}
+                    {msg.sender === 'client' && <span className="msg-read">{msg.read ? Icons.checkDouble : Icons.checkDouble}</span>}
+                  </div>
+                </div>
+              ))}
+              <div className="chat-message received" style={{ opacity: 0.6 }}>
+                <div className="msg-sender">Equipa Issencial</div>
+                👋 Olá! Como podemos ajudar?
+              </div>
+            </div>
+            <div className="chat-input-area">
+              <textarea
+                value={newMsg}
+                onChange={e => setNewMsg(e.target.value)}
+                placeholder="Escreva a sua mensagem..."
+                rows={1}
+                onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); /* send */ } }}
+              />
+              <button className="send-btn" disabled={!newMsg.trim()} onClick={() => {
+                if (!newMsg.trim()) return;
+                setMessages([...messages, { id: 'new', content: newMsg.trim(), sender: 'client', time: new Date().toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' }), date: 'Hoje' }]);
+                setNewMsg('');
+              }}>{Icons.send}</button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div>
+        <div className="page-title">
+          <h1>Mensagens</h1>
+          <p>Troque mensagens diretamente com a equipa Issencial.</p>
+        </div>
+        <div className="process-list" style={{ marginBottom: 16 }}>
+          <div className="process-item" onClick={() => setShowChat(true)}>
+            <div className="process-avatar" style={{ background: 'rgba(215,222,106,0.15)' }}>
+              {Icons.messageSquare}
+            </div>
+            <div className="p-info">
+              <div className="p-title">Equipa Issencial</div>
+              <div className="p-desc">Documento recebido! Vamos dar seguimento...</div>
+            </div>
+            <div className="p-right">
+              <div style={{ fontSize: 11, color: '#999' }}>14 Jan</div>
+              <div style={{ width:18, height:18, borderRadius:'50%', background:'#d7de6a', color:'#002e35', fontSize:10, fontWeight:700, display:'flex', alignItems:'center', justifyContent:'center', marginTop:4 }}>2</div>
+            </div>
+          </div>
+        </div>
+        <div className="chat-container">
+          <div className="chat-header"><h3>💬 Conversa Rápida</h3></div>
+          <div className="chat-body" style={{ maxHeight: 240 }}>
+            {messages.slice(0, 4).reverse().map(msg => (
+              <div key={msg.id} className={'chat-message ' + (msg.sender === 'client' ? 'sent' : 'received')}>
+                {msg.sender === 'support' && <div className="msg-sender">{msg.name}</div>}
+                {msg.content}
+                <div className="msg-time">{msg.date} {msg.time}</div>
+              </div>
+            ))}
+          </div>
+          <div className="chat-input-area">
+            <textarea placeholder="Escreva a sua mensagem..." rows={1} />
+            <button className="send-btn" onClick={() => setShowChat(true)}>{Icons.send}</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  function Perfil() {
+    return (
+      <div>
+        <div className="page-title">
+          <h1>O Meu Perfil</h1>
+          <p>Gerir informações pessoais e preferências.</p>
+        </div>
+        <div className="profile-card">
+          <div className="profile-header">
+            <div className="profile-avatar-lg">{MOCK_USER.initial}</div>
+            <div><h2 style={{ fontSize:18, fontWeight:700, color:'#151e28' }}>{MOCK_USER.name}</h2><p style={{ fontSize:13, color:'#999' }}>{MOCK_USER.email}</p></div>
+          </div>
+          <div className="profile-field"><label>Nome</label><div className="value">{MOCK_USER.name}</div></div>
+          <div className="profile-field"><label>Email</label><div className="value">{MOCK_USER.email}</div></div>
+          <div className="profile-field"><label>Telemóvel</label><div className="value">+351 900 000 000</div></div>
+          <div className="profile-field"><label>Membro desde</label><div className="value">Janeiro 2026</div></div>
+        </div>
+      </div>
+    );
+  }
+
+  // ─── Main App ───
+  function App() {
+    const [screen, setScreen] = useState('dashboard');
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [subScreen, setSubScreen] = useState(null);
+
+    const renderScreen = () => {
+      if (subScreen && subScreen.startsWith('processo-')) {
+        return <ProcessoDetail processId={subScreen.replace('processo-', '')} setSubScreen={setSubScreen} />;
+      }
+      switch (screen) {
+        case 'dashboard': return <Dashboard />;
+        case 'processos': return <Processos setSubScreen={setSubScreen} />;
+        case 'mensagens': return <Mensagens setSubScreen={setSubScreen} />;
+        case 'perfil': return <Perfil />;
+        default: return <Dashboard />;
+      }
+    };
+
+    const pageTitles = { dashboard: 'Issencial', processos: 'Processos', mensagens: 'Mensagens', perfil: 'Perfil' };
+
+    return (
+      <div className="root">
+        <Sidebar screen={screen} setScreen={setScreen} sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+        <div className="main-area">
+          <div className="mobile-header">
+            <button className="hamburger" onClick={() => setSidebarOpen(true)}>{Icons.menu}</button>
+            <h1>{pageTitles[screen] || 'Issencial'}</h1>
+            <div className="user-avatar-sm">{MOCK_USER.initial}</div>
+          </div>
+          <div className="page-content">{renderScreen()}</div>
+          <BottomTabs screen={screen} setScreen={setScreen} />
+        </div>
+      </div>
+    );
+  }
+
+  const root = ReactDOM.createRoot(document.getElementById('root'));
+  root.render(<App />);
+</script>
+</body>
+</html>

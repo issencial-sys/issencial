@@ -1,36 +1,87 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Issencial - Serviços Integrados Globais
 
-## Getting Started
+Issencial is a comprehensive service portal for "Issencial - Serviços Integrados Globais", offering travel, education, international transfers, and administrative services. The platform provides a public-facing website, a secure client portal, and a robust administration dashboard.
 
-First, run the development server:
+## 🛠️ Technology Stack
+
+- **Framework**: [Next.js 13+](https://nextjs.org/) (App Router)
+- **Language**: [TypeScript](https://www.typescriptlang.org/)
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/) with a custom design system
+- **Backend/Auth**: [Supabase](https://supabase.com/) (PostgreSQL + Auth)
+- **Fonts**: Overused Grotesk (Custom) & Geist
+- **Deployment**: [Vercel](https://vercel.com/)
+
+## 📁 Project Structure
+
+```text
+issencial/
+├── src/
+│   ├── app/                    # Next.js App Router
+│   │   ├── admin/              # Admin dashboard (Protected)
+│   │   │   ├── clientes/       # Client management
+│   │   │   ├── config/         # Settings management
+│   │   │   ├── contactos/      # Contact management
+│   │   │   ├── faturas/        # Invoice management
+│   │   │   ├── mensagens/      # Messaging system
+│   │   │   ├── pedidos/        # Order management
+│   │   │   └── processos/      # Process management
+│   │   ├── portal/             # Client portal (Authenticated)
+│   │   │   ├── faturas/        # Client invoices
+│   │   │   ├── mensagens/      # Client messages
+│   │   │   ├── perfil/         # Profile management
+│   │   │   └── processos/      # Client processes
+│   │   ├── (public)/           # Public accessible pages
+│   │   │   ├── sobre/          # About page
+│   │   │   ├── serviços/       # Services with dynamic [slug]
+│   │   │   ├── contacto/       # Contact form
+│   │   │   ├── faq/            # Frequently asked questions
+│   │   │   └── termos-privacidade/ # Terms & Privacy
+│   │   ├── layout.tsx          # Root layout
+│   │   └── page.tsx            # Homepage
+│   ├── components/             # Reusable UI components
+│   │   ├── ui/                 # Base components (buttons, inputs, cards)
+│   │   └── layout/             # Layout components (header, footer)
+│   └── lib/
+│       └── supabase/           # Supabase client utilities (browser, server, middleware)
+├── public/                     # Static assets (fonts, images, icons)
+├── supabase/                   # Database migration files
+└── mockups/                    # HTML design references
+```
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Node.js 18+
+- A Supabase project
+
+### Installation
+
+1. **Clone the repository**
+2. **Install dependencies**:
+   ```bash
+   npm install
+   ```
+3. **Environment Variables**:
+   Create a `.env.local` file in the root directory and add your Supabase credentials:
+   ```env
+   NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+   ```
+
+### Running the Development Server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🎨 Design System
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The project uses a custom Tailwind configuration with the following primary colors:
+- **Primary**: `#002e35` (Dark Cyan)
+- **Accent**: `#d7de6a` (Lime Yellow)
+- **Neutral**: `#d9dad3` (Light Gray)
+- **Dark**: `#151e28` (Very Dark Blue)
+- **Light**: `#f1f1f1` (Off-white)

@@ -4,8 +4,9 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
+import FadeIn from "@/components/ui/FadeIn";
 import { useState } from "react";
-import { ChevronDown, Search } from "lucide-react";
+import { ChevronDown, Search, MessageCircle, ArrowRight } from "lucide-react";
 
 interface FAQItem {
   question: string;
@@ -140,35 +141,47 @@ export default function FAQPage() {
       <Header />
       <main>
         {/* Hero */}
-        <section className="relative bg-primary pt-24 pb-16 md:pb-20 overflow-hidden">
+        <section className="relative bg-primary py-28 min-h-[50vh] overflow-hidden flex flex-col items-center justify-center">
           <div className="absolute inset-0 opacity-[0.03] bg-[radial-gradient(circle_at_25%_25%,#d7de6a_1px,transparent_1px),radial-gradient(circle_at_75%_75%,#d7de6a_1px,transparent_1px)] bg-[length:60px_60px]" />
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute w-[400px] h-[400px] rounded-full border border-accent/8 -top-[150px] -right-[80px]" />
+            <div className="absolute w-[250px] h-[250px] rounded-full border border-accent/6 -bottom-[80px] -left-[60px]" />
+          </div>
           <div className="relative z-10 mx-auto max-w-2xl px-4 sm:px-6 lg:px-10 text-center">
-            <Badge variant="accent">FAQ</Badge>
-            <h1 className="mt-4 text-3xl md:text-4xl font-bold text-white">Perguntas Frequentes</h1>
-            <p className="mt-4 text-lg text-white/70">
-              Encontre respostas rápidas para as perguntas mais comuns sobre os nossos serviços.
-            </p>
+            <FadeIn delay={0.1}>
+              <Badge variant="accent">FAQ</Badge>
+            </FadeIn>
+            <FadeIn delay={0.2}>
+              <h1 className="mt-6 text-3xl md:text-5xl font-bold text-white leading-tight">Perguntas Frequentes</h1>
+            </FadeIn>
+            <FadeIn delay={0.3}>
+              <p className="mt-6 text-lg md:text-xl text-white/70 max-w-xl mx-auto">
+                Encontre respostas rápidas para as perguntas mais comuns sobre os nossos serviços.
+              </p>
+            </FadeIn>
           </div>
         </section>
 
         {/* Search */}
-        <section className="border-b border-gray-100 bg-white">
-          <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-10 py-6">
-            <div className="relative">
-              <Search
-                size={18}
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
-              />
-              <input
-                type="text"
-                placeholder="Pesquisar perguntas..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full rounded-xl border border-gray-200 bg-light py-3.5 pl-11 pr-4 text-sm outline-none transition-colors focus:border-primary focus:bg-white focus:ring-1 focus:ring-primary"
-              />
+        <FadeIn>
+          <section className="border-b border-gray-100 bg-white">
+            <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-10 py-6">
+              <div className="relative">
+                <Search
+                  size={18}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+                />
+                <input
+                  type="text"
+                  placeholder="Pesquisar perguntas..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full rounded-xl border border-gray-200 bg-light py-3.5 pl-11 pr-4 text-sm outline-none transition-colors focus:border-primary focus:bg-white focus:ring-1 focus:ring-primary"
+                />
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+        </FadeIn>
 
         {/* FAQ Content */}
         <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-10 py-16 md:py-20">
@@ -186,12 +199,14 @@ export default function FAQPage() {
             <div className="flex flex-col gap-12">
               {filteredData.map((category, catIdx) => (
                 <section key={category.category}>
+                  <FadeIn>
                   <h2 className="text-2xl font-bold text-dark mb-6 flex items-center gap-3">
                     <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent/15 text-primary text-sm font-bold">
                       {catIdx + 1}
                     </span>
                     {category.category}
                   </h2>
+                  </FadeIn>
                   <div className="flex flex-col gap-2">
                     {category.items.map((item, idx) => {
                       const key = `${category.category}-${idx}`;
@@ -237,17 +252,21 @@ export default function FAQPage() {
           )}
 
           {/* Still have questions CTA */}
-          <div className="rounded-2xl bg-primary p-8 md:p-10 text-center mt-16">
-            <h3 className="text-xl font-semibold text-white mb-2">
-              Não encontrou o que procura?
-            </h3>
-            <p className="text-sm text-white/70 mb-6 max-w-md mx-auto">
-              A nossa equipa está disponível para responder a qualquer questão. Entre em contacto connosco.
-            </p>
-            <Button href="/contacto" variant="primary" size="lg">
-              Fale Connosco
-            </Button>
-          </div>
+          <FadeIn>
+            <div className="rounded-2xl bg-primary p-8 md:p-10 text-center mt-16">
+              <h3 className="text-xl font-semibold text-white mb-2">
+                Não encontrou o que procura?
+              </h3>
+              <p className="text-sm text-white/70 mb-6 max-w-md mx-auto">
+                A nossa equipa está disponível para responder a qualquer questão. Entre em contacto connosco.
+              </p>
+              <Button href="/contacto" size="lg">
+                <MessageCircle size={16} />
+                Fale Connosco
+                <ArrowRight size={16} />
+              </Button>
+            </div>
+          </FadeIn>
         </div>
       </main>
       <Footer />

@@ -73,6 +73,7 @@ export function ChevronCard({
             position: "absolute",
             inset: 0,
             paddingInline: "14%",
+            clipPath: "polygon(3.7% 0%, 83.3% 0%, 100% 79.3%, 96.3% 100%, 6.8% 100%, 0% 20.8%)",
           }}
         >
           {children}

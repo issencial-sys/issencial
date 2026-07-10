@@ -8,6 +8,14 @@ const nextConfig: NextConfig = {
     optimizePackageImports: ["lucide-react"],
   },
 
+  // Pin the workspace root to this project directory so Next.js doesn't infer
+  // a wrong parent root (e.g. a stray lockfile in the home dir) that makes it
+  // resolve middleware/proxy paths as "./src/src/...". Without this, the build
+  // can report a false "Both middleware and proxy files detected" conflict.
+  turbopack: {
+    root: import.meta.dirname,
+  },
+
   // Security HTTP headers
   async headers() {
     return [

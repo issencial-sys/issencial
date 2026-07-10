@@ -47,10 +47,10 @@ const services: ServiceItem[] = [
   },
 ];
 
-const cardImages = [
-  "/assets/cards/card-cinza.webp",
-  "/assets/cards/card-verde-claro.webp",
-  "/assets/cards/card-verde-escuro.webp",
+const cardVariants = [
+  { bg: "bg-neutral", line: "bg-accent", isDark: false }, // cinza
+  { bg: "bg-accent", line: "bg-primary", isDark: false }, // verde claro (linha verde escuro p/ contraste)
+  { bg: "bg-primary", line: "bg-accent", isDark: true }, // verde escuro
 ];
 
 export default function ServicesPreview() {
@@ -65,34 +65,22 @@ export default function ServicesPreview() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
           {services.map((service, index) => {
-            const cardImage = cardImages[index % cardImages.length];
-            const isDark = index % cardImages.length === 2;
+            const variant = cardVariants[index % cardVariants.length];
 
             return (
               <div
                 key={service.title}
-                className="group relative overflow-hidden rounded-2xl cursor-pointer transition-transform duration-300 hover:scale-[1.015] min-h-[200px] sm:min-h-[180px] lg:min-h-0 lg:aspect-[2806/884]"
+                className={`group relative overflow-hidden rounded-2xl cursor-pointer transition-transform duration-300 hover:scale-[1.015] min-h-[210px] sm:min-h-[200px] ${variant.bg}`}
               >
-                {/* Card background image */}
-                <div className="absolute inset-0">
-                  <Image
-                    src={cardImage}
-                    alt=""
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 768px) 100vw, 50vw"
-                  />
-                </div>
-
                 {/* Content overlay */}
-                <div className="relative z-10 flex h-full flex-col items-start justify-center gap-1.5 px-[5%] py-4 sm:px-[7%] sm:py-5">
-                  {/* Hover line */}
-                  <div className="absolute top-0 h-[3px] bg-accent scale-x-0 origin-left transition-transform duration-500 ease-out group-hover:scale-x-100" style={{ left: '3.7%', width: '79.6%' }} />
+                <div className="relative z-10 flex h-full flex-col items-start justify-center gap-1.5 px-[7%] py-5">
+                  {/* Hover line — começa no canto superior esquerdo e percorre até ao canto superior direito */}
+                  <div className={`absolute top-0 left-0 right-0 h-[3px] ${variant.line} scale-x-0 origin-left transition-transform duration-500 ease-out group-hover:scale-x-100`} />
 
                   {/* Icon */}
                   <div
                     className={`flex items-center justify-center w-10 h-10 rounded-lg ${
-                      isDark ? "bg-white/10" : "bg-black/5"
+                      variant.isDark ? "bg-white/10" : "bg-black/5"
                     } mb-1 flex-shrink-0`}
                   >
                     <Image
@@ -101,7 +89,7 @@ export default function ServicesPreview() {
                       width={26}
                       height={26}
                       style={{ width: "auto", height: "auto" }}
-                      className={isDark ? "brightness-0 invert" : ""}
+                      className={variant.isDark ? "brightness-0 invert" : ""}
                     />
                   </div>
 
@@ -109,7 +97,7 @@ export default function ServicesPreview() {
                   <div className="flex items-center gap-1.5 w-full">
                     <h3
                       className={`text-sm sm:text-base font-semibold leading-tight ${
-                        isDark ? "text-white" : "text-primary"
+                        variant.isDark ? "text-white" : "text-primary"
                       }`}
                     >
                       {service.title}
@@ -122,7 +110,7 @@ export default function ServicesPreview() {
                   {/* Description */}
                   <p
                     className={`text-xs sm:text-[13px] leading-relaxed ${
-                      isDark ? "text-white/70" : "text-gray-500"
+                      variant.isDark ? "text-white/70" : "text-gray-500"
                     }`}
                   >
                     {service.description}

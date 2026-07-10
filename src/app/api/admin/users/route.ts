@@ -23,7 +23,8 @@ export async function GET() {
     const { data: users, error } = await supabase.auth.admin.listUsers();
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      console.error("Erro ao listar users:", error);
+      return NextResponse.json({ error: "Erro ao carregar utilizadores." }, { status: 500 });
     }
 
     // Return only id and email for each user
@@ -37,7 +38,8 @@ export async function GET() {
       })) || [];
 
     return NextResponse.json({ users: result });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch {
+    console.error("Erro inesperado em list-users:");
+    return NextResponse.json({ error: "Erro interno do servidor." }, { status: 500 });
   }
 }

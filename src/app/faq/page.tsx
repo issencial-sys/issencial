@@ -5,8 +5,9 @@ import Footer from "@/components/layout/Footer";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import FadeIn from "@/components/ui/FadeIn";
+import Image from "next/image";
 import { useState } from "react";
-import { ChevronDown, Search, MessageCircle, ArrowRight } from "lucide-react";
+import { ChevronDown, ArrowRight } from "lucide-react";
 
 interface FAQItem {
   question: string;
@@ -28,7 +29,7 @@ const faqData: FAQCategory[] = [
       },
       {
         question: "Como posso solicitar um orçamento?",
-        answer: "Pode solicitar um orçamento através do formulário de contacto no nosso website, enviando um email para info@issencial.pt ou ligando para +351 210 000 000. Analisaremos o seu caso e apresentaremos uma proposta personalizada num prazo máximo de 48 horas úteis.",
+        answer: "Pode solicitar um orçamento através do formulário de contacto no nosso website, enviando um email para info@issencial.pt ou ligando para +351 920 701 837. Analisaremos o seu caso e apresentaremos uma proposta personalizada num prazo máximo de 48 horas úteis.",
       },
       {
         question: "A Issencial atende clientes fora de Portugal?",
@@ -100,7 +101,7 @@ const faqData: FAQCategory[] = [
       },
       {
         question: "Como posso cancelar um pedido ou serviço?",
-        answer: "Para cancelar um pedido ou serviço, entre em contacto connosco através do email info@issencial.pt ou do telefone +351 210 000 000. As condições de cancelamento variam conforme o serviço contratado e serão comunicadas no momento da contratação.",
+        answer: "Para cancelar um pedido ou serviço, entre em contacto connosco através do email info@issencial.pt ou do telefone +351 920 701 837. As condições de cancelamento variam conforme o serviço contratado e serão comunicadas no momento da contratação.",
       },
       {
         question: "A Issencial emite fatura?",
@@ -167,8 +168,11 @@ export default function FAQPage() {
           <section className="border-b border-gray-100 bg-white">
             <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-10 py-6">
               <div className="relative">
-                <Search
-                  size={18}
+                <Image
+                  src="/assets/icons/pesquisa.png"
+                  alt=""
+                  width={18}
+                  height={18}
                   className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
                 />
                 <input
@@ -261,7 +265,7 @@ export default function FAQPage() {
                 A nossa equipa está disponível para responder a qualquer questão. Entre em contacto connosco.
               </p>
               <Button href="/contacto" size="lg">
-                <MessageCircle size={16} />
+                <Image src="/assets/icons/telefone.png" alt="" width={16} height={16} className="brightness-0 invert" />
                 Fale Connosco
                 <ArrowRight size={16} />
               </Button>

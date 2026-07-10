@@ -2,12 +2,19 @@
 
 import { MessageCircle, X } from "lucide-react";
 import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 
-const PHONE_NUMBER = "351900000000";
+const PHONE_NUMBER = "351920701837";
 const WHATSAPP_URL = `https://wa.me/${PHONE_NUMBER}`;
-const PREVIEW_MESSAGE = "Olá! 👋 Como podemos ajudar?";
+const PREVIEW_MESSAGE = "Olá! Como podemos ajudar?";
 
 export default function WhatsAppButton() {
+  const pathname = usePathname();
+
+  // Don't show on admin or portal pages
+  if (pathname.startsWith("/admin") || pathname.startsWith("/portal")) {
+    return null;
+  }
   const [showTooltip, setShowTooltip] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
 

@@ -4,34 +4,34 @@ import Footer from "@/components/layout/Footer";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import FadeIn from "@/components/ui/FadeIn";
-import { Send, Clock, Mail, MessageCircle, Phone, Loader2 } from "lucide-react";
+import Image from "next/image";
+import { Loader2 } from "lucide-react";
 import { useState } from "react";
-import { createClient } from "@/lib/supabase/client";
 
 const contactInfo = [
   {
-    icon: MessageCircle,
+    icon: "/assets/icons/telefone.png",
     title: "WhatsApp",
-    lines: ["+351 900 000 000"],
-    href: "https://wa.me/351900000000",
+    lines: ["+351 920 701 837"],
+    href: "https://wa.me/351920701837",
     cta: "Falar connosco",
   },
   {
-    icon: Phone,
+    icon: "/assets/icons/telefone.png",
     title: "Telefone",
-    lines: ["+351 210 000 000"],
-    href: "tel:+351210000000",
+    lines: ["+351 920 701 837"],
+    href: "tel:+351920701837",
     cta: "Ligar agora",
   },
   {
-    icon: Mail,
+    icon: "/assets/icons/email.png",
     title: "Email",
     lines: ["info@issencial.pt"],
     href: "mailto:info@issencial.pt",
     cta: "Enviar email",
   },
   {
-    icon: Clock,
+    icon: "/assets/icons/relogio.png",
     title: "Horário",
     lines: ["Seg - Sex: 9h - 18h", "Sáb: 9h - 13h"],
   },
@@ -51,6 +51,7 @@ export default function ContactoPage() {
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [honeypot, setHoneypot] = useState("");
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -64,23 +65,23 @@ export default function ContactoPage() {
     setError(null);
 
     try {
-      const supabase = createClient();
-      const { error: insertError } = await supabase
-        .from("contact_submissions")
-        .insert({
-          name: formData.name,
-          email: formData.email,
-          subject: formData.subject,
-          message: formData.message,
-        });
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...formData, honeypot }),
+      });
 
-      if (insertError) throw insertError;
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Erro ao enviar mensagem.");
+      }
 
       setSubmitted(true);
       setFormData({ name: "", email: "", subject: "", message: "" });
-    } catch (err) {
+    } catch (err: any) {
       console.error("Erro ao enviar formulário:", err);
-      setError("Ocorreu um erro ao enviar a sua mensagem. Por favor, tente novamente.");
+      setError(err.message || "Ocorreu um erro ao enviar a sua mensagem. Por favor, tente novamente.");
     } finally {
       setLoading(false);
     }
@@ -132,7 +133,6 @@ export default function ContactoPage() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {contactInfo.map((item) => {
-                    const Icon = item.icon;
                     const CardWrapper = item.href ? "a" : "div";
                     const cardProps = item.href
                       ? { href: item.href, target: "_blank", rel: "noopener noreferrer" }
@@ -146,7 +146,7 @@ export default function ContactoPage() {
                       >
                         <div className="absolute top-0 left-0 w-full h-1 bg-accent scale-x-0 origin-left transition-transform duration-300 group-hover:scale-x-100" />
                         <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-accent/10 text-primary mb-4 transition-all duration-300 group-hover:bg-accent">
-                          <Icon size={22} />
+                          <Image src={item.icon} alt={item.title} width={22} height={22} className="text-primary" />
                         </div>
                         <h3 className="font-semibold text-dark text-sm mb-1.5">
                           {item.title}
@@ -177,7 +177,7 @@ export default function ContactoPage() {
                   {submitted ? (
                     <div className="flex flex-col items-center justify-center py-12 text-center">
                       <div className="flex h-20 w-20 items-center justify-center rounded-full bg-accent/15 text-accent mb-6">
-                        <Send size={32} />
+                        <Image src="/assets/icons/email.png" alt="Enviado" width={32} height={32} />
                       </div>
                       <h3 className="text-2xl font-bold text-dark mb-2">
                         Mensagem Enviada! 🎉
@@ -195,10 +195,21 @@ export default function ContactoPage() {
                       onSubmit={handleSubmit}
                       className="flex flex-col gap-6"
                     >
+                      {/* Honeypot — invisible to humans, bots fill it */}
+                      <input
+                        type="text"
+                        name="website"
+                        value={honeypot}
+                        onChange={(e) => setHoneypot(e.target.value)}
+                        tabIndex={-1}
+                        autoComplete="off"
+                        style={{ position: "absolute", left: "-9999px", opacity: 0, height: 0 }}
+                        aria-hidden="true"
+                      />
                       {/* Trust indicators */}
                       <div className="flex flex-wrap items-center gap-3 pb-4 border-b border-gray-100">
                         <div className="inline-flex items-center gap-1.5 rounded-full bg-accent/10 px-3 py-1.5">
-                          <Clock size={13} className="text-accent-dark" />
+                          <Image src="/assets/icons/relogio.png" alt="" width={13} height={13} />
                           <span className="text-xs font-semibold text-accent-dark">Resposta em até 24h</span>
                         </div>
                         <div className="inline-flex items-center gap-1.5 text-gray-400">
@@ -294,7 +305,7 @@ export default function ContactoPage() {
                         {loading ? (
                           <Loader2 size={16} className="mr-2 animate-spin" />
                         ) : (
-                          <Send size={16} className="mr-2" />
+                          <Image src="/assets/icons/email.png" alt="" width={16} height={16} className="mr-2 inline-block" />
                         )}
                         {loading ? "A enviar..." : "Enviar Pedido"}
                       </Button>
@@ -323,15 +334,15 @@ export default function ContactoPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-2xl mx-auto">
               {[
                 {
-                  icon: MessageCircle,
+                  icon: "/assets/icons/telefone.png",
                   title: "WhatsApp",
-                  desc: "+351 900 000 000",
+                  desc: "+351 920 701 837",
                   sub: "Respondemos rapidamente",
-                  href: "https://wa.me/351900000000",
+                  href: "https://wa.me/351920701837",
                   cta: "Abrir conversa",
                 },
                 {
-                  icon: Mail,
+                  icon: "/assets/icons/email.png",
                   title: "Envie-nos um Email",
                   desc: "info@issencial.pt",
                   sub: "Respondemos em até 24h",
@@ -339,7 +350,6 @@ export default function ContactoPage() {
                   cta: "Enviar email",
                 },
               ].map((item) => {
-                const Icon = item.icon;
                 return (
                   <a
                     key={item.title}
@@ -350,7 +360,7 @@ export default function ContactoPage() {
                   >
                     <div className="absolute top-0 left-0 w-full h-1 bg-accent scale-x-0 origin-left transition-transform duration-300 group-hover:scale-x-100" />
                     <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-accent/10 text-primary transition-all duration-300 group-hover:bg-accent">
-                      <Icon size={24} />
+                      <Image src={item.icon} alt={item.title} width={24} height={24} />
                     </div>
                     <h3 className="text-lg font-semibold text-dark mb-1">
                       {item.title}

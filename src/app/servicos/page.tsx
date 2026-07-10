@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import Badge from "@/components/ui/Badge";
@@ -5,6 +6,28 @@ import Button from "@/components/ui/Button";
 import FadeIn from "@/components/ui/FadeIn";
 import { ArrowRight } from "lucide-react";
 import { services } from "@/data/services";
+
+export const metadata: Metadata = {
+  title: "Serviços — Issencial | Soluções Completas",
+  description:
+    "Oferecemos uma gama integrada de serviços desenhados para simplificar a sua vida em qualquer parte do mundo: passaportes, educação na Europa, transferências internacionais e serviços administrativos.",
+  openGraph: {
+    title: "Serviços — Issencial | Soluções Completas",
+    description:
+      "Oferecemos uma gama integrada de serviços desenhados para simplificar a sua vida em qualquer parte do mundo.",
+    type: "website",
+    locale: "pt_PT",
+    siteName: "Issencial",
+    images: [{ url: "/og-image.svg", width: 1200, height: 630, type: "image/svg+xml" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Serviços — Issencial | Soluções Completas",
+    description:
+      "Oferecemos uma gama integrada de serviços desenhados para simplificar a sua vida em qualquer parte do mundo.",
+    images: ["/og-image.svg"],
+  },
+};
 
 const serviceIcons: Record<string, string> = {
   "tratamento-passaporte": "/assets/icons/pasta-ficheiro.png",
@@ -39,7 +62,7 @@ const serviceThemes: Record<string, { bgHover: string; shadowHover: string; icon
 const steps = [
   { num: "1", icon: "/assets/icons/telefone.png", title: "Contacto", desc: "Entre em contacto connosco e conte-nos a sua necessidade.", benefit: "Sem compromisso" },
   { num: "2", icon: "/assets/icons/pesquisa.png", title: "Análise", desc: "Analisamos o seu caso e propomos a melhor solução.", benefit: "Proposta em 48h" },
-  { num: "3", icon: "/assets/icons/rosto.png", title: "Execução", desc: "Cuidamos de cada etapa do processo com dedicação.", benefit: "Acompanhamento total" },
+  { num: "3", icon: "/assets/icons/acompanhar-grupo.png", title: "Execução", desc: "Cuidamos de cada etapa do processo com dedicação.", benefit: "Acompanhamento total" },
   { num: "4", icon: "/assets/icons/bandeira.png", title: "Conclusão", desc: "Garantimos a conclusão bem-sucedida e ficamos disponíveis.", benefit: "Suporte contínuo" },
 ];
 

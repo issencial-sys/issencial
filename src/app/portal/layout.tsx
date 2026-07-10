@@ -61,9 +61,10 @@ export default function PortalLayout({
         return;
       }
 
-      // Admin users should not access the client portal
+      // Admin users should not access the client portal — sign them out
       if (user.app_metadata?.role === "admin") {
-        router.push("/admin");
+        await supabase.auth.signOut();
+        router.push("/admin/login");
         return;
       }
 
@@ -92,9 +93,10 @@ export default function PortalLayout({
         return;
       }
 
-      // Admin users should not access the client portal
+      // Admin users should not access the client portal — sign them out
       if (session.user.app_metadata?.role === "admin") {
-        router.push("/admin");
+        supabase.auth.signOut();
+        router.push("/admin/login");
         return;
       }
 
@@ -200,9 +202,11 @@ export default function PortalLayout({
       <div className="pt-6 border-t border-white/10 mt-auto">
         <div className="flex items-center gap-3 px-4 py-3 mb-2">
           {avatarUrl ? (
-            <img
+            <Image
               src={avatarUrl}
               alt="Avatar"
+              width={32}
+              height={32}
               className="h-8 w-8 rounded-full object-cover"
             />
           ) : (
@@ -279,9 +283,11 @@ export default function PortalLayout({
             />
           </Link>
           {avatarUrl ? (
-            <img
+            <Image
               src={avatarUrl}
               alt="Avatar"
+              width={32}
+              height={32}
               className="h-8 w-8 rounded-full object-cover"
             />
           ) : (

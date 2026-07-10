@@ -33,7 +33,8 @@ export async function POST(request: Request) {
       });
 
       if (error) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        console.error("Erro ao definir role admin:", error);
+        return NextResponse.json({ error: "Erro ao atualizar permissões." }, { status: 500 });
       }
 
       return NextResponse.json({ success: true, message: "Admin role set" });
@@ -44,12 +45,14 @@ export async function POST(request: Request) {
       });
 
       if (error) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        console.error("Erro ao remover role admin:", error);
+        return NextResponse.json({ error: "Erro ao atualizar permissões." }, { status: 500 });
       }
 
       return NextResponse.json({ success: true, message: "Admin role removed" });
     }
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch {
+    console.error("Erro inesperado em set-role:");
+    return NextResponse.json({ error: "Erro interno do servidor." }, { status: 500 });
   }
 }

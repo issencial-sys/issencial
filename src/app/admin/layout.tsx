@@ -19,6 +19,7 @@ import {
   Menu,
   X,
   ChevronRight,
+  Newspaper,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
@@ -31,6 +32,7 @@ const navItems = [
   { href: "/admin/clientes", icon: Users, label: "Clientes" },
   { href: "/admin/mensagens", icon: MessageSquare, label: "Mensagens" },
   { href: "/admin/faturas", icon: Receipt, label: "Faturas" },
+  { href: "/admin/blog", icon: Newspaper, label: "Blog" },
   { href: "/admin/config", icon: Settings, label: "Configuração" },
 ];
 
@@ -50,8 +52,14 @@ export default function AdminLayout({
 
   useEffect(() => {
     const checkAdmin = async () => {
+      // Preview pages are standalone — don't redirect, just stop loading
+      if (pathname.endsWith("/preview")) {
+        setLoading(false);
+        return;
+      }
+
       // Login page is public — don't redirect, just stop loading
-      if (pathname === "/admin/login") {
+      if (pathname === "/admin/login" || pathname.startsWith("/admin/login/")) {
         setLoading(false);
         return;
       }
@@ -114,7 +122,8 @@ export default function AdminLayout({
   }, [pathname]);
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    // scope: 'global' revoga refresh token no servidor
+    await supabase.auth.signOut({ scope: "global" });
     router.push("/");
   };
 
@@ -124,6 +133,11 @@ export default function AdminLayout({
         <Loader2 size={32} className="animate-spin text-accent" />
       </div>
     );
+  }
+
+  // Preview pages are standalone — render without admin wrapper
+  if (pathname.endsWith("/preview")) {
+    return <>{children}</>;
   }
 
   // Login page is public — render without admin wrapper

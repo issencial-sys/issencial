@@ -1,288 +1,575 @@
 -- ============================================
--- Issencial — Seed de Dados para Teste
--- ============================================
--- Executar no SQL Editor do Supabase Dashboard
--- 
--- ATENÇÃO: Este seed cria dados de exemplo para o utilizador com email
--- 'baptistalimab@gmail.com'. Se o teu email for diferente, altera na
--- variável 'v_user_email' abaixo (linha ~25).
---
--- Para testar com DUAS contas (admin + cliente normal):
--- 1. Altera 'v_user_email' para o teu email de admin
--- 2. Cria uma segunda conta no /portal com outro email
--- 3. Altera 'v_client_email' para esse segundo email
+-- Issencial — Seed: Blog Articles
+-- Popula a tabela blog_articles com os artigos
+-- existentes nos dados estáticos.
 -- ============================================
 
-DO $$
-DECLARE
-  -- ⚠️ ALTERA AQUI os emails conforme necessário:
-  v_user_email TEXT := 'issencialofficial@gmail.com';
-  v_client_email TEXT := 'issencialofficial@gmail.com';  -- Se tiveres 2 contas, mete aqui o email do cliente de teste
+INSERT INTO public.blog_articles (slug, title, excerpt, content, category, category_label, author, author_role, date, reading_time, related_slugs, status, created_at)
+VALUES
 
-  v_user_id UUID;
-  v_client_id UUID;
+-- 1. Novo Passaporte Português 2026
+(
+  'novo-passaporte-portugues-2026',
+  'Novo Passaporte Português 2026: Tudo o que precisa de saber',
+  'O novo modelo do passaporte português chegou com mais segurança e um design renovado. Guia completo sobre prazos, documentos necessários e como acelerar o processo.',
+  $$O novo passaporte português já está em circulação desde o início de 2026, trazendo consigo um design renovado e funcionalidades de segurança avançadas. Se está a planear renovar ou emitir o seu passaporte pela primeira vez, este guia vai ajudá-lo a navegar todo o processo.
 
-  v_process1_id UUID := gen_random_uuid();
-  v_process2_id UUID := gen_random_uuid();
-  v_process3_id UUID := gen_random_uuid();
+## O que mudou no novo passaporte?
 
-  v_sr1_id UUID := gen_random_uuid();
-  v_sr2_id UUID := gen_random_uuid();
+O Instituto dos Registos e do Notariado (IRN) introduziu várias novidades no novo modelo:
 
-  v_contact1_id UUID := gen_random_uuid();
-  v_contact2_id UUID := gen_random_uuid();
-  v_contact3_id UUID := gen_random_uuid();
+- **Design atualizado**: O novo passaporte apresenta um design mais moderno, com elementos da cultura portuguesa incorporados nas páginas internas.
+- **Segurança reforçada**: Novos elementos de segurança, incluindo hologramas mais complexos e chips eletrónicos de última geração.
+- **Página de dados redesenhada**: A página com os dados do titular foi redesenhada para ser mais legível e segura.
 
-  v_msg1_id UUID := gen_random_uuid();
-  v_msg2_id UUID := gen_random_uuid();
-  v_msg3_id UUID := gen_random_uuid();
-  v_msg4_id UUID := gen_random_uuid();
-  v_msg5_id UUID := gen_random_uuid();
-  v_msg6_id UUID := gen_random_uuid();
+## Documentos necessários
 
-  v_inv1_id UUID := gen_random_uuid();
-  v_inv2_id UUID := gen_random_uuid();
-  v_inv3_id UUID := gen_random_uuid();
+Para emitir ou renovar o passaporte, precisa dos seguintes documentos:
 
-BEGIN
-  -- ============================================
-  -- 1. Buscar IDs dos utilizadores
-  -- ============================================
-  SELECT id INTO v_user_id FROM auth.users WHERE email = v_user_email;
-  SELECT id INTO v_client_id FROM auth.users WHERE email = v_client_email;
+1. **Cartão de Cidadão** válido (ou documento de identificação equivalente)
+2. **Fotografia** atual (tipo passe, fundo branco)
+3. **Passaporte anterior** (se for renovação)
+4. **Comprovativo de residência** (se aplicável)
+5. **Formulário de requerimento** preenchido
 
-  IF v_user_id IS NULL THEN
-    RAISE NOTICE '⚠️  Utilizador com email % não encontrado em auth.users. Regista-te primeiro no /portal.', v_user_email;
-    RETURN;
-  END IF;
+> **Dica Issencial**: Verifique se o seu Cartão de Cidadão está válido antes de iniciar o processo. Renovar o CC primeiro pode poupar-lhe uma viagem ao balcão.
 
-  IF v_client_id IS NULL THEN
-    -- Usar o mesmo utilizador
-    v_client_id := v_user_id;
-  END IF;
+## Quanto custa?
 
-  RAISE NOTICE '✅ Utilizador encontrado: % (ID: %)', v_user_email, v_user_id;
-  RAISE NOTICE '✅ Cliente: % (ID: %)', v_client_email, v_client_id;
+| Tipo de passaporte | Preço |
+|-------------------|-------|
+| Passaporte normal (válido 5 anos) | €65,00 |
+| Passaporte especial (válido 5 anos) | €85,00 |
+| Passaporte de urgência | €100,00 |
+| Passaporte de emergência (24h) | €150,00 |
 
+## Prazos de emissão
 
-  -- ============================================
-  -- 2. Garantir que os profiles existem
-  -- ============================================
-  -- (Se o user foi criado antes da migração 001, o trigger não criou o profile)
-  INSERT INTO public.profiles (id, name, phone)
-  VALUES (v_client_id, 'Maria Fernandes', '+351 900 000 000')
-  ON CONFLICT (id) DO NOTHING;
+- **Normal**: 15 a 20 dias úteis
+- **Urgente**: 5 a 7 dias úteis
+- **Emergência**: 24 a 48 horas
 
-  IF v_user_id != v_client_id THEN
-    INSERT INTO public.profiles (id, name, phone)
-    VALUES (v_user_id, 'Admin Issencial', '+351 210 000 000')
-    ON CONFLICT (id) DO NOTHING;
-  END IF;
+## Como acelerar o processo?
 
+A Issencial pode ajudá-lo a acelerar todo o processo de emissão ou renovação do passaporte. Desde a verificação da documentação até ao acompanhamento do pedido, tratamos de tudo para que não perca tempo com burocracias.
 
-  -- ============================================
-  -- 3. Contact Submissions (formulário de contacto)
-  -- ============================================
-  INSERT INTO public.contact_submissions (id, name, email, subject, message, read, created_at) VALUES
-  (v_contact1_id, 'Ana Silva', 'ana.silva@email.pt', 'Informações sobre passaporte',
-   'Bom dia, gostaria de saber quais os documentos necessários para iniciar o processo de renovação de passaporte. Tenho viagem marcada para agosto e preciso de tratar com urgência. Obrigada!',
-   false, now() - interval '2 hours'),
+### Vantagens de usar a Issencial:
 
-  (v_contact2_id, 'Carlos Mendes', 'carlos.m@email.pt', 'Orçamento para transferência internacional',
-   'Preciso de fazer uma transferência de €15.000 para o Brasil. Quais as taxas aplicadas e qual o prazo estimado? Agradeço orçamento detalhado.',
-   true, now() - interval '2 days'),
+- Verificação prévia de toda a documentação
+- Acompanhamento do estado do pedido em tempo real
+- Redução significativa de erros e rejeições
+- Atendimento personalizado e confidencial
 
-  (v_contact3_id, 'Marisa Costa', 'marisa.costa@email.com', 'Inscrição universidade Europa',
-   'Estou interessada em candidatar-me a uma universidade em França para o curso de Design. Gostaria de saber mais sobre os vossos serviços de orientação educacional.',
-   false, now() - interval '30 minutes');
+## Perguntas frequentes
 
+**Preciso de marcar atendimento presencial?**
+Sim, é necessário agendar atendimento no balcão de atendimento do IRN ou Loja de Cidadão para a entrega dos dados biométricos.
 
-  -- ============================================
-  -- 3. Service Requests (orçamentos solicitados)
-  -- ============================================
-  INSERT INTO public.service_requests (id, client_id, service_slug, name, email, phone, description, status, created_at) VALUES
-  (v_sr1_id, v_client_id, 'tratamento-passaporte', 'Maria Fernandes', v_client_email, '+351 900 000 000',
-   'Preciso de renovar o passaporte para o meu filho de 10 anos. Gostaria de saber o processo e os custos envolvidos.',
-   'in_review', now() - interval '5 days'),
+**O passaporte pode ser entregue em casa?**
+Sim, pode optar pela entrega por correio registado, com um custo adicional de €5,00.
 
-  (v_sr2_id, v_client_id, 'educacao-europa', 'Maria Fernandes', v_client_email, '+351 900 000 000',
-   'Estou a planear candidatar-me a um mestrado na Universidade de Coimbra para o próximo ano letivo. Preciso de ajuda com toda a documentação.',
-   'approved', now() - interval '3 days');
+**Quanto tempo antes da validade expirar devo renovar?**
+Recomendamos iniciar o processo de renovação com pelo menos 6 meses de antecedência para evitar situações de última hora.
 
+---
 
-  -- ============================================
-  -- 4. Processes (Processos)
-  -- ============================================
+Precisa de ajuda com o seu processo de passaporte? A equipa Issencial está pronta para o acompanhar em cada etapa.$$,
+  'passaporte',
+  'Passaporte & Vistos',
+  'Equipa Issencial',
+  'Especialista em Processos Documentais',
+  '12 Jun 2026',
+  '8 min de leitura',
+  ARRAY['renovacao-passaporte-passo-a-passo', 'passaporte-para-menores'],
+  'published',
+  NOW() - INTERVAL '1 day'
+),
 
-  -- Processo 1: Passaporte (Ativo)
-  INSERT INTO public.processes (id, client_id, title, description, service_slug, status, source_request_id, created_at, updated_at) VALUES
-  (v_process1_id, v_client_id,
-   'Renovação de Passaporte — Maria Fernandes',
-   'Processo de renovação de passaporte para a cliente Maria Fernandes. Acompanhamento completo desde a preparação documental até à entrega.',
-   'tratamento-passaporte', 'active', v_sr1_id,
-   now() - interval '5 days', now() - interval '1 hour');
+-- 2. Renovação de Passaporte: Passo a Passo
+(
+  'renovacao-passaporte-passo-a-passo',
+  'Renovação de Passaporte: Passo a Passo',
+  'Tudo o que precisa para renovar o seu passaporte sem dores de cabeça. Prazos, custos e documentos atualizados.',
+  $$Renovar o passaporte parece uma tarefa simples, mas os detalhes podem fazer toda a diferença entre um processo tranquilo e uma dor de cabeça desnecessária. Neste guia, explicamos cada etapa do processo de renovação.
 
-  -- Processo 2: Educação (Ativo)
-  INSERT INTO public.processes (id, client_id, title, description, service_slug, status, source_request_id, created_at, updated_at) VALUES
-  (v_process2_id, v_client_id,
-   'Candidatura Mestrado — Universidade de Coimbra',
-   'Processo de candidatura a mestrado na Universidade de Coimbra. Inclui orientação, preparação de documentos e acompanhamento da candidatura.',
-   'educacao-europa', 'active', v_sr2_id,
-   now() - interval '3 days', now() - interval '2 hours');
+## Passo 1: Verifique a sua documentação
 
-  -- Processo 3: Transferência (Concluído - exemplo histórico)
-  INSERT INTO public.processes (id, client_id, title, description, service_slug, status, source_request_id, created_at, updated_at) VALUES
-  (v_process3_id, v_client_id,
-   'Transferência Internacional — Reino Unido',
-   'Transferência internacional para pagamento de propina na University of Manchester. Valor: €8.500.',
-   'transferencias', 'completed', NULL,
-   now() - interval '30 days', now() - interval '20 days');
+Antes de mais nada, confirme que tem os seguintes documentos em mãos:
 
+- Cartão de Cidadão válido (se estiver expirado, renove-o primeiro)
+- Passaporte anterior (mesmo que expirado)
+- Fotografia atual (menos de 6 meses)
 
-  -- ============================================
-  -- 5. Process Stages (Etapas)
-  -- ============================================
+## Passo 2: Agende o atendimento
 
-  -- Etapas do Processo 1 (Passaporte)
-  INSERT INTO public.process_stages (process_id, title, description, status, sort_order, created_at) VALUES
-  (v_process1_id, 'Receção e Análise de Documentos',
-   'Documentos recebidos e em análise pela equipa. Todos os documentos estão em conformidade.',
-   'completed', 0, now() - interval '5 days'),
+O agendamento pode ser feito online através do portal do IRN ou presencialmente numa Loja de Cidadão.
 
-  (v_process1_id, 'Preparação do Requerimento',
-   'A preparar o requerimento oficial para submissão junto da entidade competente.',
-   'completed', 1, now() - interval '4 days'),
+**Documentos a levar no dia do atendimento:**
 
-  (v_process1_id, 'Submissão do Pedido',
-   'Pedido submetido e em processamento pela entidade emissora.',
-   'in_progress', 2, now() - interval '2 days'),
+- Original e cópia do Cartão de Cidadão
+- Passaporte anterior
+- Duas fotografias tipo passe
+- Comprovativo de pagamento da taxa
 
-  (v_process1_id, 'Emissão e Recolha',
-   'Após emissão, o documento estará disponível para recolha ou envio ao cliente.',
-   'pending', 3, now());
+## Passo 3: Pagamento das taxas
 
-  -- Etapas do Processo 2 (Educação)
-  INSERT INTO public.process_stages (process_id, title, description, status, sort_order, created_at) VALUES
-  (v_process2_id, 'Análise de Perfil e Objetivos',
-   'Reunião realizada para alinhar expectativas e definir plano de candidatura.',
-   'completed', 0, now() - interval '3 days'),
+O pagamento pode ser feito por:
 
-  (v_process2_id, 'Seleção de Curso e Instituição',
-   'Curso selecionado: Mestrado em Design e Multimédia na Universidade de Coimbra.',
-   'completed', 1, now() - interval '2 days'),
+- Multibanco (no local)
+- Referência multibanco (gerada no momento do agendamento)
+- Dinheiro (em alguns balcões)
 
-  (v_process2_id, 'Preparação de Documentação',
-   'A reunir documentos necessários: certificados, carta de motivação, recomendações.',
-   'in_progress', 2, now() - interval '1 day'),
+## Passo 4: Acompanhamento do processo
 
-  (v_process2_id, 'Submissão da Candidatura',
-   'Submissão da candidatura através do portal da universidade.',
-   'pending', 3, now()),
+Após a submissão, pode acompanhar o estado do seu pedido online através do portal do IRN.
 
-  (v_process2_id, 'Acompanhamento e Matrícula',
-   'Acompanhamento do resultado e apoio no processo de matrícula em caso de aceitação.',
-   'pending', 4, now());
+## Passo 5: Levantamento ou entrega
 
-  -- Etapas do Processo 3 (Transferência - Concluído)
-  INSERT INTO public.process_stages (process_id, title, description, status, sort_order, created_at) VALUES
-  (v_process3_id, 'Verificação de Dados',
-   'Dados do beneficiário verificados e validados.',
-   'completed', 0, now() - interval '30 days'),
+Pode optar por:
 
-  (v_process3_id, 'Processamento da Transferência',
-   'Transferência processada através do sistema SWIFT.',
-   'completed', 1, now() - interval '29 days'),
+- Levantar no balcão onde fez o pedido
+- Receber por correio registado em casa (custo adicional)
 
-  (v_process3_id, 'Confirmação de Receção',
-   'Transferência confirmada e recebida pelo beneficiário no Reino Unido.',
-   'completed', 2, now() - interval '28 days');
+---
 
+**Precisa de ajuda com a renovação?** A Issencial trata de todo o processo por si.$$,
+  'passaporte',
+  'Passaporte & Vistos',
+  'Equipa Issencial',
+  'Especialista em Processos Documentais',
+  '5 Jun 2026',
+  '6 min de leitura',
+  ARRAY['novo-passaporte-portugues-2026', 'passaporte-para-menores'],
+  'published',
+  NOW() - INTERVAL '2 days'
+),
 
-  -- ============================================
-  -- 6. Messages (Mensagens)
-  -- ============================================
+-- 3. Universidades Europeias sem Propinas?
+(
+  'universidades-europeias-sem-propinas',
+  'Universidades Europeias sem Propinas? É Possível',
+  'Alemanha, Noruega, Áustria — conheça os países onde pode estudar sem pagar propinas e como candidatar-se.',
+  $$Estudar na Europa sem pagar propinas não é um mito — é uma realidade em vários países que apostam no ensino superior gratuito ou com custos mínimos. Neste artigo, exploramos as melhores opções para estudar de forma acessível na Europa.
 
-  -- Mensagem Geral (sem processo associado)
-  INSERT INTO public.messages (id, process_id, client_id, sender_id, content, read, created_at) VALUES
-  (v_msg1_id, NULL, v_client_id, v_client_id,
-   'Olá! Gostaria de saber qual o prazo estimado para o processo do passaporte. Precisa de algum documento extra?',
-   true, now() - interval '3 days');
+## Países com ensino superior gratuito (ou quase)
 
-  INSERT INTO public.messages (id, process_id, client_id, sender_id, content, read, created_at) VALUES
-  (v_msg2_id, NULL, v_client_id, v_user_id,  -- admin responde
-   'Olá Maria! O prazo estimado é de 15 a 20 dias úteis após a submissão. Neste momento estamos a aguardar apenas o certificado de residência. Pode enviar-nos por email?',
-   false, now() - interval '2 days');
+### Alemanha
 
-  -- Mensagens no Processo 1 (Passaporte)
-  INSERT INTO public.messages (process_id, client_id, sender_id, content, read, created_at) VALUES
-  (v_process1_id, v_client_id, v_client_id,
-   'Envio o certificado de residência em anexo conforme solicitado. Obrigado!',
-   true, now() - interval '4 days');
+Desde 2014, a maioria das universidades públicas alemãs aboliu as propinas para todos os estudantes, independentemente da nacionalidade.
 
-  INSERT INTO public.messages (process_id, client_id, sender_id, content, read, created_at) VALUES
-  (v_process1_id, v_client_id, v_user_id,
-   'Documento recebido e em anexo ao processo. Vamos dar seguimento com a submissão do pedido ainda esta semana.',
-   false, now() - interval '3 days');
+**O que precisa:**
+- Proficiência em alemão (nível B2/C1) para a maioria dos cursos
+- Visto de estudante
+- Comprovativo de meios financeiros (cerca de €11.200/ano para custos de vida)
 
-  -- Mensagens no Processo 2 (Educação)
-  INSERT INTO public.messages (process_id, client_id, sender_id, content, read, created_at) VALUES
-  (v_process2_id, v_client_id, v_user_id,
-   'Maria, boa notícia! A Universidade de Coimbra confirmou que aceita candidaturas até 31 de maio. Vamos preparar tudo com calma.',
-   false, now() - interval '1 day');
+### Noruega
 
-  INSERT INTO public.messages (process_id, client_id, sender_id, content, read, created_at) VALUES
-  (v_process2_id, v_client_id, v_client_id,
-   'Excelente notícia! Já tenho a carta de motivação pronta. Posso enviar para revisão?',
-   false, now() - interval '12 hours');
+As universidades públicas norueguesas não cobram propinas para nenhum estudante, independentemente da nacionalidade.
 
+**O que precisa:**
+- Proficiência em inglês (IELTS 6.5+) ou norueguês
+- Visto de estudante
+- Comprovativo de meios financeiros (cerca de €14.000/ano)
 
-  -- ============================================
-  -- 7. Invoices (Faturas)
-  -- ============================================
+### Áustria
 
-  -- Fatura 1: Passaporte (Pendente)
-  INSERT INTO public.invoices (process_id, client_id, invoice_number, amount, currency, status, due_date, description, created_at) VALUES
-  (v_process1_id, v_client_id, '2025/0001', 150.00, 'EUR', 'pending',
-   now() + interval '15 days',
-   'Serviços de tratamento e renovação de passaporte — Taxa de serviço Issencial',
-   now() - interval '4 days');
+As propinas nas universidades austríacas são mínimas para estudantes internacionais (cerca de €750 por semestre).
 
-  -- Fatura 2: Educação (Paga)
-  INSERT INTO public.invoices (process_id, client_id, invoice_number, amount, currency, status, due_date, description, created_at) VALUES
-  (v_process2_id, v_client_id, '2025/0002', 450.00, 'EUR', 'paid',
-   now() - interval '5 days',
-   'Serviços de orientação educacional — Candidatura Universidade de Coimbra',
-   now() - interval '10 days');
+## Como candidatar-se?
 
-  -- Fatura 3: Transferência (Concluída - Paga)
-  INSERT INTO public.invoices (process_id, client_id, invoice_number, amount, currency, status, due_date, description, created_at) VALUES
-  (v_process3_id, v_client_id, '2025/0003', 35.00, 'EUR', 'paid',
-   now() - interval '35 days',
-   'Taxa de transferência internacional — Reino Unido (€8.500)',
-   now() - interval '35 days');
+O processo de candidatura varia de país para país, mas geralmente inclui:
 
+1. Escolha do curso e universidade
+2. Verificação dos requisitos de acesso
+3. Tradução e autenticação de documentos
+4. Submissão da candidatura
+5. Candidatura ao visto de estudante
 
-  -- ============================================
-  -- 8. Summary
-  -- ============================================
-  RAISE NOTICE '┌──────────────────────────────────────────────────┐';
-  RAISE NOTICE '│  ✅ Seed concluído com sucesso!                  │';
-  RAISE NOTICE '│                                                  │';
-  RAISE NOTICE '│  📊 Dados inseridos:                             │';
-  RAISE NOTICE '│     • 3 contactos do formulário                  │';
-  RAISE NOTICE '│     • 2 pedidos de orçamento                     │';
-  RAISE NOTICE '│     • 3 processos (1 ativo/c/etapas + 1 ativo   │';
-  RAISE NOTICE '│       + 1 concluído)                             │';
-  RAISE NOTICE '│     • 12 etapas distribuídas pelos processos     │';
-  RAISE NOTICE '│     • 6 mensagens (gerais + por processo)        │';
-  RAISE NOTICE '│     • 3 faturas (1 pendente + 2 pagas)          │';
-  RAISE NOTICE '│                                                  │';
-  RAISE NOTICE '│  🔗 Agora testa:                                 │';
-  RAISE NOTICE '│     • /portal — Dashboard com dados reais        │';
-  RAISE NOTICE '│     • /portal/processos — Lista de processos     │';
-  RAISE NOTICE '│     • /portal/processos/[id] — Detalhe + chat   │';
-  RAISE NOTICE '│     • /portal/mensagens — Mensagens gerais       │';
-  RAISE NOTICE '│     • /admin — Gestão completa (se fores admin)  │';
-  RAISE NOTICE '└──────────────────────────────────────────────────┘';
+## Como a Issencial pode ajudar?
 
-END $$;
+A Issencial oferece acompanhamento completo no processo de candidatura a universidades europeias, incluindo:
+
+- Orientação na escolha do curso e instituição
+- Preparação de toda a documentação
+- Tradução certificada de documentos
+- Apoio na candidatura ao visto de estudante
+
+---
+
+Está a pensar estudar na Europa sem gastar uma fortuna em propinas? Fale connosco e descubra como podemos ajudá-lo.$$,
+  'educacao',
+  'Educação',
+  'Equipa Issencial',
+  'Conselheira Educacional',
+  '2 Jun 2026',
+  '7 min de leitura',
+  ARRAY['bolsas-de-estudo-na-europa'],
+  'published',
+  NOW() - INTERVAL '3 days'
+),
+
+-- 4. Transferências Internacionais: O Guia Completo
+(
+  'transferencias-internacionais-guia-completo',
+  'Transferências Internacionais: O Guia Completo',
+  'Taxas de câmbio, SWIFT vs SEPA, prazos e custos. Tudo o que precisa para enviar dinheiro para o estrangeiro.',
+  $$Enviar dinheiro para o estrangeiro pode parecer complicado, mas com o conhecimento certo, pode poupar tempo e dinheiro. Neste guia, explicamos tudo o que precisa de saber sobre transferências internacionais.
+
+## SEPA vs SWIFT: Qual a diferença?
+
+### Transferências SEPA
+
+A SEPA (Single Euro Payments Area) permite transferências em euros entre países da zona SEPA de forma rápida e económica.
+
+**Características:**
+- Processamento no próprio dia útil
+- Sem custos adicionais (ou muito reduzidos)
+- Montante máximo: geralmente sem limite
+- Apenas para transferências em euros
+
+### Transferências SWIFT
+
+A SWIFT é utilizada para transferências internacionais fora da zona SEPA ou em moedas diferentes do euro.
+
+**Características:**
+- Processamento em 1 a 5 dias úteis
+- Custos mais elevados
+- Rastreamento em tempo real
+- Suporta múltiplas moedas
+
+## Como escolher a melhor opção?
+
+A escolha entre SEPA e SWIFT depende de vários fatores:
+
+| Fator | SEPA | SWIFT |
+|-------|------|-------|
+| Destino | Zona SEPA | Qualquer país |
+| Moeda | Euros | Todas as moedas |
+| Custo | €0-€3 | €10-€50 |
+| Prazo | Mesmo dia | 1-5 dias |
+
+## Dicas para poupar nas transferências
+
+1. **Compare as taxas de câmbio** — Nem todas as entidades oferecem o mesmo câmbio
+2. **Evite transferências de urgência** — São sempre mais caras
+3. **Consolide transferências** — Várias transferências pequenas custam mais do que uma grande
+4. **Verifique as taxas escondidas** — Algumas entidades têm comissões ocultas
+
+## Como a Issencial pode ajudar?
+
+A Issencial oferece serviços de transferência internacional com as melhores taxas do mercado e total transparência em todo o processo.$$,
+  'financas',
+  'Finanças',
+  'Equipa Issencial',
+  'Especialista Financeiro',
+  '28 Mai 2026',
+  '10 min de leitura',
+  ARRAY['como-evitar-comissoes-transferencias'],
+  'published',
+  NOW() - INTERVAL '4 days'
+),
+
+-- 5. NIF, NISS, SNS: O Guia do Imigrante em Portugal
+(
+  'nif-niss-sns-guia-imigrante-portugal',
+  'NIF, NISS, SNS: O Guia do Imigrante em Portugal',
+  'Os primeiros passos burocráticos para quem chega a Portugal. Números, documentos e processos explicados.',
+  $$Chegar a Portugal é entusiasmante, mas a burocracia inicial pode ser esmagadora. Neste guia, explicamos os três números mais importantes que precisa de obter para viver legalmente em Portugal.
+
+## NIF — Número de Identificação Fiscal
+
+O NIF é obrigatório para qualquer pessoa que viva ou faça negócios em Portugal.
+
+**Como obter:**
+1. Dirija-se a um balcão das Finanças (AT)
+2. Apresente o seu passaporte ou documento de identificação
+3. Indique a sua morada fiscal em Portugal
+4. O NIF é emitido no momento
+
+**Documentos necessários:**
+- Passaporte válido
+- Número de contribuinte do país de origem (se aplicável)
+- Comprovativo de morada em Portugal
+
+## NISS — Número de Identificação da Segurança Social
+
+O NISS é necessário para trabalhar e ter acesso à segurança social em Portugal.
+
+**Como obter:**
+1. Agende atendimento na Segurança Social
+2. Apresente o seu NIF e documento de identificação
+3. Apresente o contrato de trabalho (se aplicável)
+
+## SNS — Serviço Nacional de Saúde
+
+Para aceder ao SNS, precisa de:
+
+1. Estar registado na Segurança Social
+2. Dirigir-se ao centro de saúde da sua área de residência
+3. Apresentar NIF, NISS e documento de identificação
+4. Solicitar a atribuição de um médico de família
+
+---
+
+**Precisa de ajuda com a sua documentação em Portugal?** A Issencial trata de todo o processo, desde a obtenção do NIF até ao registo no SNS.$$,
+  'viver-portugal',
+  'Viver em Portugal',
+  'Equipa Issencial',
+  'Consultora de Relocação',
+  '25 Mai 2026',
+  '8 min de leitura',
+  ARRAY['arrendar-casa-portugal-guia-estrangeiros'],
+  'published',
+  NOW() - INTERVAL '5 days'
+),
+
+-- 6. "Consegui o Visto numa Semana" — A História da Ana
+(
+  'consegui-visto-numa-semana-historia-ana',
+  '"Consegui o Visto numa Semana" — A História da Ana',
+  'A Ana precisava do visto de residência em 10 dias para não perder a oportunidade de trabalho. Como a Issencial a ajudou.',
+  $$Quando a Ana recebeu a oferta de trabalho em Lisboa, o entusiasmo foi imediato. Mas a realidade bateu à porta quando percebeu que precisava do visto de residência em 10 dias — um processo que normalmente leva meses.
+
+## O Desafio
+
+A Ana, brasileira, tinha sido selecionada para uma posição numa empresa de tecnologia em Lisboa. O contrato começava dentro de três semanas e ela precisava de:
+
+- Visto de residência para trabalho
+- NIF português
+- Número de Segurança Social
+- Conta bancária em Portugal
+
+## Como a Issencial entrou em ação
+
+A nossa equipa mobilizou-se imediatamente:
+
+**Dia 1:** Análise completa da documentação da Ana e identificação dos requisitos específicos para o seu caso.
+
+**Dia 2:** Preparação e submissão de toda a documentação necessária para o visto de trabalho.
+
+**Dia 4:** Acompanhamento do processo junto das autoridades competentes.
+
+**Dia 6:** Visto aprovado! A Ana podia viajar para Portugal.
+
+**Dia 8:** Chegada a Portugal com tudo preparado — NIF, NISS e conta bancária já em processo de emissão.
+
+## O Resultado
+
+A Ana chegou a Portugal uma semana antes do início do contrato, com toda a documentação em ordem e pronta para começar a nova vida.
+
+> "Sem a Issencial, teria perdido esta oportunidade incrível. Eles trataram de tudo enquanto eu me preparava para a mudança." — Ana S.
+
+## Como podemos ajudar?
+
+Cada caso é único, mas a nossa abordagem é sempre a mesma: rapidez, eficiência e acompanhamento personalizado. Se precisa de um visto de residência, contacto-nos para uma consulta inicial gratuita.$$,
+  'historias',
+  'Histórias de Clientes',
+  'Equipa Issencial',
+  'Gestora de Clientes',
+  '20 Mai 2026',
+  '5 min de leitura',
+  ARRAY['nif-niss-sns-guia-imigrante-portugal'],
+  'published',
+  NOW() - INTERVAL '6 days'
+),
+
+-- 7. Bolsas de Estudo na Europa
+(
+  'bolsas-de-estudo-na-europa',
+  'Bolsas de Estudo na Europa: Onde e Como Candidatar-se',
+  'Erasmus+, bolsas nacionais e fundações privadas. Um roteiro completo para financiar os seus estudos na Europa.',
+  $$Estudar na Europa pode ser mais acessível do que pensa, graças a uma vasta oferta de bolsas de estudo. Neste guia, exploramos as principais opções de financiamento para estudantes internacionais.
+
+## Principais programas de bolsas
+
+### Erasmus+
+
+O programa Erasmus+ é o mais conhecido e abrange não só mobilidade entre universidades, mas também bolsas para estudos completos.
+
+**O que oferece:**
+- Bolsas para estudos de 3 a 12 meses
+- Apoio para estágios profissionais
+- Cobertura de propinas em alguns casos
+- Subsídio mensal para custos de vida
+
+### Bolsas nacionais
+
+Muitos países europeus oferecem bolsas específicas para estudantes internacionais:
+
+| País | Programa | Cobertura |
+|------|----------|-----------|
+| Alemanha | DAAD | Propinas + custos de vida |
+| França | Campus France | Propinas + alojamento |
+| Suécia | Swedish Institute | Propinas + €10.000/ano |
+| Itália | DSU | Propinas + alojamento + refeições |
+
+### Fundações privadas
+
+Diversas fundações privadas oferecem bolsas para estudantes internacionais:
+
+- **Fundação Gulbenkian**: Bolsas para estudantes de países lusófonos
+- **Fundação Calouste Gulbenkian**: Bolsas para estudos em Portugal
+- **Rotary Foundation**: Bolsas para estudos em qualquer país
+
+## Como maximizar as suas hipóteses?
+
+1. **Candidate-se a múltiplas bolsas** — Não se limite a uma
+2. **Prepare uma candidatura forte** — Cartas de motivação bem escritas fazem a diferença
+3. **Cumpra todos os prazos** — As candidaturas são rigorosas
+4. **Peça ajuda profissional** — A Issencial pode orientá-lo em todo o processo
+
+---
+
+Quer estudar na Europa mas precisa de orientação? A Issencial ajuda-o a encontrar e candidatar-se às melhores bolsas de estudo.$$,
+  'educacao',
+  'Educação',
+  'Equipa Issencial',
+  'Conselheira Educacional',
+  '18 Mai 2026',
+  '7 min de leitura',
+  ARRAY['universidades-europeias-sem-propinas'],
+  'published',
+  NOW() - INTERVAL '7 days'
+),
+
+-- 8. Como Evitar Comissões em Transferências Internacionais
+(
+  'como-evitar-comissoes-transferencias',
+  'Como Evitar Comissões em Transferências Internacionais',
+  'Descubra as melhores formas de enviar dinheiro para o estrangeiro sem pagar taxas escondidas.',
+  $$As comissões em transferências internacionais podem representar uma fatia significativa do valor enviado. Neste artigo, mostramos como minimizar ou evitar esses custos.
+
+## Os custos escondidos das transferências
+
+Muitas pessoas olham apenas para a comissão fixa anunciada, mas há outros custos que podem passar despercebidos:
+
+1. **Spread cambial** — A diferença entre a taxa de câmbio real e a taxa aplicada
+2. **Comissão de receção** — Taxa cobrada pelo banco do destinatário
+3. **Comissão de intermediação** — Taxa de bancos intermediários na transferência SWIFT
+4. **Taxa de urgência** — Custo adicional para processamento rápido
+
+## Como poupar
+
+**Compare as taxas de câmbio:**
+A diferença entre a taxa de câmbio real e a aplicada pode representar 2-5% do valor total.
+
+**Escolha o método certo:**
+- SEPA para transferências em euros dentro da zona SEPA
+- Serviços especializados para transferências internacionais
+
+**Evite transferências pequenas:**
+O custo fixo é o mesmo para qualquer valor, por isso, consolide as transferências.
+
+## Como a Issencial pode ajudar?
+
+Na Issencial, garantimos total transparência em todas as transferências. O que vê é o que paga — sem comissões ocultas, sem spreads abusivos.$$,
+  'financas',
+  'Finanças',
+  'Equipa Issencial',
+  'Especialista Financeiro',
+  '12 Mai 2026',
+  '5 min de leitura',
+  ARRAY['transferencias-internacionais-guia-completo'],
+  'published',
+  NOW() - INTERVAL '8 days'
+),
+
+-- 9. Passaporte para Menores
+(
+  'passaporte-para-menores',
+  'Passaporte para Menores: Documentos Necessários',
+  'O processo de emissão de passaporte para crianças e jovens tem regras específicas. Saiba quais.',
+  $$Emitir um passaporte para menores de idade requer documentação adicional e a presença dos pais ou tutores legais. Neste guia, explicamos tudo o que precisa de saber.
+
+## Documentos necessários
+
+Para emitir o passaporte de um menor (idade < 18 anos), são necessários:
+
+1. **Cartão de Cidadão** do menor (válido)
+2. **Autorização** de ambos os pais ou tutores legais
+3. **Documento de identificação** dos pais/tutores
+4. **Fotografia** atual do menor (tipo passe)
+5. **Registo Civil** (certidão de nascimento, se aplicável)
+
+## Regras especiais
+
+**Menores de 4 anos:**
+- O passaporte tem validade reduzida (2 anos)
+- Necessário levar uma fotografia atual (pode ser tirada no momento)
+
+**Menores entre 4 e 18 anos:**
+- Passaporte válido por 5 anos
+- Presença obrigatória do menor no momento do atendimento
+
+## Ausência de um dos pais
+
+Se um dos pais não puder estar presente, é necessária:
+
+- **Autorização escrita** com reconhecimento notarial da assinatura
+- **Documento que comprove a regulação do exercício das responsabilidades parentais** (se aplicável)
+
+---
+
+Precisa de tratar do passaporte do seu filho? A Issencial trata de todo o processo para si.$$,
+  'passaporte',
+  'Passaporte & Vistos',
+  'Equipa Issencial',
+  'Especialista em Processos Documentais',
+  '15 Mai 2026',
+  '4 min de leitura',
+  ARRAY['novo-passaporte-portugues-2026', 'renovacao-passaporte-passo-a-passo'],
+  'published',
+  NOW() - INTERVAL '9 days'
+),
+
+-- 10. Arrendar Casa em Portugal: Guia para Estrangeiros
+(
+  'arrendar-casa-portugal-guia-estrangeiros',
+  'Arrendar Casa em Portugal: Guia para Estrangeiros',
+  'Contratos, cauções, fiadores e documentação. Tudo o que precisa para alugar casa em Portugal.',
+  $$Arrendar casa em Portugal sendo estrangeiro pode parecer complicado, mas com a preparação certa, o processo é mais simples do que parece. Neste guia, explicamos cada etapa.
+
+## Documentos necessários
+
+Para arrendar casa em Portugal, geralmente precisa de:
+
+1. **NIF** (Número de Identificação Fiscal) — obrigatório
+2. **Visto de residência** ou passaporte válido
+3. **Comprovativo de rendimentos** (contrato de trabalho, extratos bancários)
+4. **Fiador português** (em alguns casos)
+5. **Caução** (geralmente 2 a 3 rendas)
+
+## O contrato de arrendamento
+
+O contrato deve incluir:
+
+- Identificação das partes (senhorio e inquilino)
+- Descrição do imóvel
+- Valor da renda e condições de pagamento
+- Prazo do contrato
+- Direitos e obrigações de cada parte
+
+## Dicas importantes
+
+1. **Peça sempre recibo** — As rendas devem ser pagas com recibo emitido pelo senhorio
+2. **Verifique as condições do imóvel** — Faça um inventário detalhado na entrada
+3. **Conheça os seus direitos** — Em Portugal, o inquilino tem direitos protegidos por lei
+
+---
+
+Precisa de ajuda para encontrar e arrendar casa em Portugal? A Issencial pode ajudá-lo em todo o processo.$$,
+  'viver-portugal',
+  'Viver em Portugal',
+  'Equipa Issencial',
+  'Consultora de Relocação',
+  '9 Mai 2026',
+  '6 min de leitura',
+  ARRAY['nif-niss-sns-guia-imigrante-portugal'],
+  'published',
+  NOW() - INTERVAL '10 days'
+);
+
+-- ============================================
+-- Verificação
+-- ============================================
+SELECT 'Seed completed: ' || COUNT(*) || ' articles inserted' AS result FROM public.blog_articles;

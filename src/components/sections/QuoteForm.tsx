@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { createClient } from "@/lib/supabase/client";
 import { Send, Loader2, CheckCircle, AlertCircle } from "lucide-react";
 import Button from "@/components/ui/Button";
 import { services } from "@/data/services";
@@ -15,6 +14,7 @@ export default function QuoteForm({ defaultService = "", className = "" }: Quote
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [honeypot, setHoneypot] = useState("");
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -29,23 +29,22 @@ export default function QuoteForm({ defaultService = "", className = "" }: Quote
     setError(null);
 
     try {
-      const supabase = createClient();
-      const { error: insertError } = await supabase
-        .from("service_requests")
-        .insert({
-          name: formData.name,
-          email: formData.email,
-          phone: formData.phone,
-          service_slug: formData.service_slug,
-          description: formData.description,
-        });
+      const res = await fetch("/api/quote", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...formData, honeypot }),
+      });
 
-      if (insertError) throw insertError;
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Erro ao enviar pedido.");
+      }
 
       setSubmitted(true);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Erro ao solicitar orçamento:", err);
-      setError("Ocorreu um erro ao enviar o seu pedido. Por favor, tente novamente.");
+      setError(err.message || "Ocorreu um erro ao enviar o seu pedido. Por favor, tente novamente.");
     } finally {
       setLoading(false);
     }
@@ -78,6 +77,17 @@ export default function QuoteForm({ defaultService = "", className = "" }: Quote
       </p>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+        {/* Honeypot — invisible to humans, bots fill it */}
+        <input
+          type="text"
+          name="website"
+          value={honeypot}
+          onChange={(e) => setHoneypot(e.target.value)}
+          tabIndex={-1}
+          autoComplete="off"
+          style={{ position: "absolute", left: "-9999px", opacity: 0, height: 0 }}
+          aria-hidden="true"
+        />
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="flex flex-col gap-1.5">
             <label htmlFor="quote-name" className="text-sm font-medium text-dark">
@@ -119,7 +129,7 @@ export default function QuoteForm({ defaultService = "", className = "" }: Quote
               type="tel"
               value={formData.phone}
               onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-              placeholder="+351 900 000 000"
+              placeholder="+351 920 701 837"
               className="rounded-xl border border-gray-200 bg-light/50 px-4 py-3 text-sm text-dark outline-none transition-all focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/10 placeholder:text-gray-400"
             />
           </div>

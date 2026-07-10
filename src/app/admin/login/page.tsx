@@ -10,6 +10,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { logAuthEvent } from "@/lib/auth-log";
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState("");
@@ -22,13 +23,13 @@ export default function AdminLoginPage() {
 
   // Redirect to /admin if already authenticated as admin
   useEffect(() => {
-    const checkSession = async () => {
+    const checkAuth = async () => {
       const {
-        data: { session },
-      } = await supabase.auth.getSession();
+        data: { user },
+      } = await supabase.auth.getUser();
 
-      if (session?.user) {
-        const role = session.user.app_metadata?.role;
+      if (user) {
+        const role = user.app_metadata?.role;
         if (role === "admin") {
           router.push("/admin");
           return;
@@ -38,7 +39,7 @@ export default function AdminLoginPage() {
       setCheckingAuth(false);
     };
 
-    checkSession();
+    checkAuth();
   }, [router, supabase]);
 
   if (checkingAuth) {
@@ -59,7 +60,14 @@ export default function AdminLoginPage() {
         email,
         password,
       });
-      if (signInError) throw signInError;
+      if (signInError) {
+        // Log failed attempt
+        await logAuthEvent(email, "login_failed", {
+          reason: signInError.message,
+          source: "admin",
+        });
+        throw signInError;
+      }
 
       // Check if user is admin
       const {
@@ -69,19 +77,30 @@ export default function AdminLoginPage() {
 
       if (role !== "admin") {
         await supabase.auth.signOut();
+        await logAuthEvent(email, "login_failed", {
+          reason: "not_admin",
+          source: "admin",
+        });
         setError(
           "Esta conta não tem permissões de administrador. Aceda ao portal de cliente.",
         );
         return;
       }
 
+      // Log successful admin login
+      await logAuthEvent(email, "login_success", { source: "admin" });
+
+      // Check if MFA is enrolled — if so, redirect to MFA verification
+      const { data: mfaData } = await supabase.auth.mfa.listFactors();
+      const hasMfa = mfaData?.totp?.some((f) => f.status === "verified");
+      if (hasMfa) {
+        router.push("/admin/login/mfa");
+        return;
+      }
+
       router.push("/admin");
-    } catch (err: any) {
-      setError(
-        err.message === "Invalid login credentials"
-          ? "Email ou palavra-passe incorretos."
-          : err.message || "Ocorreu um erro.",
-      );
+    } catch {
+      setError("Email ou palavra-passe incorretos.");
     } finally {
       setLoading(false);
     }

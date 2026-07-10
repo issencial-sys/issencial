@@ -55,6 +55,20 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  // Admin users trying to access /portal — sign them out by clearing cookies
+  if (pathname === "/portal" && user?.app_metadata?.role === "admin") {
+    const url = request.nextUrl.clone();
+    url.pathname = "/admin/login";
+    const redirectResponse = NextResponse.redirect(url);
+
+    // Clear Supabase auth cookies on the actual response we're returning
+    request.cookies.getAll()
+      .filter(c => c.name.startsWith("sb-"))
+      .forEach(c => redirectResponse.cookies.set(c.name, "", { maxAge: 0, path: "/" }));
+
+    return redirectResponse;
+  }
+
   // Protected portal sub-routes -> redirect to /login if not authenticated
   if (pathname.startsWith("/portal/")) {
     if (!user) {
@@ -62,6 +76,20 @@ export async function proxy(request: NextRequest) {
       url.pathname = "/login";
       url.searchParams.set("redirect", pathname);
       return NextResponse.redirect(url);
+    }
+
+    // Admin users should not access portal — sign them out by clearing cookies
+    if (user.app_metadata?.role === "admin") {
+      const url = request.nextUrl.clone();
+      url.pathname = "/admin/login";
+      const redirectResponse = NextResponse.redirect(url);
+
+      // Clear Supabase auth cookies on the actual response we're returning
+      request.cookies.getAll()
+        .filter(c => c.name.startsWith("sb-"))
+        .forEach(c => redirectResponse.cookies.set(c.name, "", { maxAge: 0, path: "/" }));
+
+      return redirectResponse;
     }
   }
 

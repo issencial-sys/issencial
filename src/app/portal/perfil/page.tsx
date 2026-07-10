@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import {
   User,
   Mail,
@@ -171,9 +172,11 @@ export default function PerfilPage() {
           <div className="flex items-center gap-5 mb-8 pb-6 border-b border-gray-100">
             <div className="relative group">
               {avatarUrl ? (
-                <img
+                <Image
                   src={avatarUrl}
                   alt="Avatar"
+                  width={64}
+                  height={64}
                   className="h-16 w-16 rounded-full object-cover"
                 />
               ) : (
@@ -282,7 +285,7 @@ export default function PerfilPage() {
                   type="tel"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+351 900 000 000"
+                  placeholder="+351 920 701 837"
                   className="w-full rounded-xl border border-gray-200 bg-light/50 pl-10 pr-4 py-3 text-sm text-dark outline-none transition-all focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/10 placeholder:text-gray-400"
                 />
               </div>

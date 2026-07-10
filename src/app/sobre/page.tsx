@@ -3,20 +3,20 @@ import Footer from "@/components/layout/Footer";
 import Badge from "@/components/ui/Badge";
 import FadeIn from "@/components/ui/FadeIn";
 import Image from "next/image";
-import { Shield, Clock, Heart, MapPin, Target, Users, ArrowRight } from "lucide-react";
+import { Heart, Target, ArrowRight } from "lucide-react";
 import Button from "@/components/ui/Button";
 import Stats from "@/components/sections/Stats";
 
 const values = [
-  { icon: Shield, title: "Confiança", desc: "Construímos relações sólidas baseadas na transparência, honestidade e cumprimento de promessas." },
-  { icon: Clock, title: "Eficiência", desc: "Otimizamos cada processo para oferecer resultados rápidos e de qualidade, poupando tempo aos nossos clientes." },
+  { icon: "/assets/icons/protecao-escudo-seguranca.png", title: "Confiança", desc: "Construímos relações sólidas baseadas na transparência, honestidade e cumprimento de promessas." },
+  { icon: "/assets/icons/relogio.png", title: "Eficiência", desc: "Otimizamos cada processo para oferecer resultados rápidos e de qualidade, poupando tempo aos nossos clientes." },
   { icon: Heart, title: "Dedicação", desc: "Cada cliente é único. Oferecemos atenção personalizada e cuidamos de cada detalhe com profissionalismo." },
 ];
 
 const milestones = [
-  { year: "2008", icon: MapPin, title: "Fundação", desc: "A Issencial é fundada com a missão de simplificar processos e conectar pessoas a oportunidades." },
+  { year: "2008", icon: "/assets/icons/mapa-mundial.webp", title: "Fundação", desc: "A Issencial é fundada com a missão de simplificar processos e conectar pessoas a oportunidades." },
   { year: "2012", icon: Target, title: "Expansão", desc: "Abertura de escritórios em mais 3 países europeus, alargando a rede de parceiros." },
-  { year: "2018", icon: Users, title: "+2.000 Clientes", desc: "Alcançamos a marca de 2.000 clientes satisfeitos em mais de 20 países." },
+  { year: "2018", icon: "/assets/icons/acompanhar-grupo.png", title: "+2.000 Clientes", desc: "Alcançamos a marca de 2.000 clientes satisfeitos em mais de 20 países." },
   { year: "2024", icon: Heart, title: "Plataforma Digital", desc: "Lançamento do portal do cliente e dashboard administrativo para acompanhamento em tempo real." },
 ];
 
@@ -66,7 +66,7 @@ export default function SobrePage() {
                   </p>
                   <div className="mt-6 pt-5 border-t border-white/10">
                     <div className="flex items-center justify-center gap-2 text-sm text-accent">
-                      <MapPin size={14} />
+                      <Image src="/assets/icons/mapa-mundial.webp" alt="" width={14} height={14} className="brightness-0 saturate-100 [filter:invert(79%)_sepia(18%)_saturate(389%)_hue-rotate(23deg)_brightness(93%)_contrast(87%)]" />
                       <span>Portugal · Europa · Mundo</span>
                     </div>
                   </div>
@@ -87,7 +87,11 @@ export default function SobrePage() {
                 <FadeIn key={v.title} delay={i * 0.1}>
                 <div className="text-center rounded-2xl border border-gray-100 bg-white p-8 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:bg-primary hover:border-primary group">
                   <div className="mx-auto mb-6 flex h-18 w-18 items-center justify-center rounded-full bg-accent/10 text-primary transition-all group-hover:bg-accent/20">
-                    <v.icon size={32} />
+                    {typeof v.icon === "string" ? (
+                      <Image src={v.icon} alt={v.title} width={32} height={32} className="text-primary" />
+                    ) : (
+                      <v.icon size={32} />
+                    )}
                   </div>
                   <h3 className="text-xl font-semibold mb-3 transition-colors group-hover:text-white">{v.title}</h3>
                   <p className="text-gray-500 transition-colors group-hover:text-white/70">{v.desc}</p>
@@ -131,18 +135,21 @@ export default function SobrePage() {
 
             {/* Desktop timeline */}
             <div className="relative hidden md:block">
-              {/* Connector line */}
               <div className="absolute top-[44px] left-[8%] right-[8%] h-px bg-gradient-to-r from-primary/10 via-accent/40 to-primary/10" />
 
               <div className="grid grid-cols-4 gap-6 relative">
                 {milestones.map((m, i) => {
-                  const Icon = m.icon;
+                  const MilestoneIcon = typeof m.icon === "function" ? m.icon : null;
                   return (
                     <FadeIn key={m.year} delay={i * 0.1}>
                     <div className="text-center group">
                       <div className="relative mx-auto mb-6">
                         <div className="mx-auto flex h-[88px] w-[88px] items-center justify-center rounded-full bg-white border-2 border-accent/30 transition-all duration-500 group-hover:border-accent group-hover:shadow-[0_0_30px_rgba(215,222,106,0.2)] relative z-10">
-                          <Icon size={30} className="text-primary transition-all duration-500 group-hover:scale-110" />
+                          {MilestoneIcon ? (
+                            <MilestoneIcon size={30} className="text-primary transition-all duration-500 group-hover:scale-110" />
+                          ) : (
+                            <Image src={m.icon as string} alt={m.title} width={30} height={30} className="text-primary transition-all duration-500 group-hover:scale-110" />
+                          )}
                         </div>
                         <div className="absolute inset-0 mx-auto h-[88px] w-[88px] rounded-full bg-accent/5 scale-0 transition-transform duration-500 group-hover:scale-150" />
                       </div>
@@ -163,12 +170,16 @@ export default function SobrePage() {
               <div className="absolute top-0 left-[39px] h-full w-px bg-accent/20" />
               <div className="flex flex-col gap-10">
                 {milestones.map((m, i) => {
-                  const Icon = m.icon;
+                  const MilestoneIcon = typeof m.icon === "function" ? m.icon : null;
                   return (
                     <FadeIn key={m.year} delay={i * 0.1}>
                     <div className="flex gap-5 relative group">
                       <div className="flex h-[78px] w-[78px] shrink-0 items-center justify-center rounded-full bg-white border-2 border-accent/30 transition-all duration-300 group-hover:border-accent z-10">
-                        <Icon size={28} className="text-primary" />
+                        {MilestoneIcon ? (
+                          <MilestoneIcon size={28} className="text-primary" />
+                        ) : (
+                          <Image src={m.icon as string} alt={m.title} width={28} height={28} className="text-primary" />
+                        )}
                       </div>
                       <div className="pt-3">
                         <span className="inline-block mb-1 rounded-full bg-accent/15 px-2.5 py-0.5 text-xs font-bold text-accent-dark">

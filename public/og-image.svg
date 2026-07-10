@@ -1,0 +1,36 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="1200" height="630" fill="#002e35"/>
+
+  <!-- Dot pattern -->
+  <g opacity="0.035">
+    <pattern id="dots" width="40" height="40" patternUnits="userSpaceOnUse">
+      <circle cx="20" cy="20" r="1.5" fill="#d7de6a"/>
+    </pattern>
+    <rect width="1200" height="630" fill="url(#dots)"/>
+  </g>
+
+  <!-- Decorative circles -->
+  <circle cx="1000" cy="100" r="250" fill="none" stroke="#d7de6a" stroke-opacity="0.08" stroke-width="1"/>
+  <circle cx="150" cy="520" r="180" fill="none" stroke="#d7de6a" stroke-opacity="0.06" stroke-width="1"/>
+  <circle cx="920" cy="380" r="90" fill="#d7de6a" fill-opacity="0.03" stroke="#d7de6a" stroke-opacity="0.04" stroke-width="1"/>
+
+  <!-- Content group -->
+  <g transform="translate(600, 315)" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif">
+
+    <!-- Logo text -->
+    <g transform="translate(0, -40)">
+      <text x="0" y="0" fill="#ffffff" font-size="64" font-weight="700" letter-spacing="-0.02">ISSENCIAL</text>
+      <text x="0" y="28" fill="#d7de6a" font-size="16" font-weight="600" letter-spacing="3" text-transform="uppercase">SERVIÇOS INTEGRADOS GLOBAIS</text>
+    </g>
+
+    <!-- Accent line -->
+    <rect x="-20" y="15" width="40" height="3" rx="2" fill="#d7de6a"/>
+
+    <!-- Tagline -->
+    <text x="0" y="50" fill="#ffffff" fill-opacity="0.5" font-size="20" font-weight="400" letter-spacing="0.01">
+      Soluções completas para cada necessidade — sem fronteiras
+    </text>
+
+  </g>
+</svg>

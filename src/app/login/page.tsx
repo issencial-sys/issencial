@@ -3,16 +3,16 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import {
-  Layers,
   Mail,
   Lock,
   User,
-  ArrowRight,
   Loader2,
   Shield,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { logAuthEvent } from "@/lib/auth-log";
 
 export default function LoginPage() {
   const [mode, setMode] = useState<"login" | "register">("login");
@@ -54,7 +54,29 @@ export default function LoginPage() {
           email,
           password,
         });
-        if (error) throw error;
+        if (error) {
+          // Log failed login attempt
+          await logAuthEvent(email, "login_failed", {
+            reason: error.message,
+            source: "client",
+          });
+          throw error;
+        }
+
+        // Admin users must use /admin/login — sign them out with an error
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user?.app_metadata?.role === "admin") {
+          await supabase.auth.signOut();
+          await logAuthEvent(email, "login_failed", {
+            reason: "admin_using_client_login",
+            source: "client",
+          });
+          setError("Esta conta é de administrador. Use o acesso específico de administrador.");
+          return;
+        }
+
+        // Log successful login
+        await logAuthEvent(email, "login_success", { source: "client" });
         router.push(getRedirectTo());
       } else {
         const { error } = await supabase.auth.signUp({
@@ -62,16 +84,23 @@ export default function LoginPage() {
           password,
           options: { data: { name, role: "client" } },
         });
-        if (error) throw error;
+        if (error) {
+          await logAuthEvent(email, "signup_failed", {
+            reason: error.message,
+            source: "client",
+          });
+          throw error;
+        }
+        await logAuthEvent(email, "signup_success", { source: "client" });
         setMode("login");
         setError("Conta criada! Verifique o seu email para confirmar o registo.");
         setPassword("");
       }
-    } catch (err: any) {
+    } catch {
       setError(
-        err.message === "Invalid login credentials"
-          ? "Email ou palavra-passe incorretos."
-          : err.message || "Ocorreu um erro.",
+        mode === "register"
+          ? "Não foi possível criar a conta. Verifique os dados e tente novamente."
+          : "Email ou palavra-passe incorretos."
       );
     } finally {
       setLoading(false);
@@ -91,16 +120,17 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-3 text-2xl font-bold"
-          >
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-white">
-              <Layers size={22} />
-            </div>
-            Issencial
+          <Link href="/" className="inline-flex items-center justify-center bg-primary rounded-2xl p-5 mx-auto w-fit">
+            <Image
+              src="/logo/principal_branco.png"
+              alt="Issencial"
+              width={160}
+              height={38}
+              className="object-contain h-8 w-auto"
+              priority
+            />
           </Link>
-          <p className="text-gray-500 mt-3">
+          <p className="text-gray-500 mt-4">
             {mode === "login"
               ? "Aceda ao seu portal de cliente"
               : "Crie a sua conta de cliente"}
@@ -231,11 +261,7 @@ export default function LoginPage() {
               disabled={loading}
               className="w-full rounded-xl bg-primary text-white py-3 text-sm font-semibold hover:bg-primary-light transition-all flex items-center justify-center gap-2 disabled:opacity-60"
             >
-              {loading ? (
-                <Loader2 size={16} className="animate-spin" />
-              ) : (
-                <ArrowRight size={16} />
-              )}
+              {loading && <Loader2 size={16} className="animate-spin" />}
               {loading
                 ? "A processar..."
                 : mode === "login"

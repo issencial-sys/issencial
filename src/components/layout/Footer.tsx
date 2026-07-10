@@ -11,7 +11,7 @@ const serviceLinks = [
 const companyLinks = [
   { href: "/sobre", label: "Sobre Nós" },
   { href: "/contacto", label: "Contacto" },
-  { href: "/#blog", label: "Blog" },
+  { href: "/blog", label: "Blog" },
 ];
 
 const supportLinks = [

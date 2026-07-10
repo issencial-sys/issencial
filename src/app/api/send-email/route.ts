@@ -41,7 +41,8 @@ export async function POST(request: Request) {
       .limit(10);
 
     if (fetchError) {
-      return NextResponse.json({ error: fetchError.message }, { status: 500 });
+      console.error("Erro ao buscar emails pendentes:", fetchError);
+      return NextResponse.json({ error: "Erro ao processar fila de emails." }, { status: 500 });
     }
 
     if (!pendingEmails || pendingEmails.length === 0) {
@@ -87,7 +88,7 @@ export async function POST(request: Request) {
           })
           .eq("id", email.id);
 
-        results.push({ id: email.id, status: "failed", error: err.message });
+        results.push({ id: email.id, status: "failed" });
       }
     }
 
@@ -96,8 +97,9 @@ export async function POST(request: Request) {
       results,
       note: "Para ativar o envio real, configura a Resend (ou outro serviço de email) e descomenta o código em /api/send-email/route.ts",
     });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch {
+    console.error("Erro inesperado em send-email:");
+    return NextResponse.json({ error: "Erro interno do servidor." }, { status: 500 });
   }
 }
 

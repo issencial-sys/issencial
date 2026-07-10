@@ -5,7 +5,7 @@ export interface ActivityLogParams {
   entityId: string;
   action: string;
   description: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 /**

@@ -34,13 +34,16 @@ export async function middleware(request: NextRequest) {
           return request.cookies.getAll();
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value),
-          );
-          supabaseResponse = NextResponse.next({ request });
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options),
-          );
+          cookiesToSet.forEach(({ name, value, options }) => {
+            // Never let the middleware itself clear the session cookie.
+            // A value of "" means "clear" (logout / failed refresh) — if we
+            // wrote that, the browser would wipe the cookie right after a
+            // successful 2FA login. Only propagate non-empty updates so the
+            // client-side signOut remains the single source of truth for
+            // ending a session.
+            if (value === "") return;
+            supabaseResponse.cookies.set(name, value, options);
+          });
         },
       },
     },

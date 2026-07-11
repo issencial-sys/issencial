@@ -10,10 +10,13 @@ import {
   Search,
   Paperclip,
   FileText,
+  CheckCircle2,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import FileUpload from "@/components/ui/FileUpload";
 import type { UploadedFile } from "@/components/ui/FileUpload";
+import { notify } from "@/lib/email/notify";
+import { newMessageTemplate } from "@/lib/email";
 
 interface GeneralMessage {
   id: string;
@@ -45,6 +48,7 @@ export default function AdminMensagensPage() {
   const [clients, setClients] = useState<Map<string, ClientInfo>>(new Map());
   const [assignments, setAssignments] = useState<Map<string, ClientAssignment>>(new Map());
   const [adminDisplayNames, setAdminDisplayNames] = useState<Map<string, string>>(new Map());
+  const [clientEmails, setClientEmails] = useState<Map<string, string>>(new Map());
   const [loading, setLoading] = useState(true);
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [replyText, setReplyText] = useState("");
@@ -56,6 +60,8 @@ export default function AdminMensagensPage() {
   const [clientTyping, setClientTyping] = useState(false);
   const [assigning, setAssigning] = useState(false);
   const [assignmentError, setAssignmentError] = useState<string | null>(null);
+  const [assignSuccess, setAssignSuccess] = useState<string | null>(null);
+  const assignTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const typingTimerRef = useRef<NodeJS.Timeout | null>(null);
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
@@ -64,6 +70,13 @@ export default function AdminMensagensPage() {
 
   useEffect(() => {
     init();
+  }, []);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (assignTimeoutRef.current) clearTimeout(assignTimeoutRef.current);
+    };
   }, []);
 
   // Realtime subscription in its own effect to avoid StrictMode race.
@@ -207,6 +220,19 @@ export default function AdminMensagensPage() {
     });
     setAdminDisplayNames(nameMap);
 
+    // Fetch client emails
+    try {
+      const emailRes = await fetch("/api/admin/users");
+      if (emailRes.ok) {
+        const { users } = await emailRes.json();
+        const emailMap = new Map<string, string>();
+        (users || []).forEach((u: any) => {
+          emailMap.set(u.id, u.email);
+        });
+        setClientEmails(emailMap);
+      }
+    } catch { /* silêncio */ }
+
     setLoading(false);
   };
 
@@ -221,6 +247,7 @@ export default function AdminMensagensPage() {
     if (!adminId) return;
     setAssigning(true);
     setAssignmentError(null);
+    setAssignSuccess(null);
 
     const { error } = await supabase.from("client_assignments").upsert({
       client_id: clientId,
@@ -237,12 +264,20 @@ export default function AdminMensagensPage() {
         next.set(clientId, { client_id: clientId, admin_id: adminId });
         return next;
       });
+      const clientName = clients.get(clientId)?.name || "Cliente";
+      setAssignSuccess(`${clientName} atribuído a si com sucesso!`);
+      if (assignTimeoutRef.current) clearTimeout(assignTimeoutRef.current);
+      assignTimeoutRef.current = setTimeout(() => {
+        setAssignSuccess(null);
+        assignTimeoutRef.current = null;
+      }, 4000);
     }
     setAssigning(false);
   };
 
   const handleReply = async () => {
-    if (!replyText.trim() || !selectedClientId || !adminId) return;
+    const text = replyText.trim();
+    if (!text || !selectedClientId || !adminId) return;
 
     setSending(true);
 
@@ -260,7 +295,7 @@ export default function AdminMensagensPage() {
       id: `temp-${Date.now()}`,
       client_id: selectedClientId,
       sender_id: adminId,
-      content: replyText.trim(),
+      content: text,
       read: false,
       created_at: new Date().toISOString(),
     };
@@ -286,6 +321,28 @@ export default function AdminMensagensPage() {
       setMessages((prev) =>
         prev.map((m) => (m.id === optimisticMsg.id ? (data as GeneralMessage) : m)),
       );
+
+      // Notify client of admin reply
+      if (selectedClientId) {
+        const clientEmail = clientEmails.get(selectedClientId);
+        const clientName = clients.get(selectedClientId)?.name || "";
+        if (clientEmail) {
+          notify({
+            to_email: clientEmail,
+            to_name: clientName,
+            subject: "Nova mensagem da Equipa Issencial",
+            html_body: newMessageTemplate({
+              client_name: clientName,
+              sender_name: "Equipa Issencial",
+              preview: text,
+              cta_url: "/portal/mensagens",
+            }),
+            type: "new_message",
+            reference_id: selectedClientId,
+            reference_type: "client",
+          });
+        }
+      }
     } else {
       // Remove optimistic message on error
       setMessages((prev) => prev.filter((m) => m.id !== optimisticMsg.id));
@@ -431,6 +488,8 @@ export default function AdminMensagensPage() {
                 (m) => !m.read && m.sender_id === clientId,
               ).length;
               const isActive = selectedClientId === clientId;
+              const assignment = assignments.get(clientId);
+              const isAssignedToMe = assignment?.admin_id === adminId;
 
               return (
                 <div key={clientId}>
@@ -445,18 +504,23 @@ export default function AdminMensagensPage() {
                       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-sm font-bold">
                         {(client?.name || "C").charAt(0).toUpperCase()}
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium text-gray-900 truncate">
-                            {client?.name || "Cliente"}
-                          </span>
-                          <span className="text-[10px] text-gray-400 shrink-0 ml-2">
-                            {new Date(lastMsg.created_at).toLocaleDateString(
-                              "pt-PT",
-                              { day: "numeric", month: "short" },
+                      <div className="flex-1 min-w-0">                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium text-gray-900 truncate">
+                              {client?.name || "Cliente"}
+                            </span>
+                            {isAssignedToMe && (
+                              <span className="shrink-0 inline-flex items-center gap-0.5 rounded-full bg-green-50 border border-green-200 px-1.5 py-0.5 text-[9px] font-semibold text-green-600">
+                                <CheckCircle2 size={8} />
+                                Meu
+                              </span>
                             )}
-                          </span>
-                        </div>
+                            <span className="text-[10px] text-gray-400 shrink-0 ml-auto">
+                              {new Date(lastMsg.created_at).toLocaleDateString(
+                                "pt-PT",
+                                { day: "numeric", month: "short" },
+                              )}
+                            </span>
+                          </div>
                         <p className="text-xs text-gray-400 truncate mt-0.5">
                           {lastMsg.content}
                         </p>
@@ -479,18 +543,23 @@ export default function AdminMensagensPage() {
                       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-sm font-bold">
                         {(client?.name || "C").charAt(0).toUpperCase()}
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium text-gray-900 truncate">
-                            {client?.name || "Cliente"}
-                          </span>
-                          <span className="text-[10px] text-gray-400 shrink-0 ml-2">
-                            {new Date(lastMsg.created_at).toLocaleDateString(
-                              "pt-PT",
-                              { day: "numeric", month: "short" },
+                      <div className="flex-1 min-w-0">                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium text-gray-900 truncate">
+                              {client?.name || "Cliente"}
+                            </span>
+                            {isAssignedToMe && (
+                              <span className="shrink-0 inline-flex items-center gap-0.5 rounded-full bg-green-50 border border-green-200 px-1.5 py-0.5 text-[9px] font-semibold text-green-600">
+                                <CheckCircle2 size={8} />
+                                Meu
+                              </span>
                             )}
-                          </span>
-                        </div>
+                            <span className="text-[10px] text-gray-400 shrink-0 ml-auto">
+                              {new Date(lastMsg.created_at).toLocaleDateString(
+                                "pt-PT",
+                                { day: "numeric", month: "short" },
+                              )}
+                            </span>
+                          </div>
                         <p className="text-xs text-gray-400 truncate mt-0.5">
                           {lastMsg.content}
                         </p>
@@ -586,8 +655,24 @@ export default function AdminMensagensPage() {
                 );
               }
 
+              if (isAssignedToMe) {
+                return (
+                  <div className="px-5 py-2.5 bg-green-50 border-b border-green-100 text-xs text-green-700 flex items-center gap-2">
+                    <CheckCircle2 size={14} className="text-green-500" />
+                    Este cliente está atribuído a si.
+                  </div>
+                );
+              }
+
               return null;
             })()}
+
+            {assignSuccess && (
+              <div className="px-5 py-2.5 bg-green-50 border-b border-green-100 text-xs text-green-700 flex items-center gap-2">
+                <CheckCircle2 size={14} className="text-green-500" />
+                {assignSuccess}
+              </div>
+            )}
 
             {assignmentError && (
               <div className="px-5 py-2 bg-red-50 border-b border-red-100 text-xs text-red-600">

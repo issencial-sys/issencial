@@ -20,6 +20,7 @@ import {
   X,
   ChevronRight,
   Newspaper,
+  Send,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
@@ -33,6 +34,7 @@ const navItems = [
   { href: "/admin/mensagens", icon: MessageSquare, label: "Mensagens" },
   { href: "/admin/faturas", icon: Receipt, label: "Faturas" },
   { href: "/admin/blog", icon: Newspaper, label: "Blog" },
+  { href: "/admin/newsletter", icon: Send, label: "Newsletter" },
   { href: "/admin/config", icon: Settings, label: "Configuração" },
 ];
 

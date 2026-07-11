@@ -5,7 +5,9 @@ import { NextResponse, type NextRequest } from "next/server";
 const PUBLIC_ROUTES = new Set([
   "/",
   "/login",
+  "/login/mfa",
   "/admin/login",
+  "/admin/login/mfa",
   "/sobre",
   "/servicos",
   "/contacto",

@@ -7,7 +7,7 @@ import Footer from "@/components/layout/Footer";
 import SectionHeader from "@/components/ui/SectionHeader";
 import { blogArticles as staticArticles } from "@/data/blog";
 import { createClient } from "@/lib/supabase/client";
-import { ArrowRight, Clock, Calendar, Search, X, Loader2 } from "lucide-react";
+import { ArrowRight, Clock, Calendar, Search, X, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 
 interface ArticleItem {
   slug: string;
@@ -18,6 +18,7 @@ interface ArticleItem {
   author: string;
   date: string;
   readingTime: string;
+  image?: string;
 }
 
 const categoryFilters = [
@@ -53,6 +54,8 @@ export default function BlogPageContent() {
   const [activeCategory, setActiveCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [subscribing, setSubscribing] = useState(false);
+  const [subscribeMsg, setSubscribeMsg] = useState<{ success: boolean; text: string } | null>(null);
 
   useEffect(() => {
     loadArticles();
@@ -80,6 +83,7 @@ export default function BlogPageContent() {
           author: a.author,
           date: a.date,
           readingTime: a.reading_time,
+          image: a.image || undefined,
         }))
       );
     } else {
@@ -108,6 +112,7 @@ export default function BlogPageContent() {
           author: a.author,
           date: a.date,
           readingTime: a.readingTime,
+          image: (a as any).image || undefined,
         }))
       );
     }
@@ -314,11 +319,36 @@ export default function BlogPageContent() {
               Sem spam. Apenas conteúdo útil para a sua vida.
             </p>
             <form
-              onSubmit={(e) => {
+              onSubmit={async (e) => {
                 e.preventDefault();
-                alert("(Demo) Subscrição efetuada com sucesso!");
+                const form = e.currentTarget;
+                const emailInput = form.querySelector('input[type="email"]') as HTMLInputElement;
+                if (!emailInput?.value) return;
+
+                setSubscribing(true);
+                setSubscribeMsg(null);
+
+                try {
+                  const res = await fetch("/api/newsletter/subscribe", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email: emailInput.value }),
+                  });
+                  const data = await res.json();
+
+                  if (res.ok) {
+                    setSubscribeMsg({ success: true, text: data.message });
+                    emailInput.value = "";
+                  } else {
+                    setSubscribeMsg({ success: false, text: data.error || "Erro ao subscrever." });
+                  }
+                } catch {
+                  setSubscribeMsg({ success: false, text: "Erro de conexão." });
+                }
+
+                setSubscribing(false);
               }}
-              className="flex gap-3 max-w-md mx-auto"
+              className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto"
             >
               <input
                 type="email"
@@ -328,11 +358,22 @@ export default function BlogPageContent() {
               />
               <button
                 type="submit"
-                className="px-5 py-3 rounded-lg bg-[#d7de6a] text-[#002e35] text-sm font-semibold hover:bg-[#e3e88f] transition-all whitespace-nowrap"
+                disabled={subscribing}
+                className="px-5 py-3 rounded-lg bg-[#d7de6a] text-[#002e35] text-sm font-semibold hover:bg-[#e3e88f] transition-all whitespace-nowrap disabled:opacity-50 flex items-center gap-2 justify-center"
               >
-                Subscrever
+                {subscribing ? (
+                  <><Loader2 size={14} className="animate-spin" /> A subscrever...</>
+                ) : (
+                  "Subscrever"
+                )}
               </button>
             </form>
+            {subscribeMsg && (
+              <div className={`mt-4 flex items-center gap-2 justify-center text-sm ${subscribeMsg.success ? "text-white" : "text-red-300"}`}>
+                {subscribeMsg.success ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
+                {subscribeMsg.text}
+              </div>
+            )}
           </div>
 
           <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 mt-12 pt-8 border-t border-white/5">
@@ -361,8 +402,17 @@ function ArticleCard({ article, index }: { article: ArticleItem; index: number }
         animationDelay: `${index * 0.06}s`,
       }}
     >
-      <div className={`relative h-44 bg-gradient-to-br ${gradient} flex items-center justify-center overflow-hidden`}>
+      <div className={`relative h-44 overflow-hidden bg-gradient-to-br ${gradient}`}>
+        {/* Pattern overlay — always visible behind the image or as fallback */}
         <div className="absolute inset-0 opacity-[0.05] bg-[radial-gradient(circle_at_50%_50%,#d7de6a_1px,transparent_1px)] bg-[length:30px_30px]" />
+        {article.image && (
+          <img
+            src={article.image}
+            alt={article.title}
+            className="relative z-10 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            loading="lazy"
+          />
+        )}
       </div>
 
       <div className="p-5">

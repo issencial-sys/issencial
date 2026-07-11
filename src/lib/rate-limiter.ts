@@ -149,3 +149,8 @@ export const authRateLimiter = createRateLimiter({
   maxRequests: 10,
   windowSeconds: 60,
 });
+
+export const mfaRateLimiter = createRateLimiter({
+  maxRequests: 5,
+  windowSeconds: 60,
+});

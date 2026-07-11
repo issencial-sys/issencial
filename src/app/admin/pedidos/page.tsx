@@ -13,6 +13,8 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { getServiceBySlug } from "@/data/services";
+import { notify } from "@/lib/email/notify";
+import { statusChangeTemplate } from "@/lib/email";
 
 interface ServiceRequest {
   id: string;
@@ -105,6 +107,35 @@ export default function AdminPedidosPage() {
           service_slug: req.service_slug,
           status: "active",
           source_request_id: req.id,
+        });
+      }
+    }
+
+    // Notify client of status change
+    if (newStatus === "approved" || newStatus === "rejected") {
+      const req = requests.find((r) => r.id === id);
+      if (req) {
+        const service = getServiceBySlug(req.service_slug);
+        const statusMap: Record<string, string> = {
+          pending: "Pendente", in_review: "Em Análise", approved: "Aprovado", rejected: "Recusado", completed: "Concluído",
+        };
+        notify({
+          to_email: req.email,
+          to_name: req.name,
+          subject: `Pedido ${statusMap[newStatus]}: ${service?.title || req.service_slug}`,
+          html_body: statusChangeTemplate({
+            entity_label: "Pedido de Serviço",
+            entity_name: service?.title || req.service_slug,
+            old_status: statusMap[req.status] || req.status,
+            new_status: statusMap[newStatus] || newStatus,
+            message: newStatus === "approved"
+              ? "O seu pedido foi aprovado. Vamos iniciar o processo em breve."
+              : "O seu pedido foi recusado. Se tiver dúvidas, por favor contacte-nos.",
+            cta_url: "/portal",
+          }),
+          type: "status_change",
+          reference_id: req.id,
+          reference_type: "service_request",
         });
       }
     }

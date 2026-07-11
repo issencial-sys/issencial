@@ -15,6 +15,9 @@ import {
   Send,
   AlertCircle,
   Search,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { getServiceBySlug } from "@/data/services";
@@ -32,6 +35,16 @@ interface Process {
 interface ClientProfile {
   id: string;
   name: string;
+}
+
+interface ClientAssignment {
+  client_id: string;
+  admin_id: string;
+}
+
+interface AdminInfo {
+  user_id: string;
+  display_name?: string;
 }
 
 const statusConfig: Record<
@@ -71,8 +84,32 @@ export default function AdminProcessosPage() {
   const [search, setSearch] = useState("");
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [clients, setClients] = useState<ClientProfile[]>([]);
+  const [assignments, setAssignments] = useState<Map<string, ClientAssignment>>(new Map());
+  const [adminList, setAdminList] = useState<AdminInfo[]>([]);
 
   // Create form state
+  const [sortColumn, setSortColumn] = useState<string>("created_at");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 15;
+
+  const handleSort = (column: string) => {
+    if (sortColumn === column) {
+      setSortDirection((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortColumn(column);
+      setSortDirection("asc");
+    }
+    setCurrentPage(1);
+  };
+
+  const getSortIcon = (column: string) => {
+    if (sortColumn !== column) return <ArrowUpDown size={12} className="text-gray-300" />;
+    return sortDirection === "asc"
+      ? <ArrowUp size={12} className="text-primary" />
+      : <ArrowDown size={12} className="text-primary" />;
+  };
+
   const [formClientId, setFormClientId] = useState("");
   const [formServiceSlug, setFormServiceSlug] = useState("");
   const [formTitle, setFormTitle] = useState("");
@@ -97,12 +134,23 @@ export default function AdminProcessosPage() {
   };
 
   const fetchProcesses = async () => {
-    const { data } = await supabase
-      .from("processes")
-      .select("*, profiles!inner(name)")
-      .order("created_at", { ascending: false });
+    const [processesResult, assignmentsResult, adminUsersResult] = await Promise.all([
+      supabase
+        .from("processes")
+        .select("*, profiles!inner(name)")
+        .order("created_at", { ascending: false }),
+      supabase.from("client_assignments").select("*"),
+      supabase.from("admin_users").select("user_id, display_name"),
+    ]);
 
-    setProcesses(data ?? []);
+    setProcesses(processesResult.data ?? []);
+
+    const assignMap = new Map<string, ClientAssignment>();
+    (assignmentsResult.data ?? []).forEach((a) => assignMap.set(a.client_id, a));
+    setAssignments(assignMap);
+
+    setAdminList(adminUsersResult.data ?? []);
+
     setLoading(false);
   };
 
@@ -166,6 +214,35 @@ export default function AdminProcessosPage() {
     completed: processes.filter((p) => p.status === "completed").length,
     cancelled: processes.filter((p) => p.status === "cancelled").length,
   };
+
+  // Sorting
+  const sortedProcesses = [...filteredProcesses].sort((a, b) => {
+    const dir = sortDirection === "asc" ? 1 : -1;
+
+    if (sortColumn === "title") {
+      return a.title.localeCompare(b.title) * dir;
+    }
+    if (sortColumn === "client") {
+      return (a.profiles?.name || "").localeCompare(b.profiles?.name || "") * dir;
+    }
+    if (sortColumn === "status") {
+      return a.status.localeCompare(b.status) * dir;
+    }
+    // Default: sort by created_at
+    return (new Date(a.created_at).getTime() - new Date(b.created_at).getTime()) * dir;
+  });
+
+  // Pagination
+  const totalPages = Math.ceil(sortedProcesses.length / ITEMS_PER_PAGE);
+  const paginatedProcesses = sortedProcesses.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE,
+  );
+
+  // Reset to page 1 when filters/search change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, filter]);
 
   return (
     <div>
@@ -331,17 +408,38 @@ export default function AdminProcessosPage() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-gray-100 bg-gray-50/50">
-                  <th className="text-left px-6 py-4 text-xs font-semibold uppercase tracking-wider text-gray-400">Processo</th>
-                  <th className="text-left px-6 py-4 text-xs font-semibold uppercase tracking-wider text-gray-400">Cliente</th>
-                  <th className="text-left px-6 py-4 text-xs font-semibold uppercase tracking-wider text-gray-400">Status</th>
-                  <th className="text-left px-6 py-4 text-xs font-semibold uppercase tracking-wider text-gray-400">Data</th>
+                  <th className="text-left px-6 py-4">
+                    <button onClick={() => handleSort("title")} className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-gray-400 hover:text-gray-700 transition-colors">
+                      Processo {getSortIcon("title")}
+                    </button>
+                  </th>
+                  <th className="text-left px-6 py-4">
+                    <button onClick={() => handleSort("client")} className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-gray-400 hover:text-gray-700 transition-colors">
+                      Cliente {getSortIcon("client")}
+                    </button>
+                  </th>
+                  <th className="text-left px-6 py-4 text-xs font-semibold uppercase tracking-wider text-gray-400">Gestor</th>
+                  <th className="text-left px-6 py-4">
+                    <button onClick={() => handleSort("status")} className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-gray-400 hover:text-gray-700 transition-colors">
+                      Status {getSortIcon("status")}
+                    </button>
+                  </th>
+                  <th className="text-left px-6 py-4">
+                    <button onClick={() => handleSort("created_at")} className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-gray-400 hover:text-gray-700 transition-colors">
+                      Data {getSortIcon("created_at")}
+                    </button>
+                  </th>
                   <th className="text-right px-6 py-4 text-xs font-semibold uppercase tracking-wider text-gray-400">Ações</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {filteredProcesses.map((p) => {
+                {paginatedProcesses.map((p) => {
                   const status = statusConfig[p.status] || statusConfig.active;
                   const StatusIcon = status.icon;
+                  const assignment = assignments.get(p.client_id);
+                  const assignedAdmin = assignment
+                    ? adminList.find((a) => a.user_id === assignment.admin_id)
+                    : null;
                   return (
                     <tr key={p.id} className="hover:bg-gray-50/50 transition-colors">
                       <td className="px-6 py-4">
@@ -349,6 +447,15 @@ export default function AdminProcessosPage() {
                       </td>
                       <td className="px-6 py-4">
                         <span className="text-sm text-gray-500">{p.profiles?.name || "—"}</span>
+                      </td>
+                      <td className="px-6 py-4">
+                        {assignedAdmin ? (
+                          <span className="text-sm text-gray-600">
+                            {assignedAdmin.display_name || "Administrador"}
+                          </span>
+                        ) : (
+                          <span className="text-sm text-gray-300 italic">—</span>
+                        )}
                       </td>
                       <td className="px-6 py-4">
                         <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${status.bg} ${status.color}`}>
@@ -374,6 +481,46 @@ export default function AdminProcessosPage() {
             </table>
           </div>
         </div>
+      )}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="mt-8 flex items-center justify-center gap-2 flex-wrap">
+          <button
+            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+            disabled={currentPage === 1}
+            className="rounded-xl border border-gray-200 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+          >
+            Anterior
+          </button>
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+            <button
+              key={page}
+              onClick={() => setCurrentPage(page)}
+              className={`w-10 h-10 rounded-xl text-sm font-medium transition-all ${
+                page === currentPage
+                  ? "bg-primary text-white shadow-sm"
+                  : "border border-gray-200 text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              {page}
+            </button>
+          ))}
+          <button
+            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+            disabled={currentPage === totalPages}
+            className="rounded-xl border border-gray-200 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+          >
+            Seguinte
+          </button>
+        </div>
+      )}
+
+      {/* Results info */}
+      {totalPages > 1 && (
+        <p className="text-center text-xs text-gray-400 mt-3">
+          Mostrando {paginatedProcesses.length} de {filteredProcesses.length} processo{filteredProcesses.length !== 1 ? "s" : ""}
+        </p>
       )}
     </div>
   );

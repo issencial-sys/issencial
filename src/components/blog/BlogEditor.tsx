@@ -13,6 +13,9 @@ import {
   Plus,
   ChevronDown,
   FileText,
+  Upload,
+  Image as ImageIcon,
+  Link as LinkIcon,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import BlogArticleView from "@/components/blog/BlogArticleView";
@@ -74,6 +77,9 @@ export default function BlogEditor({ articleId }: { articleId?: string }) {
   const [showSeo, setShowSeo] = useState(false);
   const [newRelated, setNewRelated] = useState("");
   const [allArticles, setAllArticles] = useState<{ slug: string; title: string }[]>([]);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [imageUrlInput, setImageUrlInput] = useState("");
+  const [showImageUrlInput, setShowImageUrlInput] = useState(false);
   const router = useRouter();
   const supabase = createClient();
 
@@ -157,6 +163,47 @@ export default function BlogEditor({ articleId }: { articleId?: string }) {
       ...prev,
       related_slugs: prev.related_slugs.filter((s) => s !== slug),
     }));
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingImage(true);
+    const filePath = `articles/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("blog-images")
+      .upload(filePath, file, {
+        cacheControl: "3600",
+        upsert: false,
+      });
+
+    if (uploadError) {
+      setError(`Erro ao enviar imagem: ${uploadError.message}`);
+    } else {
+      const { data: urlData } = supabase.storage
+        .from("blog-images")
+        .getPublicUrl(filePath);
+      if (urlData?.publicUrl) {
+        setForm((prev) => ({ ...prev, image: urlData.publicUrl }));
+      }
+    }
+
+    setUploadingImage(false);
+    if (e.target) e.target.value = "";
+  };
+
+  const handleImageUrlSubmit = () => {
+    if (imageUrlInput.trim()) {
+      setForm((prev) => ({ ...prev, image: imageUrlInput.trim() }));
+      setImageUrlInput("");
+      setShowImageUrlInput(false);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setForm((prev) => ({ ...prev, image: "" }));
   };
 
   const handleSave = async (publish = false) => {
@@ -516,6 +563,88 @@ export default function BlogEditor({ articleId }: { articleId?: string }) {
                   <ExternalLink size={16} />
                   Abrir Preview (nova janela)
                 </Link>
+              )}
+            </div>
+          </div>
+
+          {/* Image */}
+          <div className="rounded-2xl border border-gray-200 bg-white p-5">
+            <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
+              Imagem do Artigo
+            </h3>
+
+            {form.image ? (
+              <div className="relative rounded-xl overflow-hidden bg-gray-50 mb-3 group">
+                <img
+                  src={form.image}
+                  alt="Preview"
+                  className="w-full h-36 object-cover"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='3' width='18' height='18' rx='2' ry='2'/%3E%3Ccircle cx='8.5' cy='8.5' r='1.5'/%3E%3Cpolyline points='21 15 16 10 5 21'/%3E%3C/svg%3E";
+                    (e.target as HTMLImageElement).className = "w-full h-36 object-contain p-4";
+                  }}
+                />
+                <button
+                  onClick={handleRemoveImage}
+                  className="absolute top-2 right-2 p-1.5 rounded-lg bg-black/50 text-white hover:bg-black/70 transition-all opacity-0 group-hover:opacity-100"
+                  title="Remover imagem"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+            ) : (
+              <div className="mb-3 rounded-xl border-2 border-dashed border-gray-200 p-4 text-center">
+                <ImageIcon size={24} className="mx-auto text-gray-300 mb-2" />
+                <p className="text-[11px] text-gray-400 mb-2">
+                  Adicione uma foto para o card do artigo
+                </p>
+              </div>
+            )}
+
+            <div className="space-y-2">
+              {/* File upload */}
+              <label className="flex items-center gap-2 rounded-xl border border-gray-200 px-3 py-2.5 cursor-pointer hover:bg-gray-50 transition-all">
+                <Upload size={14} className="text-gray-400" />
+                <span className="text-xs text-gray-600 flex-1">
+                  {uploadingImage ? "A enviar..." : "Upload do computador"}
+                </span>
+                {uploadingImage && <Loader2 size={14} className="animate-spin text-primary" />}
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  onChange={handleImageUpload}
+                  disabled={uploadingImage}
+                  className="hidden"
+                />
+              </label>
+
+              {/* URL input toggle */}
+              <button
+                onClick={() => setShowImageUrlInput(!showImageUrlInput)}
+                className="flex items-center gap-2 w-full rounded-xl border border-gray-200 px-3 py-2.5 text-xs text-gray-600 hover:bg-gray-50 transition-all"
+              >
+                <LinkIcon size={14} className="text-gray-400" />
+                Inserir URL
+              </button>
+
+              {showImageUrlInput && (
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={imageUrlInput}
+                    onChange={(e) => setImageUrlInput(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleImageUrlSubmit())}
+                    placeholder="https://..."
+                    className="flex-1 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-900 outline-none focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/10 placeholder:text-gray-400"
+                  />
+                  <button
+                    onClick={handleImageUrlSubmit}
+                    disabled={!imageUrlInput.trim()}
+                    className="rounded-xl bg-primary px-3 py-2 text-xs font-semibold text-white hover:bg-primary-light transition-all disabled:opacity-40"
+                  >
+                    OK
+                  </button>
+                </div>
               )}
             </div>
           </div>

@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Issencial — Templates Transacionais · Editorial</title>
+<style>
+  :root {
+    --primary: #002e35; --primary-light: #004a54; --accent: #d7de6a;
+    --canvas: #f1f1f1; --ink: #151e28; --muted: #6b7280; --faint: #9ca3af;
+    --border: #e5e7eb; --footer-bg: #f9fafb; --surface: #ffffff; --radius: 20px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--canvas);
+    font-family: 'Overused Grotesk', 'Inter', system-ui, -apple-system, sans-serif;
+    color: var(--ink); -webkit-font-smoothing: antialiased;
+  }
+  .page-header {
+    max-width: 1200px; margin: 0 auto; padding: 48px 32px 32px;
+  }
+  .page-header h1 {
+    font-size: 28px; font-weight: 700; margin: 0 0 6px; letter-spacing: -0.02em;
+  }
+  .page-header h1 span { color: var(--primary); }
+  .page-header .sub {
+    color: var(--muted); font-size: 14px; line-height: 1.6; margin: 0; max-width: 600px;
+  }
+  .design-note {
+    margin-top: 16px; padding: 14px 18px; background: #fff; border-radius: 12px;
+    border-left: 3px solid var(--accent); font-size: 13px; line-height: 1.6; color: var(--muted);
+  }
+  .token-bar {
+    display: flex; gap: 10px; margin-top: 18px; flex-wrap: wrap;
+  }
+  .token {
+    display: flex; align-items: center; gap: 6px; padding: 5px 10px 5px 5px;
+    background: #fff; border-radius: 8px; font-size: 11px; color: var(--muted);
+    border: 1px solid var(--border);
+  }
+  .swatch { width: 18px; height: 18px; border-radius: 6px; border: 1px solid var(--border); flex-shrink: 0; }
+
+  .grid {
+    max-width: 1200px; margin: 0 auto; padding: 0 32px 48px;
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;
+  }
+  @media (max-width: 1024px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 640px) { .grid { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--surface); border-radius: var(--radius); overflow: hidden;
+    border: 1px solid var(--border);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.03), 0 8px 24px rgba(0,46,53,0.05);
+    transition: transform .25s ease, box-shadow .35s ease;
+    animation: fadeInUp .5s ease both;
+  }
+  .card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05), 0 16px 40px rgba(0,46,53,0.09);
+  }
+  .card:nth-child(1) { animation-delay: 0.05s; }
+  .card:nth-child(2) { animation-delay: 0.1s; }
+  .card:nth-child(3) { animation-delay: 0.15s; }
+  .card:nth-child(4) { animation-delay: 0.2s; }
+  .card:nth-child(5) { animation-delay: 0.25s; }
+
+  .card-head {
+    padding: 12px 18px; background: var(--primary);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .card-head .name {
+    color: var(--accent); font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase; display: flex; align-items: center; gap: 8px;
+  }
+  .card-head .name .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); opacity: 0.5; }
+  .card-head .type {
+    color: rgba(255,255,255,0.5); font-size: 10px; font-weight: 600; letter-spacing: 0.04em;
+    text-transform: uppercase; padding: 3px 8px; border-radius: 999px;
+    background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .card-preview { position: relative; background: var(--canvas); overflow: hidden; }
+  .card-preview::after {
+    content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 40px;
+    background: linear-gradient(to top, var(--canvas), transparent); pointer-events: none;
+  }
+  .card-preview iframe {
+    width: 100%; height: 600px; border: 0; display: block;
+    transform: scale(0.78); transform-origin: top center; margin-bottom: -170px;
+  }
+
+  .card-footer {
+    padding: 12px 18px; border-top: 1px solid var(--border); background: var(--footer-bg);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .card-footer .desc { font-size: 11px; color: var(--faint); line-height: 1.5; }
+  .card-footer .desc strong { color: var(--muted); }
+
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .page-footer {
+    max-width: 1200px; margin: 0 auto 48px; padding: 24px 32px 0;
+    border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;
+  }
+  .page-footer p { color: var(--faint); font-size: 11px; line-height: 1.6; margin: 0; }
+  .page-footer .links { display: flex; gap: 14px; }
+  .page-footer .links a { color: var(--muted); font-size: 11px; text-decoration: none; transition: color .2s ease; }
+  .page-footer .links a:hover { color: var(--primary); }
+</style>
+</head>
+<body>
+
+<header class="page-header">
+  <h1><span>Issencial</span> · Templates Transacionais</h1>
+  <p class="sub">
+    Pré-visualização dos 5 templates transacionais no estilo <strong>Editorial</strong> —
+    accent spine, tipo arejado, CTA accent invertido. Sem setas, sem emojis, sem distrações.
+  </p>
+  <div class="design-note">
+    <strong>Estilo Editorial</strong> · h2: 26px · body: 15px/1.8 · CTA accent invertido (lime + dark) ·
+    card radius: 4px · padding: 40px · accent bar alinhada à esquerda · footer com hairline accent 2px ·
+    spine lateral 3px accent · header com hairline decorativa.
+  </div>
+  <div class="token-bar">
+    <span class="token"><span class="swatch" style="background:#002e35"></span>primary #002e35</span>
+    <span class="token"><span class="swatch" style="background:#d7de6a"></span>accent #d7de6a</span>
+    <span class="token"><span class="swatch" style="background:#374151"></span>body #374151</span>
+    <span class="token"><span class="swatch" style="background:#151e28"></span>ink #151e28</span>
+    <span class="token"><span class="swatch" style="background:#6b7280"></span>muted #6b7280</span>
+  </div>
+</header>
+
+<div class="grid">
+
+<!-- ═══ 1. Notification ═══ -->
+<div class="card">
+  <div class="card-head">
+    <span class="name"><span class="dot"></span>Notificação</span>
+    <span class="type">notification</span>
+  </div>
+  <div class="card-preview">
+    <iframe srcdoc='
+      <!DOCTYPE html>
+      <html lang="pt">
+      <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+      <title>Issencial</title></head>
+      <body style="margin:0;padding:0;background-color:#f1f1f1;font-family:Overused Grotesk,Inter,system-ui,sans-serif;">
+      <div style="display:none;max-height:0;overflow:hidden;opacity:0;font-size:1px;line-height:1px;color:#f1f1f1;">Bem-vindo à Issencial&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;</div>
+      <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f1f1f1;">
+      <tr><td align="center" style="padding:40px 16px;">
+      <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#fff;border-radius:4px;overflow:hidden;border:1px solid #e5e7eb;border-left:3px solid #d7de6a;">
+      <tr><td style="background:#002e35;padding:40px 40px;text-align:center;">
+      <a href="/" style="text-decoration:none;display:inline-block;">
+      <img src="/logo/principal_branco.png" alt="Issencial" width="132" style="height:auto;display:block;margin:0 auto;" />
+      </a>
+      <p style="color:#fff;font-size:12px;letter-spacing:.12em;text-transform:uppercase;margin:12px 0 0;opacity:.65;">Serviços Integrados Globais</p>
+      <div style="width:40px;height:2px;background:#d7de6a;margin:14px auto 0;"></div>
+      </td></tr>
+      <tr><td style="background:#d7de6a;padding:10px 44px;text-align:left;">
+      <span style="color:#002e35;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;">Notificação</span>
+      </td></tr>
+      <tr><td style="padding:40px 44px;">
+      <h2 style="color:#151e28;font-size:26px;margin:0 0 18px;font-weight:700;line-height:1.2;">Bem-vindo à Issencial</h2>
+      <p style="color:#6b7280;font-size:14px;line-height:1.6;margin:0 0 18px;">Olá Maria,</p>
+      <p style="color:#374151;font-size:15px;line-height:1.8;margin:0;">A sua conta foi ativada. Já pode aceder ao portal e acompanhar os seus processos em tempo real.</p>
+      <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:28px;"><tr><td style="border-radius:2px;background:#d7de6a;text-align:center;">
+      <a href="#" style="display:block;padding:15px 32px;color:#002e35;font-size:14px;font-weight:700;text-decoration:none;border-radius:2px;">Aceder ao portal</a></td></tr></table>
+      </td></tr>
+      <tr><td style="padding:24px 44px;background:#f9fafb;border-top:2px solid #d7de6a;">
+      <p style="color:#9ca3af;font-size:12px;line-height:1.6;margin:0;">Este é um email automático do portal Issencial. Por favor, não responda a este email.</p>
+      <p style="color:#9ca3af;font-size:12px;line-height:1.6;margin:8px 0 0;">&copy; 2026 Issencial — Serviços Integrados Globais</p>
+      </td></tr></table></td></tr></table></body></html>
+    '></iframe>
+  </div>
+  <div class="card-footer">
+    <span class="desc"><strong>Notificação</strong> · Título, saudação, mensagem, CTA opcional</span>
+  </div>
+</div>
+
+<!-- ═══ 2. Process Update ═══ -->
+<div class="card">
+  <div class="card-head">
+    <span class="name"><span class="dot"></span>Atualização de Processo</span>
+    <span class="type">process_update</span>
+  </div>
+  <div class="card-preview">
+    <iframe srcdoc='
+      <!DOCTYPE html>
+      <html lang="pt">
+      <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+      <title>Issencial</title></head>
+      <body style="margin:0;padding:0;background-color:#f1f1f1;font-family:Overused Grotesk,Inter,system-ui,sans-serif;">
+      <div style="display:none;max-height:0;overflow:hidden;opacity:0;font-size:1px;line-height:1px;color:#f1f1f1;">Processo: Visto Gold · Renovação&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;</div>
+      <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f1f1f1;">
+      <tr><td align="center" style="padding:40px 16px;">
+      <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#fff;border-radius:4px;overflow:hidden;border:1px solid #e5e7eb;border-left:3px solid #d7de6a;">
+      <tr><td style="background:#002e35;padding:40px 40px;text-align:center;">
+      <a href="/" style="text-decoration:none;display:inline-block;">
+      <img src="/logo/principal_branco.png" alt="Issencial" width="132" style="height:auto;display:block;margin:0 auto;" />
+      </a>
+      <p style="color:#fff;font-size:12px;letter-spacing:.12em;text-transform:uppercase;margin:12px 0 0;opacity:.65;">Serviços Integrados Globais</p>
+      <div style="width:40px;height:2px;background:#d7de6a;margin:14px auto 0;"></div>
+      </td></tr>
+      <tr><td style="background:#d7de6a;padding:10px 44px;text-align:left;">
+      <span style="color:#002e35;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;">Processo</span>
+      </td></tr>
+      <tr><td style="padding:40px 44px;">
+      <p style="color:#6b7280;font-size:13px;margin:0 0 4px;">Atualização de processo</p>
+      <h2 style="color:#151e28;font-size:26px;margin:0 0 18px;font-weight:700;line-height:1.2;">Visto Gold · Renovação</h2>
+      <p style="color:#374151;font-size:14px;margin:0 0 8px;">Olá Maria,</p>
+      <p style="margin:0 0 4px;font-size:14px;color:#6b7280;line-height:1.6;">Fase atual: <strong style="color:#151e28;">Tradução de documentos</strong></p>
+      <table width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0 4px;"><tr>
+        <td style="background:#e5e7eb;border-radius:2px;height:8px;width:100%;">
+          <div style="background:#d7de6a;height:8px;border-radius:2px;width:65%;"></div>
+        </td></tr>
+        <tr><td align="right" style="padding-top:6px;"><span style="color:#6b7280;font-size:12px;">65% concluído</span></td></tr></table>
+      <p style="color:#374151;font-size:15px;line-height:1.8;margin:18px 0 0;">Os documentos foram enviados para tradução juramentada. Previsão de conclusão em 5 dias úteis.</p>
+      <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:28px;"><tr><td style="border-radius:2px;background:#d7de6a;text-align:center;">
+      <a href="#" style="display:block;padding:15px 32px;color:#002e35;font-size:14px;font-weight:700;text-decoration:none;border-radius:2px;">Ver processo no portal</a></td></tr></table>
+      </td></tr>
+      <tr><td style="padding:24px 44px;background:#f9fafb;border-top:2px solid #d7de6a;">
+      <p style="color:#9ca3af;font-size:12px;line-height:1.6;margin:0;">Este é um email automático do portal Issencial. Por favor, não responda a este email.</p>
+      <p style="color:#9ca3af;font-size:12px;line-height:1.6;margin:8px 0 0;">&copy; 2026 Issencial — Serviços Integrados Globais</p>
+      </td></tr></table></td></tr></table></body></html>
+    '></iframe>
+  </div>
+  <div class="card-footer">
+    <span class="desc"><strong>Atualização</strong> · Nome do processo, fase, barra de progresso, mensagem, CTA</span>
+  </div>
+</div>
+
+<!-- ═══ 3. New Message ═══ -->
+<div class="card">
+  <div class="card-head">
+    <span class="name"><span class="dot"></span>Nova Mensagem</span>
+    <span class="type">new_message</span>
+  </div>
+  <div class="card-preview">
+    <iframe srcdoc='
+      <!DOCTYPE html>
+      <html lang="pt">
+      <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+      <title>Issencial</title></head>
+      <body style="margin:0;padding:0;background-color:#f1f1f1;font-family:Overused Grotesk,Inter,system-ui,sans-serif;">
+      <div style="display:none;max-height:0;overflow:hidden;opacity:0;font-size:1px;line-height:1px;color:#f1f1f1;">Nova mensagem de Ana Costa&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;</div>
+      <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f1f1f1;">
+      <tr><td align="center" style="padding:40px 16px;">
+      <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#fff;border-radius:4px;overflow:hidden;border:1px solid #e5e7eb;border-left:3px solid #d7de6a;">
+      <tr><td style="background:#002e35;padding:40px 40px;text-align:center;">
+      <a href="/" style="text-decoration:none;display:inline-block;">
+      <img src="/logo/principal_branco.png" alt="Issencial" width="132" style="height:auto;display:block;margin:0 auto;" />
+      </a>
+      <p style="color:#fff;font-size:12px;letter-spacing:.12em;text-transform:uppercase;margin:12px 0 0;opacity:.65;">Serviços Integrados Globais</p>
+      <div style="width:40px;height:2px;background:#d7de6a;margin:14px auto 0;"></div>
+      </td></tr>
+      <tr><td style="background:#d7de6a;padding:10px 44px;text-align:left;">
+      <span style="color:#002e35;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;">Mensagem</span>
+      </td></tr>
+      <tr><td style="padding:40px 44px;">
+      <p style="color:#6b7280;font-size:13px;margin:0 0 12px;">Nova mensagem · Visto Gold · Renovação</p>
+      <table cellpadding="0" cellspacing="0" style="margin:0 0 20px;"><tr>
+        <td style="width:40px;vertical-align:top;"><span style="display:inline-block;width:40px;height:40px;border-radius:50%;background:#002e35;color:#d7de6a;font-size:16px;font-weight:700;line-height:40px;text-align:center;">A</span></td>
+        <td style="padding-left:12px;vertical-align:middle;">
+          <span style="color:#151e28;font-size:16px;font-weight:600;">Ana Costa</span>
+          <span style="color:#9ca3af;font-size:13px;display:block;">Equipa Issencial</span>
+        </td></tr></table>
+      <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb;border-left:4px solid #d7de6a;border-radius:4px;"><tr><td style="padding:18px 20px;">
+        <p style="color:#374151;font-size:15px;line-height:1.8;margin:0;white-space:pre-wrap;">Olá Maria, o seu agendamento para recolha biométrica está confirmado para dia 14. Leve o passaporte e 2 fotografias.</p></td></tr></table>
+      <p style="color:#374151;font-size:14px;margin:16px 0 0;">Olá Maria, recebeu uma nova mensagem no seu portal.</p>
+      <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:28px;"><tr><td style="border-radius:2px;background:#d7de6a;text-align:center;">
+      <a href="#" style="display:block;padding:15px 32px;color:#002e35;font-size:14px;font-weight:700;text-decoration:none;border-radius:2px;">Abrir conversa</a></td></tr></table>
+      </td></tr>
+      <tr><td style="padding:24px 44px;background:#f9fafb;border-top:2px solid #d7de6a;">
+      <p style="color:#9ca3af;font-size:12px;line-height:1.6;margin:0;">Este é um email automático do portal Issencial. Por favor, não responda a este email.</p>
+      <p style="color:#9ca3af;font-size:12px;line-height:1.6;margin:8px 0 0;">&copy; 2026 Issencial — Serviços Integrados Globais</p>
+      </td></tr></table></td></tr></table></body></html>
+    '></iframe>
+  </div>
+  <div class="card-footer">
+    <span class="desc"><strong>Mensagem</strong> · Avatar do remetente, quote block com border accent, CTA</span>
+  </div>
+</div>
+
+<!-- ═══ 4. New Invoice ═══ -->
+<div class="card">
+  <div class="card-head">
+    <span class="name"><span class="dot"></span>Nova Fatura</span>
+    <span class="type">new_invoice</span>
+  </div>
+  <div class="card-preview">
+    <iframe srcdoc='
+      <!DOCTYPE html>
+      <html lang="pt">
+      <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+      <title>Issencial</title></head>
+      <body style="margin:0;padding:0;background-color:#f1f1f1;font-family:Overused Grotesk,Inter,system-ui,sans-serif;">
+      <div style="display:none;max-height:0;overflow:hidden;opacity:0;font-size:1px;line-height:1px;color:#f1f1f1;">Fatura 2026/0042&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;</div>
+      <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f1f1f1;">
+      <tr><td align="center" style="padding:40px 16px;">
+      <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#fff;border-radius:4px;overflow:hidden;border:1px solid #e5e7eb;border-left:3px solid #d7de6a;">
+      <tr><td style="background:#002e35;padding:40px 40px;text-align:center;">
+      <a href="/" style="text-decoration:none;display:inline-block;">
+      <img src="/logo/principal_branco.png" alt="Issencial" width="132" style="height:auto;display:block;margin:0 auto;" />
+      </a>
+      <p style="color:#fff;font-size:12px;letter-spacing:.12em;text-transform:uppercase;margin:12px 0 0;opacity:.65;">Serviços Integrados Globais</p>
+      <div style="width:40px;height:2px;background:#d7de6a;margin:14px auto 0;"></div>
+      </td></tr>
+      <tr><td style="background:#d7de6a;padding:10px 44px;text-align:left;">
+      <span style="color:#002e35;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;">Fatura</span>
+      </td></tr>
+      <tr><td style="padding:40px 44px;">
+      <p style="color:#6b7280;font-size:13px;margin:0 0 4px;">Nova fatura disponível</p>
+      <h2 style="color:#151e28;font-size:26px;margin:0 0 18px;font-weight:700;line-height:1.2;">Fatura 2026/0042</h2>
+      <p style="color:#374151;font-size:14px;margin:0 0 16px;">Olá Maria,</p>
+      <table width="100%" cellpadding="0" cellspacing="0">
+        <tr><td style="padding:10px 0;color:#6b7280;font-size:14px;border-bottom:2px solid #f0f1ec;">Fatura</td>
+            <td align="right" style="padding:10px 0;color:#151e28;font-size:14px;font-weight:600;border-bottom:2px solid #f0f1ec;">2026/0042</td></tr>
+        <tr><td style="padding:10px 0;color:#6b7280;font-size:14px;border-bottom:2px solid #f0f1ec;">Montante</td>
+            <td align="right" style="padding:10px 0;color:#151e28;font-size:14px;font-weight:600;border-bottom:2px solid #f0f1ec;">480,00 EUR</td></tr>
+        <tr><td style="padding:10px 0;color:#6b7280;font-size:14px;border-bottom:2px solid #f0f1ec;">Vencimento</td>
+            <td align="right" style="padding:10px 0;color:#151e28;font-size:14px;font-weight:600;border-bottom:2px solid #f0f1ec;">30/07/2026</td></tr>
+        <tr><td style="padding:14px 0 0;"><span style="display:inline-block;padding:4px 12px;border-radius:2px;background:#d7de6a;color:#002e35;font-size:12px;font-weight:600;">Pendente</span></td><td></td></tr>
+      </table>
+      <p style="color:#6b7280;font-size:13px;line-height:1.6;margin:16px 0 0;">Por favor, efetue o pagamento até à data de vencimento para evitar interrupções no serviço.</p>
+      <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:28px;"><tr><td style="border-radius:2px;background:#d7de6a;text-align:center;">
+      <a href="#" style="display:block;padding:15px 32px;color:#002e35;font-size:14px;font-weight:700;text-decoration:none;border-radius:2px;">Ver e pagar fatura</a></td></tr></table>
+      </td></tr>
+      <tr><td style="padding:24px 44px;background:#f9fafb;border-top:2px solid #d7de6a;">
+      <p style="color:#9ca3af;font-size:12px;line-height:1.6;margin:0;">Este é um email automático do portal Issencial. Por favor, não responda a este email.</p>
+      <p style="color:#9ca3af;font-size:12px;line-height:1.6;margin:8px 0 0;">&copy; 2026 Issencial — Serviços Integrados Globais</p>
+      </td></tr></table></td></tr></table></body></html>
+    '></iframe>
+  </div>
+  <div class="card-footer">
+    <span class="desc"><strong>Fatura</strong> · Tabela de detalhes, status pill, aviso de vencimento, CTA</span>
+  </div>
+</div>
+
+<!-- ═══ 5. Status Change ═══ -->
+<div class="card">
+  <div class="card-head">
+    <span class="name"><span class="dot"></span>Alteração de Estado</span>
+    <span class="type">status_change</span>
+  </div>
+  <div class="card-preview">
+    <iframe srcdoc='
+      <!DOCTYPE html>
+      <html lang="pt">
+      <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+      <title>Issencial</title></head>
+      <body style="margin:0;padding:0;background-color:#f1f1f1;font-family:Overused Grotesk,Inter,system-ui,sans-serif;">
+      <div style="display:none;max-height:0;overflow:hidden;opacity:0;font-size:1px;line-height:1px;color:#f1f1f1;">Visto Gold · Renovação: Em análise → Aprovado&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;</div>
+      <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f1f1f1;">
+      <tr><td align="center" style="padding:40px 16px;">
+      <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#fff;border-radius:4px;overflow:hidden;border:1px solid #e5e7eb;border-left:3px solid #d7de6a;">
+      <tr><td style="background:#002e35;padding:40px 40px;text-align:center;">
+      <a href="/" style="text-decoration:none;display:inline-block;">
+      <img src="/logo/principal_branco.png" alt="Issencial" width="132" style="height:auto;display:block;margin:0 auto;" />
+      </a>
+      <p style="color:#fff;font-size:12px;letter-spacing:.12em;text-transform:uppercase;margin:12px 0 0;opacity:.65;">Serviços Integrados Globais</p>
+      <div style="width:40px;height:2px;background:#d7de6a;margin:14px auto 0;"></div>
+      </td></tr>
+      <tr><td style="background:#d7de6a;padding:10px 44px;text-align:left;">
+      <span style="color:#002e35;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;">Estado</span>
+      </td></tr>
+      <tr><td style="padding:40px 44px;">
+      <p style="color:#6b7280;font-size:13px;margin:0 0 4px;">Alteração de estado</p>
+      <h2 style="color:#151e28;font-size:26px;margin:0 0 6px;font-weight:700;line-height:1.2;">Pedido de Orçamento</h2>
+      <p style="color:#374151;font-size:15px;margin:0 0 24px;line-height:1.6;">Visto Gold · Renovação</p>
+      <table cellpadding="0" cellspacing="0" style="margin:0 0 20px;"><tr>
+        <td style="padding:8px 0;"><span style="display:inline-block;padding:4px 12px;border-radius:2px;background:#eef2f3;color:#004a54;font-size:12px;font-weight:600;">Em análise</span></td>
+        <td style="padding:8px 14px;color:#6b7280;font-size:12px;font-weight:600;letter-spacing:0.04em;">para</td>
+        <td style="padding:8px 0;"><span style="display:inline-block;padding:4px 12px;border-radius:2px;background:#d7de6a;color:#002e35;font-size:12px;font-weight:600;">Aprovado</span></td></tr></table>
+      <p style="color:#374151;font-size:15px;line-height:1.8;margin:0 0 4px;">O seu pedido foi aprovado. Vamos dar início ao processo e entraremos em contacto em breve.</p>
+      <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:28px;"><tr><td style="border-radius:2px;background:#d7de6a;text-align:center;">
+      <a href="#" style="display:block;padding:15px 32px;color:#002e35;font-size:14px;font-weight:700;text-decoration:none;border-radius:2px;">Ver detalhes</a></td></tr></table>
+      </td></tr>
+      <tr><td style="padding:24px 44px;background:#f9fafb;border-top:2px solid #d7de6a;">
+      <p style="color:#9ca3af;font-size:12px;line-height:1.6;margin:0;">Este é um email automático do portal Issencial. Por favor, não responda a este email.</p>
+      <p style="color:#9ca3af;font-size:12px;line-height:1.6;margin:8px 0 0;">&copy; 2026 Issencial — Serviços Integrados Globais</p>
+      </td></tr></table></td></tr></table></body></html>
+    '></iframe>
+  </div>
+  <div class="card-footer">
+    <span class="desc"><strong>Estado</strong> · Transição de estado (old → new), mensagem, CTA</span>
+  </div>
+</div>
+
+</div>
+
+<footer class="page-footer">
+  <p>Issencial — Serviços Integrados Globais<br>Pré-visualização para aprovação. Código-fonte em <code>src/lib/email/</code></p>
+  <div class="links">
+    <a href="#">notification.ts</a>
+    <a href="#">process-update.ts</a>
+    <a href="#">new-message.ts</a>
+    <a href="#">new-invoice.ts</a>
+    <a href="#">status-change.ts</a>
+  </div>
+</footer>
+
+</body>
+</html>

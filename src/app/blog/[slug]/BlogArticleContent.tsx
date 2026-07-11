@@ -10,7 +10,7 @@ import BlogArticleView from "@/components/blog/BlogArticleView";
 import type { BlogArticleData } from "@/components/blog/BlogArticleView";
 import { blogArticles as staticArticles } from "@/data/blog";
 import { createClient } from "@/lib/supabase/client";
-import { Calendar, Clock, Loader2 } from "lucide-react";
+import { Calendar, Clock, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import type { BlogArticle } from "@/data/blog";
 
 const categoryBadge: Record<string, string> = {
@@ -228,11 +228,47 @@ export default function BlogArticleContent() {
               Sem spam. Apenas conteúdo útil para a sua vida.
             </p>
             <form
-              onSubmit={(e) => {
+              onSubmit={async (e) => {
                 e.preventDefault();
-                alert("(Demo) Subscrição efetuada com sucesso!");
+                const form = e.currentTarget;
+                const emailInput = form.querySelector('input[type="email"]') as HTMLInputElement;
+                if (!emailInput?.value) return;
+
+                // Use a local state via data attribute on the form
+                const btn = form.querySelector('button') as HTMLButtonElement;
+                btn.disabled = true;
+                btn.textContent = 'A subscrever...';
+
+                try {
+                  const res = await fetch("/api/newsletter/subscribe", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email: emailInput.value }),
+                  });
+                  const data = await res.json();
+
+                  if (res.ok) {
+                    const msg = document.createElement('div');
+                    msg.className = 'mt-4 flex items-center gap-2 justify-center text-sm text-white';
+                    msg.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg> ' + data.message;
+                    form.parentElement?.appendChild(msg);
+                    emailInput.value = '';
+                    btn.textContent = 'Subscrever';
+                    btn.disabled = false;
+                  } else {
+                    btn.textContent = 'Subscrever';
+                    btn.disabled = false;
+                    const msg = document.createElement('div');
+                    msg.className = 'mt-4 flex items-center gap-2 justify-center text-sm text-red-300';
+                    msg.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg> ' + (data.error || 'Erro ao subscrever.');
+                    form.parentElement?.appendChild(msg);
+                  }
+                } catch {
+                  btn.textContent = 'Subscrever';
+                  btn.disabled = false;
+                }
               }}
-              className="flex gap-3 max-w-md mx-auto"
+              className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto"
             >
               <input
                 type="email"
@@ -242,7 +278,7 @@ export default function BlogArticleContent() {
               />
               <button
                 type="submit"
-                className="px-5 py-3 rounded-lg bg-[#d7de6a] text-[#002e35] text-sm font-semibold hover:bg-[#e3e88f] transition-all whitespace-nowrap"
+                className="px-5 py-3 rounded-lg bg-[#d7de6a] text-[#002e35] text-sm font-semibold hover:bg-[#e3e88f] transition-all whitespace-nowrap disabled:opacity-50 flex items-center gap-2 justify-center"
               >
                 Subscrever
               </button>

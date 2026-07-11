@@ -12,10 +12,11 @@ import {
   ArrowRight,
   Copy,
   RefreshCw,
+  Printer,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
-type MfaState = "loading" | "off" | "enrolling" | "verify_enroll" | "on";
+type MfaState = "loading" | "off" | "enrolling" | "verify_enroll" | "on" | "recovery_codes";
 
 export default function MfaSettings() {
   const [state, setState] = useState<MfaState>("loading");
@@ -25,6 +26,8 @@ export default function MfaSettings() {
   const [verifyCode, setVerifyCode] = useState("");
   const [verifyError, setVerifyError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
+  const [recoveryCodes, setRecoveryCodes] = useState<string[]>([]);
+  const [generatingCodes, setGeneratingCodes] = useState(false);
   const [message, setMessage] = useState<{
     type: "success" | "error";
     text: string;
@@ -80,6 +83,32 @@ export default function MfaSettings() {
     setActionLoading(false);
   };
 
+  // ── Generate recovery codes ──────────────────────────
+  const generateRecoveryCodes = async () => {
+    setGeneratingCodes(true);
+    try {
+      const res = await fetch("/api/auth/mfa/generate-recovery", {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (res.ok && data.codes) {
+        setRecoveryCodes(data.codes);
+        setState("recovery_codes");
+      } else {
+        setMessage({
+          type: "error",
+          text: data.error || "Erro ao gerar códigos de recuperação.",
+        });
+      }
+    } catch {
+      setMessage({
+        type: "error",
+        text: "Erro ao gerar códigos de recuperação.",
+      });
+    }
+    setGeneratingCodes(false);
+  };
+
   // ── Challenge + Verify ────────────────────────────────
   const handleVerify = async () => {
     if (!factorId || verifyCode.length < 6) return;
@@ -105,11 +134,8 @@ export default function MfaSettings() {
       if (verifyError) {
         setVerifyError("Código inválido. Tente novamente.");
       } else {
-        setState("on");
-        setMessage({
-          type: "success",
-          text: "2FA ativado com sucesso! A partir do próximo login, será solicitado o código de autenticação.",
-        });
+        // 2FA verified — generate and show recovery codes directly
+        await generateRecoveryCodes();
       }
     } catch (err: any) {
       setVerifyError(err.message || "Erro ao verificar código.");
@@ -180,7 +206,7 @@ export default function MfaSettings() {
     <div className="space-y-4">
       {/* Status indicator */}
       <div className="flex items-center gap-3">
-        {state === "on" ? (
+        {state === "on" || state === "recovery_codes" ? (
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-50">
             <ShieldCheck size={20} className="text-green-600" />
           </div>
@@ -196,12 +222,14 @@ export default function MfaSettings() {
           <p className="text-xs text-gray-400">
             {state === "on"
               ? "Protegido com 2FA via aplicação autenticadora"
-              : state === "enrolling" || state === "verify_enroll"
-                ? "A configurar 2FA..."
-                : "Adicione uma camada extra de segurança à sua conta"}
+              : state === "recovery_codes"
+                ? "Guarde os códigos de recuperação abaixo"
+                : state === "enrolling" || state === "verify_enroll"
+                  ? "A configurar 2FA..."
+                  : "Adicione uma camada extra de segurança à sua conta"}
           </p>
         </div>
-        {state === "on" && (
+        {(state === "on" || state === "recovery_codes") && (
           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-medium bg-green-50 text-green-600 border border-green-200">
             <ShieldCheck size={12} />
             Ativo
@@ -347,17 +375,129 @@ export default function MfaSettings() {
             </div>
           </div>
 
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={generateRecoveryCodes}
+              disabled={generatingCodes}
+              className="inline-flex items-center gap-2 rounded-xl border border-gray-200 px-5 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-all disabled:opacity-40"
+            >
+              {generatingCodes ? (
+                <Loader2 size={16} className="animate-spin" />
+              ) : (
+                <Key size={16} />
+              )}
+              {generatingCodes ? "A gerir..." : "Gerir códigos de recuperação"}
+            </button>
+            <button
+              onClick={handleDisable}
+              disabled={actionLoading}
+              className="inline-flex items-center gap-2 rounded-xl border border-red-200 px-5 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-50 transition-all disabled:opacity-40"
+            >
+              {actionLoading ? (
+                <Loader2 size={16} className="animate-spin" />
+              ) : (
+                <ShieldOff size={16} />
+              )}
+              {actionLoading ? "A desativar..." : "Desativar 2FA"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── State: RECOVERY CODES ──────────────────────── */}
+      {state === "recovery_codes" && (
+        <div className="space-y-4">
+          <div className="rounded-xl border border-amber-200 bg-amber-50 p-5">
+            <div className="flex items-start gap-3 mb-3">
+              <Key size={20} className="text-amber-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <h3 className="text-sm font-semibold text-amber-800 mb-1">
+                  Códigos de Recuperação
+                </h3>
+                <p className="text-xs text-amber-700">
+                  Guarde estes códigos num local seguro. Cada código só pode ser
+                  usado uma vez para aceder à sua conta caso perca o acesso à
+                  aplicação autenticadora.
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl border border-amber-200 p-4 mb-4" id="recovery-codes-list">
+              <div className="grid grid-cols-2 gap-2">
+                {recoveryCodes.map((code, i) => (
+                  <div
+                    key={i}
+                    className="flex items-center gap-2 font-mono text-sm text-gray-700 bg-gray-50 rounded-lg px-3 py-2"
+                  >
+                    <span className="text-[10px] text-gray-400 font-sans w-5">
+                      {i + 1}.
+                    </span>
+                    <span className="tracking-wider">{code}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => {
+                  const text = recoveryCodes
+                    .map((c, i) => `${i + 1}. ${c}`)
+                    .join("\n");
+                  navigator.clipboard.writeText(
+                    `Issencial — Códigos de Recuperação 2FA\n\n${text}\n\nGuarde estes códigos num local seguro. Cada código só pode ser usado uma vez.`,
+                  );
+                  setMessage({
+                    type: "success",
+                    text: "Códigos copiados! Guarde-os num local seguro.",
+                  });
+                  setTimeout(() => setMessage(null), 3000);
+                }}
+                className="inline-flex items-center gap-2 rounded-xl bg-amber-600 px-4 py-2 text-xs font-semibold text-white hover:bg-amber-700 transition-all"
+              >
+                <Copy size={14} />
+                Copiar
+              </button>
+
+              <button
+                onClick={() => {
+                  const printWindow = window.open("", "_blank");
+                  if (!printWindow) return;
+                  const codeRows = recoveryCodes
+                    .map((c, i) => `<tr><td style="padding:6px 12px;font-family:monospace;font-size:14px;border:1px solid #e5e7eb;">${i + 1}.</td><td style="padding:6px 12px;font-family:monospace;font-size:14px;letter-spacing:3px;border:1px solid #e5e7eb;">${c}</td></tr>`)
+                    .join("");
+                  printWindow.document.write(`
+                    <html>
+                      <head><title>Issencial — Códigos de Recuperação</title></head>
+                      <body style="font-family:sans-serif;padding:40px;max-width:500px;margin:0 auto;">
+                        <h2 style="margin-bottom:8px;">Issencial — Códigos de Recuperação 2FA</h2>
+                        <p style="color:#666;font-size:14px;margin-bottom:24px;">Guarde este documento num local seguro. Cada código só pode ser usado uma vez.</p>
+                        <table style="border-collapse:collapse;width:100%;">
+                          ${codeRows}
+                        </table>
+                        <p style="color:#999;font-size:11px;margin-top:24px;">Gerado a ${new Date().toLocaleString("pt-PT")}</p>
+                      </body>
+                    </html>
+                  `);
+                  printWindow.document.close();
+                  printWindow.print();
+                }}
+                className="inline-flex items-center gap-2 rounded-xl border border-amber-300 bg-white px-4 py-2 text-xs font-semibold text-amber-700 hover:bg-amber-50 transition-all"
+              >
+                <Printer size={14} />
+                Imprimir
+              </button>
+            </div>
+          </div>
+
           <button
-            onClick={handleDisable}
-            disabled={actionLoading}
-            className="inline-flex items-center gap-2 rounded-xl border border-red-200 px-5 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-50 transition-all disabled:opacity-40"
+            onClick={() => {
+              setState("on");
+              setMessage(null);
+            }}
+            className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
           >
-            {actionLoading ? (
-              <Loader2 size={16} className="animate-spin" />
-            ) : (
-              <ShieldOff size={16} />
-            )}
-            {actionLoading ? "A desativar..." : "Desativar 2FA"}
+            Já guardei. Voltar às definições.
           </button>
         </div>
       )}

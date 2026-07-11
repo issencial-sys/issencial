@@ -62,6 +62,8 @@ export default function AdminBlogPage() {
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [showFilters, setShowFilters] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
   const supabase = createClient();
   const router = useRouter();
 
@@ -92,6 +94,18 @@ export default function AdminBlogPage() {
       return matchesSearch && matchesCategory && matchesStatus;
     });
   }, [articles, search, filterCategory, filterStatus]);
+
+  // Pagination
+  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+  const paginatedArticles = filtered.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE,
+  );
+
+  // Reset to page 1 when filters/search change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, filterCategory, filterStatus]);
 
   const handleArchive = async (id: string, currentStatus: string) => {
     const newStatus = currentStatus === "archived" ? "draft" : "archived";
@@ -203,7 +217,7 @@ export default function AdminBlogPage() {
         </div>
       ) : (
         <div className="space-y-3">
-          {filtered.map((article) => (
+          {paginatedArticles.map((article) => (
             <div
               key={article.id}
               className="rounded-2xl border border-gray-200 bg-white p-5 transition-all hover:shadow-sm hover:border-gray-300"
@@ -281,6 +295,46 @@ export default function AdminBlogPage() {
             </div>
           ))}
         </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="mt-8 flex items-center justify-center gap-2 flex-wrap">
+            <button
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="rounded-xl border border-gray-200 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              Anterior
+            </button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              <button
+                key={page}
+                onClick={() => setCurrentPage(page)}
+                className={`w-10 h-10 rounded-xl text-sm font-medium transition-all ${
+                  page === currentPage
+                    ? "bg-primary text-white shadow-sm"
+                    : "border border-gray-200 text-gray-600 hover:bg-gray-50"
+                }`}
+              >
+                {page}
+              </button>
+            ))}
+            <button
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="rounded-xl border border-gray-200 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              Seguinte
+            </button>
+          </div>
+        )}
+
+        {/* Results info */}
+        {totalPages > 1 && (
+          <p className="text-center text-xs text-gray-400 mt-3">
+            Mostrando {paginatedArticles.length} de {filtered.length} artigo{filtered.length !== 1 ? "s" : ""}
+          </p>
+        )}
       )}
     </div>
   );

@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Issencial — Newsletter · Templates Preview</title>
+<style>
+  :root {
+    --primary: #002e35;
+    --primary-light: #004a54;
+    --accent: #d7de6a;
+    --accent-light: #eef4b0;
+    --canvas: #f1f1f1;
+    --ink: #151e28;
+    --muted: #6b7280;
+    --faint: #9ca3af;
+    --border: #e5e7eb;
+    --footer-bg: #f9fafb;
+    --surface: #ffffff;
+    --radius: 20px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--canvas);
+    font-family: 'Overused Grotesk', 'Inter', system-ui, -apple-system, sans-serif;
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ─── Page header ─── */
+  .page-header {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 56px 32px 40px;
+  }
+  .page-header h1 {
+    font-size: 32px;
+    font-weight: 700;
+    margin: 0 0 6px;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+  }
+  .page-header h1 span {
+    color: var(--primary);
+  }
+  .page-header .sub {
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1.6;
+    margin: 0;
+    max-width: 640px;
+  }
+  .page-header .sub code {
+    font-family: 'JetBrains Mono', 'Consolas', monospace;
+    font-size: 13px;
+    background: var(--border);
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: var(--primary);
+  }
+  .design-note {
+    margin-top: 20px;
+    padding: 16px 20px;
+    background: #fff;
+    border-radius: 12px;
+    border-left: 3px solid var(--accent);
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--muted);
+    max-width: 640px;
+  }
+  .design-note strong {
+    color: var(--ink);
+  }
+
+  /* ─── Token bar ─── */
+  .token-bar {
+    display: flex;
+    gap: 12px;
+    margin-top: 22px;
+    flex-wrap: wrap;
+  }
+  .token {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px 6px 6px;
+    background: #fff;
+    border-radius: 8px;
+    font-size: 12px;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    transition: transform .2s ease, box-shadow .2s ease;
+  }
+  .token:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+  .swatch {
+    width: 20px;
+    height: 20px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  /* ─── Section headers ─── */
+  .section {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 32px;
+  }
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+    padding-top: 8px;
+  }
+  .section-header h2 {
+    font-size: 20px;
+    font-weight: 700;
+    margin: 0;
+    color: var(--ink);
+    white-space: nowrap;
+  }
+  .section-header .rule {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, var(--border), transparent);
+  }
+  .section-header .badge {
+    padding: 4px 12px;
+    border-radius: 999px;
+    background: var(--accent);
+    color: var(--primary);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  /* ─── Grid ─── */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 32px;
+    padding-bottom: 48px;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  /* ─── Card ─── */
+  .card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 1px solid var(--border);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.03), 0 8px 24px rgba(0,46,53,0.05);
+    transition: transform .25s ease, box-shadow .35s ease;
+  }
+  .card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05), 0 16px 40px rgba(0,46,53,0.09);
+  }
+
+  .card-head {
+    padding: 14px 20px;
+    background: var(--primary);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .card-head .name {
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-head .name .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    opacity: 0.5;
+  }
+  .card-head .variant-tag {
+    color: rgba(255,255,255,0.55);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .card-preview {
+    position: relative;
+    background: var(--canvas);
+    overflow: hidden;
+  }
+  .card-preview::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 40px;
+    background: linear-gradient(to top, var(--canvas), transparent);
+    pointer-events: none;
+  }
+  .card-preview iframe {
+    width: 100%;
+    height: 560px;
+    border: 0;
+    display: block;
+    transform: scale(0.82);
+    transform-origin: top center;
+    margin-bottom: -120px;
+  }
+  .card-preview .simulated-email {
+    padding: 0;
+  }
+
+  .card-footer {
+    padding: 14px 20px;
+    border-top: 1px solid var(--border);
+    background: var(--footer-bg);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .card-footer .desc {
+    font-size: 12px;
+    color: var(--faint);
+    line-height: 1.5;
+  }
+  .card-footer .desc strong {
+    color: var(--muted);
+  }
+  .card-footer .pill {
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .pill-soft { background: #eef2f3; color: var(--primary-light); }
+  .pill-alert { background: #fdecec; color: #9b2c2c; }
+
+
+  /* ─── Footer ─── */
+  .page-footer {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 32px 32px 48px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .page-footer p {
+    color: var(--faint);
+    font-size: 12px;
+    line-height: 1.6;
+    margin: 0;
+  }
+  .page-footer .links {
+    display: flex;
+    gap: 16px;
+  }
+  .page-footer .links a {
+    color: var(--muted);
+    font-size: 12px;
+    text-decoration: none;
+    transition: color .2s ease;
+  }
+  .page-footer .links a:hover {
+    color: var(--primary);
+  }
+
+  /* ─── Responsive ─── */
+  @media (max-width: 1024px) {
+    .grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 640px) {
+    .grid { grid-template-columns: 1fr; }
+    .page-header { padding: 32px 16px 24px; }
+    .page-header h1 { font-size: 24px; }
+    .section { padding: 0 16px; }
+
+  }
+
+  /* ─── Animation ─── */
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .card {
+    animation: fadeInUp .5s ease both;
+  }
+  .card:nth-child(1) { animation-delay: 0.05s; }
+  .card:nth-child(2) { animation-delay: 0.1s; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════ Page Header ═══════════ -->
+<header class="page-header">
+  <h1><span>Issencial</span> · Newsletter Templates</h1>
+  <p class="sub">
+    Pré-visualização dos templates de newsletter no estilo <strong>Editorial</strong> —
+    tipografia arejada, accent spine, CTA invertido. Visual limpo e focado no conteúdo.
+  </p>
+
+  <div class="design-note">
+    <strong>🎯 Estilo Editorial</strong> · Templates simplificados com o
+    visual <strong>Editorial</strong> — accent spine (3px), tipo arejado
+    (h2: 26px, body: 15px/1.8), CTA accent invertido, bordas sharp 4px.
+    Sem variantes, sem setas, sem distrações.
+  </div>
+
+  <div class="token-bar">
+    <span class="token"><span class="swatch" style="background:#002e35"></span>primary #002e35</span>
+    <span class="token"><span class="swatch" style="background:#d7de6a"></span>accent #d7de6a</span>
+    <span class="token"><span class="swatch" style="background:#151e28"></span>ink #151e28</span>
+    <span class="token"><span class="swatch" style="background:#374151"></span>body #374151</span>
+    <span class="token"><span class="swatch" style="background:#6b7280"></span>muted #6b7280</span>
+    <span class="token"><span class="swatch" style="background:#f1f1f1"></span>canvas #f1f1f1</span>
+  </div>
+</header>
+
+<div class="section">
+  <div class="grid">
+    <div class="card">
+      <div class="card-head">
+        <span class="name"><span class="dot"></span>Bem-vindo</span>
+        <span class="variant-tag">Boas-Vindas</span>
+      </div>
+      <div class="card-preview">
+        <iframe srcdoc='
+          <!DOCTYPE html>
+          <html lang="pt">
+          <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+          <title>Issencial · Newsletter</title></head>
+          <body style="margin:0;padding:0;background-color:#f1f1f1;font-family:Overused Grotesk,Inter,system-ui,sans-serif;">
+          <div style="display:none;max-height:0;overflow:hidden;opacity:0;font-size:1px;line-height:1px;color:#f1f1f1;">Confirmámos a sua subscrição. Vai receber guias, dicas e histórias no seu email.&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;</div>
+          <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f1f1f1;">
+          <tr><td align="center" style="padding:40px 16px;">
+          <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#fff;border-radius:4px;overflow:hidden;border:1px solid #e5e7eb;border-left:3px solid #d7de6a;">
+          <tr><td style="background:#002e35;padding:40px 40px;text-align:center;">
+          <a href="/" style="text-decoration:none;display:inline-block;">
+          <img src="/logo/principal_branco.png" alt="Issencial" width="132" style="height:auto;display:block;margin:0 auto;" />
+          </a>
+          <p style="color:#fff;font-size:12px;letter-spacing:.12em;text-transform:uppercase;margin:12px 0 0;opacity:.65;">Serviços Integrados Globais</p>
+          <div style="width:40px;height:2px;background:#d7de6a;margin:14px auto 0;"></div>
+          </td></tr>
+          <tr><td style="background:#d7de6a;padding:10px 44px;text-align:left;">
+          <span style="color:#002e35;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;">Newsletter</span>
+          </td></tr>
+          <tr><td style="padding:40px 44px;">
+          <p style="color:#6b7280;font-size:13px;margin:0 0 4px;">Newsletter · Subscrição confirmada</p>
+          <h2 style="color:#151e28;font-size:26px;margin:0 0 14px;font-weight:700;line-height:1.25;">Bem-vindo à Issencial</h2>
+          <p style="color:#374151;font-size:15px;line-height:1.8;margin:0 0 20px;">A sua subscrição está confirmada. A partir de agora, recebe no seu email os melhores guias, dicas e histórias sobre passaportes, educação e viver em Portugal — sempre útil, sem spam.</p>
+          <p style="color:#374151;font-size:15px;line-height:1.8;margin:0 0 4px;">Pode esperar:</p>
+          <table width="100%" cellpadding="0" cellspacing="0" style="margin:8px 0 0;">
+          <tr><td style="padding:8px 0;color:#151e28;font-size:14px;line-height:1.6;border-bottom:1px solid #e5e7eb;">
+          <span style="display:inline-block;width:12px;text-align:center;margin-right:10px;color:#d7de6a;font-weight:700;font-size:16px;line-height:1;">•</span>Um artigo em destaque por edição</td></tr>
+          <tr><td style="padding:8px 0;color:#151e28;font-size:14px;line-height:1.6;border-bottom:1px solid #e5e7eb;">
+          <span style="display:inline-block;width:12px;text-align:center;margin-right:10px;color:#d7de6a;font-weight:700;font-size:16px;line-height:1;">•</span>Guias práticos de passaportes e vistos</td></tr>
+          <tr><td style="padding:8px 0;color:#151e28;font-size:14px;line-height:1.6;border-bottom:1px solid #e5e7eb;">
+          <span style="display:inline-block;width:12px;text-align:center;margin-right:10px;color:#d7de6a;font-weight:700;font-size:16px;line-height:1;">•</span>Dicas de educação e finanças internacionais</td></tr></table>
+          <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:28px;"><tr><td style="border-radius:2px;background:#d7de6a;text-align:center;">
+          <a href="/blog" style="display:block;padding:15px 32px;color:#002e35;font-size:14px;font-weight:700;text-decoration:none;border-radius:2px;">Explorar o blog</a></td></tr></table>
+          </td></tr>
+          <tr><td style="padding:24px 44px;background:#f9fafb;border-top:2px solid #d7de6a;">
+          <p style="color:#9ca3af;font-size:12px;line-height:1.6;margin:0;">Recebeu este email porque subscreveu a newsletter da Issencial.</p>
+          <p style="color:#9ca3af;font-size:12px;line-height:1.6;margin:8px 0 0;">&copy; 2026 Issencial — Serviços Integrados Globais</p>
+          </td></tr></table></td></tr></table>
+          </body></html>
+        '></iframe>
+      </div>
+      <div class="card-footer">
+        <span class="desc"><strong>Bem-vindo</strong> · Confirmação de subscrição, boas-vindas, lista de expectativas</span>
+        <span class="pill pill-soft">newsletterConfirmTemplate</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head">
+        <span class="name"><span class="dot"></span>Edição #12</span>
+        <span class="variant-tag">Newsletter</span>
+      </div>
+      <div class="card-preview">
+        <iframe srcdoc='
+          <!DOCTYPE html>
+          <html lang="pt">
+          <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+          <title>Issencial · Newsletter</title></head>
+          <body style="margin:0;padding:0;background-color:#f1f1f1;font-family:Overused Grotesk,Inter,system-ui,sans-serif;">
+          <div style="display:none;max-height:0;overflow:hidden;opacity:0;font-size:1px;line-height:1px;color:#f1f1f1;">#12 · Guia completo: renovação do passaporte português em 2026&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;</div>
+          <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f1f1f1;">
+          <tr><td align="center" style="padding:40px 16px;">
+          <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#fff;border-radius:4px;overflow:hidden;border:1px solid #e5e7eb;border-left:3px solid #d7de6a;">
+          <tr><td style="background:#002e35;padding:40px 40px;text-align:center;">
+          <img src="/logo/principal_branco.png" alt="Issencial" width="132" style="height:auto;display:block;margin:0 auto;" />
+          <p style="color:#fff;font-size:12px;letter-spacing:.12em;text-transform:uppercase;margin:12px 0 0;opacity:.65;">Serviços Integrados Globais</p>
+          <div style="width:40px;height:2px;background:#d7de6a;margin:14px auto 0;"></div>
+          </td></tr>
+          <tr><td style="background:#d7de6a;padding:10px 44px;text-align:left;">
+          <span style="color:#002e35;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;">Edição #12</span></td></tr>
+          <tr><td style="padding:40px 44px;">
+          <p style="color:#6b7280;font-size:13px;margin:0 0 8px;line-height:1.6;">Edição #12 · 10 de julho de 2026</p>
+          <h2 style="color:#151e28;font-size:26px;margin:0 0 10px;font-weight:700;line-height:1.25;">Guia completo: renovação do passaporte português em 2026</h2>
+          <p style="color:#374151;font-size:15px;line-height:1.8;margin:0 0 28px;">Trouxemos tudo o que precisa de saber sobre a renovação do passaporte português: prazos, documentos necessários, custos atualizados e respostas às perguntas mais frequentes.</p>
+          <a href="/blog" style="display:block;text-decoration:none;background:#002e35;border-radius:4px;padding:28px 30px;margin-bottom:8px;">
+          <span style="display:inline-block;color:#d7de6a;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;">Passaportes</span><br>
+          <span style="color:#fff;font-size:21px;font-weight:700;line-height:1.3;display:block;">Guia completo: renovação do passaporte português em 2026</span>
+          <span style="color:rgba(255,255,255,.78);font-size:14px;line-height:1.6;display:block;margin-top:8px;">Prazos, documentos e custos atualizados — tudo o que precisa para renovar o seu passaporte sem complicações.</span></a>
+          <table cellpadding="0" cellspacing="0" style="margin:0 0 8px;"><tr><td style="border-radius:2px;">
+          <a href="/blog" style="display:inline-block;padding:10px 24px;color:#002e35;background:#d7de6a;font-size:13px;font-weight:700;text-decoration:none;border-radius:2px;">Ler artigo</a></td></tr></table>
+          <p style="color:#6b7280;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin:28px 0 0;">Mais para ler</p>
+          <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:4px;">
+          <tr><td style="padding:16px 0;border-top:1px solid #e5e7eb;">
+          <a href="/blog" style="text-decoration:none;">
+          <span style="display:inline-block;color:#004a54;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px;">Vistos</span><br>
+          <span style="color:#151e28;font-size:16px;font-weight:600;line-height:1.4;">Visto D7 para reformados: requisitos e documentos 2026</span></a>
+          <p style="color:#6b7280;font-size:13px;line-height:1.6;margin:4px 0 0;">Tudo sobre o visto de residência para reformados que pretendem viver em Portugal.</p></td></tr>
+          <tr><td style="padding:16px 0;border-top:1px solid #e5e7eb;">
+          <a href="/blog" style="text-decoration:none;">
+          <span style="display:inline-block;color:#004a54;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px;">Educação</span><br>
+          <span style="color:#151e28;font-size:16px;font-weight:600;line-height:1.4;">Escolas internacionais em Portugal: guia completo</span></a>
+          <p style="color:#6b7280;font-size:13px;line-height:1.6;margin:4px 0 0;">Conheça as melhores escolas internacionais no país e o processo de inscrição.</p></td></tr></table>
+          <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:28px;"><tr><td style="border-radius:2px;background:#d7de6a;text-align:center;">
+          <a href="/blog" style="display:block;padding:15px 32px;color:#002e35;font-size:14px;font-weight:700;text-decoration:none;border-radius:2px;">Ver todos os artigos</a></td></tr></table>
+          <p style="color:#9ca3af;font-size:12px;line-height:1.6;margin:24px 0 0;border-top:1px solid #e5e7eb;padding-top:16px;">Não quer receber mais emails? <a href="#" style="color:#6b7280;text-decoration:underline;">Cancelar subscrição</a>.</p>
+          </td></tr>
+          <tr><td style="padding:24px 44px;background:#f9fafb;border-top:2px solid #d7de6a;">
+          <p style="color:#9ca3af;font-size:12px;line-height:1.6;margin:0;">Recebeu este email porque subscreveu a newsletter da Issencial.</p>
+          <p style="color:#9ca3af;font-size:12px;line-height:1.6;margin:8px 0 0;">&copy; 2026 Issencial — Serviços Integrados Globais</p>
+          </td></tr></table></td></tr></table>
+          </body></html>
+        '></iframe>
+      </div>
+      <div class="card-footer">
+        <span class="desc"><strong>Edição #12</strong> · Hero article + artigos secundários, CTA accent invertido</span>
+        <span class="pill pill-soft">newsletterEditionTemplate</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+<!-- ═══════════ Footer ═══════════ -->
+<footer class="page-footer">
+  <p>
+    Issencial — Serviços Integrados Globais<br>
+    Templates disponíveis em <code>src/lib/email/newsletter.ts</code>
+  </p>
+  <div class="links">
+    <a href="#">newsletterConfirmTemplate</a>
+    <a href="#">newsletterEditionTemplate</a>
+    <a href="#">shared.ts</a>
+  </div>
+</footer>
+
+</body>
+</html>

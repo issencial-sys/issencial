@@ -2,11 +2,12 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import Image from "next/image";
 import { Loader2, Shield, ArrowRight, AlertCircle, Clock, Key } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
-export default function AdminMfaPage() {
+export default function ClientMfaPage() {
   const [mode, setMode] = useState<"totp" | "recovery">("totp");
   const [code, setCode] = useState("");
   const [recoveryCode, setRecoveryCode] = useState("");
@@ -70,13 +71,14 @@ export default function AdminMfaPage() {
       } = await supabase.auth.getUser();
 
       if (!user) {
-        router.push("/admin/login");
+        router.push("/login");
         return;
       }
 
+      // Non-admin users: make sure they're not an admin
       const role = user.app_metadata?.role;
-      if (role !== "admin") {
-        router.push("/portal");
+      if (role === "admin") {
+        router.push("/admin/login/mfa");
         return;
       }
 
@@ -85,8 +87,10 @@ export default function AdminMfaPage() {
       const verifiedTotp = data?.totp?.find((f) => f.status === "verified");
 
       if (!verifiedTotp) {
-        // No verified factors — MFA not configured, go to admin
-        router.push("/admin");
+        // No verified factors — MFA not configured, go to portal
+        const params = new URLSearchParams(window.location.search);
+        const redirectTo = params.get("redirect") || "/portal";
+        router.push(redirectTo);
         return;
       }
 
@@ -102,7 +106,6 @@ export default function AdminMfaPage() {
     if (mode === "totp") {
       if (!factorId || code.length < 6 || rateLimited) return;
 
-      // Check rate limit before attempting
       const allowed = await checkRateLimit();
       if (!allowed) return;
 
@@ -121,7 +124,9 @@ export default function AdminMfaPage() {
         });
         if (verifyError) throw verifyError;
 
-        router.push("/admin");
+        const params = new URLSearchParams(window.location.search);
+        const redirectTo = params.get("redirect") || "/portal";
+        router.push(redirectTo);
       } catch {
         setRemainingAttempts((prev) => Math.max(prev - 1, 0));
         setError("Código inválido. Tente novamente.");
@@ -144,14 +149,15 @@ export default function AdminMfaPage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ code: recoveryCode.trim() }),
         });
-        const data = await res.json();
 
         if (!res.ok) {
+          const data = await res.json();
           throw new Error(data.error || "Código inválido.");
         }
 
-        // Recovery code verified — sign out MFA session and redirect
-        router.push("/admin");
+        const params = new URLSearchParams(window.location.search);
+        const redirectTo = params.get("redirect") || "/portal";
+        router.push(redirectTo);
       } catch (err: any) {
         setRemainingAttempts((prev) => Math.max(prev - 1, 0));
         setError(err.message || "Código de recuperação inválido.");
@@ -163,35 +169,38 @@ export default function AdminMfaPage() {
 
   if (checking) {
     return (
-      <div className="min-h-screen bg-gray-950 flex items-center justify-center">
-        <Loader2 size={32} className="animate-spin text-accent" />
+      <div className="min-h-screen bg-light flex items-center justify-center">
+        <Loader2 size={28} className="animate-spin text-primary" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 flex items-center justify-center px-4 py-12">
+    <div className="min-h-screen bg-light flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
+        {/* Logo */}
         <div className="text-center mb-8">
-          <Image
-            src="/logo/principal_branco.png"
-            alt="Issencial"
-            width={180}
-            height={45}
-            className="object-contain h-9 w-auto mx-auto"
-            priority
-          />
+          <Link href="/" className="inline-flex items-center justify-center bg-primary rounded-2xl p-5 mx-auto w-fit">
+            <Image
+              src="/logo/principal_branco.png"
+              alt="Issencial"
+              width={160}
+              height={38}
+              className="object-contain h-8 w-auto"
+              priority
+            />
+          </Link>
           <p className="text-gray-500 mt-4">
             Verificação adicional de segurança
           </p>
         </div>
 
-        <div className="rounded-2xl border border-gray-800 bg-gray-900 p-8 shadow-sm">
+        <div className="rounded-2xl border border-gray-100 bg-white p-8 shadow-sm">
           <div className="flex flex-col items-center mb-6">
-            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-accent/15 mb-4">
-              <Shield size={28} className="text-accent" />
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 mb-4">
+              <Shield size={28} className="text-primary" />
             </div>
-            <h2 className="text-lg font-semibold text-white text-center">
+            <h2 className="text-lg font-semibold text-dark text-center">
               Autenticação de Dois Fatores
             </h2>
             {mode === "totp" ? (
@@ -219,7 +228,7 @@ export default function AdminMfaPage() {
                 }}
                 placeholder="000000"
                 autoFocus
-                className="w-full rounded-xl border border-gray-700 bg-gray-800 px-4 py-4 text-center text-2xl font-mono tracking-[0.5em] text-white outline-none transition-all focus:border-accent focus:ring-2 focus:ring-accent/20 placeholder:text-gray-600"
+                className="w-full rounded-xl border border-gray-200 bg-light/50 px-4 py-4 text-center text-2xl font-mono tracking-[0.5em] text-dark outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/10 placeholder:text-gray-300"
               />
             ) : (
               <input
@@ -231,31 +240,31 @@ export default function AdminMfaPage() {
                 }}
                 placeholder="XXXXX-XXXXX"
                 autoFocus
-                className="w-full rounded-xl border border-gray-700 bg-gray-800 px-4 py-4 text-center text-xl font-mono tracking-[0.3em] text-white outline-none transition-all focus:border-accent focus:ring-2 focus:ring-accent/20 placeholder:text-gray-600"
+                className="w-full rounded-xl border border-gray-200 bg-light/50 px-4 py-4 text-center text-xl font-mono tracking-[0.3em] text-dark outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/10 placeholder:text-gray-300"
               />
             )}
 
             {error && (
-              <div className="flex items-center gap-2 p-3 rounded-xl bg-red-900/30 border border-red-800 text-red-400 text-sm">
+              <div className="flex items-center gap-2 p-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-sm">
                 <AlertCircle size={16} />
                 {error}
               </div>
             )}
 
             {rateLimited ? (
-              <div className="w-full rounded-xl bg-red-900/30 border border-red-800 p-4 text-center">
-                <div className="flex items-center justify-center gap-2 text-red-400 text-sm font-medium mb-2">
+              <div className="w-full rounded-xl bg-red-50 border border-red-200 p-4 text-center">
+                <div className="flex items-center justify-center gap-2 text-red-600 text-sm font-medium mb-2">
                   <Clock size={16} />
                   Demasiadas tentativas
                 </div>
-                <p className="text-xs text-red-400/70">
+                <p className="text-xs text-red-500">
                   Aguarde {cooldownSeconds}s para tentar novamente.
                 </p>
               </div>
             ) : (
               <>
                 {remainingAttempts < 3 && remainingAttempts > 0 && (
-                  <p className="text-xs text-yellow-400/70 text-center">
+                  <p className="text-xs text-amber-600 text-center">
                     {remainingAttempts} tentativa{remainingAttempts !== 1 ? "s" : ""} restante{remainingAttempts !== 1 ? "s" : ""}
                   </p>
                 )}
@@ -264,7 +273,7 @@ export default function AdminMfaPage() {
                   disabled={
                     (mode === "totp" ? code.length < 6 : !recoveryCode.trim()) || loading
                   }
-                  className="w-full rounded-xl bg-accent text-gray-950 py-3 text-sm font-semibold hover:bg-accent-light transition-all flex items-center justify-center gap-2 disabled:opacity-60"
+                  className="w-full rounded-xl bg-primary text-white py-3 text-sm font-semibold hover:bg-primary-light transition-all flex items-center justify-center gap-2 disabled:opacity-60"
                 >
                   {loading ? (
                     <Loader2 size={16} className="animate-spin" />
@@ -286,7 +295,7 @@ export default function AdminMfaPage() {
                   setError(null);
                   setCode("");
                 }}
-                className="inline-flex items-center gap-1.5 text-xs text-gray-500 hover:text-accent transition-colors"
+                className="inline-flex items-center gap-1.5 text-xs text-gray-400 hover:text-primary transition-colors"
               >
                 <Key size={12} />
                 Usar código de recuperação
@@ -298,7 +307,7 @@ export default function AdminMfaPage() {
                   setError(null);
                   setRecoveryCode("");
                 }}
-                className="inline-flex items-center gap-1.5 text-xs text-gray-500 hover:text-accent transition-colors"
+                className="inline-flex items-center gap-1.5 text-xs text-gray-400 hover:text-primary transition-colors"
               >
                 <Shield size={12} />
                 Usar aplicação autenticadora
@@ -307,7 +316,7 @@ export default function AdminMfaPage() {
           </div>
         </div>
 
-        <p className="text-center text-xs text-gray-600 mt-6">
+        <p className="text-center text-xs text-gray-400 mt-6">
           Use o Google Authenticator, Authy ou outra aplicação compatível.
         </p>
       </div>

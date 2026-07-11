@@ -12,6 +12,8 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useSearchParams } from "next/navigation";
+import { notify } from "@/lib/email/notify";
+import { newInvoiceTemplate, paymentReceivedTemplate } from "@/lib/email";
 
 interface Invoice {
   id: string;
@@ -163,6 +165,36 @@ function FaturasContent() {
         inv.id === id ? { ...inv, status: newStatus } : inv,
       ),
     );
+
+    // Notify client of payment
+    if (newStatus === "paid") {
+      const inv = invoices.find((i) => i.id === id);
+      if (inv) {
+        try {
+          const emailRes = await fetch("/api/admin/users");
+          if (emailRes.ok) {
+            const { users } = await emailRes.json();
+            const clientUser = (users || []).find((u: any) => u.id === inv.client_id);
+            if (clientUser?.email) {
+              notify({
+                to_email: clientUser.email,
+                to_name: "",
+                subject: `Pagamento recebido: ${inv.invoice_number}`,
+                html_body: paymentReceivedTemplate({
+                  invoice_number: inv.invoice_number,
+                  amount: Number(inv.amount).toFixed(2),
+                  currency: inv.currency || "EUR",
+                  cta_url: "/portal",
+                }),
+                type: "notification",
+                reference_id: id,
+                reference_type: "invoice",
+              });
+            }
+          }
+        } catch { /* silêncio */ }
+      }
+    }
   };
 
   const handleCreate = async (e: React.FormEvent) => {
@@ -172,10 +204,10 @@ function FaturasContent() {
     setSubmitting(true);
     setFormError(null);
 
-    // Fetch client_id from the process
+    // Fetch client_id and title from the process
     const { data: processData, error: processError } = await supabase
       .from("processes")
-      .select("client_id")
+      .select("client_id, title")
       .eq("id", formData.process_id)
       .maybeSingle();
 
@@ -210,6 +242,34 @@ function FaturasContent() {
         due_date: "",
       });
       fetchInvoices();
+
+      // Notify client of new invoice
+      try {
+        const emailRes = await fetch("/api/admin/users");
+        if (emailRes.ok) {
+          const { users } = await emailRes.json();
+          const clientUser = (users || []).find((u: any) => u.id === processData.client_id);
+          if (clientUser?.email) {
+            notify({
+              to_email: clientUser.email,
+              to_name: processData.title || "",
+              subject: `Nova fatura: ${invoiceNumber}`,
+              html_body: newInvoiceTemplate({
+                invoice_number: invoiceNumber,
+                amount: parseFloat(formData.amount).toFixed(2),
+                due_date: formData.due_date
+                  ? new Date(formData.due_date).toLocaleDateString("pt-PT")
+                  : undefined,
+                status: "Pendente",
+                cta_url: "/portal",
+              }),
+              type: "new_invoice",
+              reference_id: processData.id,
+              reference_type: "process",
+            });
+          }
+        }
+      } catch { /* silêncio */ }
     }
     setSubmitting(false);
   };

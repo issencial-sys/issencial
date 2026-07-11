@@ -77,6 +77,15 @@ export default function LoginPage() {
 
         // Log successful login
         await logAuthEvent(email, "login_success", { source: "client" });
+
+        // Check if MFA is enrolled — if so, redirect to MFA verification
+        const { data: mfaData } = await supabase.auth.mfa.listFactors();
+        const hasMfa = mfaData?.totp?.some((f) => f.status === "verified");
+        if (hasMfa) {
+          router.push(`/login/mfa?redirect=${encodeURIComponent(getRedirectTo())}`);
+          return;
+        }
+
         router.push(getRedirectTo());
       } else {
         const { error } = await supabase.auth.signUp({

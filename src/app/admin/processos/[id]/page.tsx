@@ -22,6 +22,14 @@ import { createClient } from "@/lib/supabase/client";
 import { logActivity, ActivityActions } from "@/lib/activity-log";
 import FileUpload from "@/components/ui/FileUpload";
 import type { UploadedFile } from "@/components/ui/FileUpload";
+import { notify } from "@/lib/email/notify";
+import {
+  statusChangeTemplate,
+  stageCompletedTemplate,
+  newMessageTemplate,
+  newInvoiceTemplate,
+  paymentReceivedTemplate,
+} from "@/lib/email";
 
 interface ProcessStage {
   id: string;
@@ -67,6 +75,7 @@ export default function AdminProcessDetailPage() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [clientName, setClientName] = useState("");
+  const [clientEmail, setClientEmail] = useState("");
   const [newStageTitle, setNewStageTitle] = useState("");
   const [newStageDesc, setNewStageDesc] = useState("");
   const [newMessage, setNewMessage] = useState("");
@@ -178,6 +187,17 @@ export default function AdminProcessDetailPage() {
     ]);
 
     setClientName(clientProfileResult.data?.name || "Cliente");
+
+    // Fetch client email from admin API
+    try {
+      const emailRes = await fetch("/api/admin/users");
+      if (emailRes.ok) {
+        const { users } = await emailRes.json();
+        const clientUser = (users || []).find((u: any) => u.id === processData.client_id);
+        if (clientUser?.email) setClientEmail(clientUser.email);
+      }
+    } catch { /* silêncio */ }
+
     setStages(stagesRes.data ?? []);
     setMessages(messagesRes.data ?? []);
     setInvoices(invoicesRes.data ?? []);
@@ -290,6 +310,32 @@ export default function AdminProcessDetailPage() {
     setStages((prev) =>
       prev.map((s) => (s.id === stageId ? { ...s, status: newStatus } : s)),
     );
+
+    // Notify client when a stage is completed
+    if (newStatus === "completed" && clientEmail && process) {
+      const stage = stages.find((s) => s.id === stageId);
+      if (stage) {
+        const alreadyCompleted = stages.filter((s) => s.status === "completed").length;
+        const completedCount = alreadyCompleted + (newStatus === "completed" ? 1 : 0);
+        const pct = stages.length > 0 ? Math.round((completedCount / stages.length) * 100) : 0;
+        notify({
+          to_email: clientEmail,
+          to_name: clientName,
+          subject: `Etapa concluída: ${stage.title}`,
+          html_body: stageCompletedTemplate({
+            client_name: clientName,
+            process_name: process.title,
+            stage_title: stage.title,
+            progress_percent: Math.min(pct, 100),
+            message: stage.description || `A etapa "${stage.title}" foi concluída com sucesso.`,
+            cta_url: `/portal/processos/${process.id}`,
+          }),
+          type: "process_update",
+          reference_id: process.id,
+          reference_type: "process",
+        });
+      }
+    }
   };
 
   const deleteStage = async (stageId: string) => {
@@ -300,11 +346,35 @@ export default function AdminProcessDetailPage() {
   // Update process status
   const updateProcessStatus = async (newStatus: string) => {
     if (!process) return;
+    const oldStatus = process.status;
     await supabase
       .from("processes")
       .update({ status: newStatus, updated_at: new Date().toISOString() })
       .eq("id", process.id);
     setProcess({ ...process, status: newStatus });
+
+    // Notify client of status change
+    if (clientEmail && oldStatus !== newStatus) {
+      const statusMap: Record<string, string> = {
+        active: "Ativo", paused: "Pausado", completed: "Concluído", cancelled: "Cancelado",
+      };
+      notify({
+        to_email: clientEmail,
+        to_name: clientName,
+        subject: `Processo ${process.title}: ${statusMap[oldStatus] || oldStatus} → ${statusMap[newStatus] || newStatus}`,
+        html_body: statusChangeTemplate({
+          entity_label: "Processo",
+          entity_name: process.title,
+          old_status: statusMap[oldStatus] || oldStatus,
+          new_status: statusMap[newStatus] || newStatus,
+          message: `O estado do seu processo foi atualizado.`,
+          cta_url: `/portal/processos/${process.id}`,
+        }),
+        type: "status_change",
+        reference_id: process.id,
+        reference_type: "process",
+      });
+    }
   };
 
   // Send message as admin
@@ -347,6 +417,25 @@ export default function AdminProcessDetailPage() {
         action: ActivityActions.MESSAGE_SENT,
         description: `Resposta do admin no processo: ${process.title}`,
       });
+
+      // Notify client of new admin message
+      if (clientEmail) {
+        notify({
+          to_email: clientEmail,
+          to_name: clientName,
+          subject: `Nova mensagem sobre ${process.title}`,
+          html_body: newMessageTemplate({
+            client_name: clientName,
+            sender_name: adminId ? "Equipa Issencial" : "Equipa Issencial",
+            preview: data.content,
+            process_name: process.title,
+            cta_url: `/portal/processos/${process.id}`,
+          }),
+          type: "new_message",
+          reference_id: process.id,
+          reference_type: "process",
+        });
+      }
     }
     setSendingMsg(false);
   };
@@ -365,6 +454,29 @@ export default function AdminProcessDetailPage() {
         inv.id === invoiceId ? { ...inv, status: newStatus } : inv,
       ),
     );
+
+    // Notify client of payment received
+    if (newStatus === "paid" && clientEmail && process) {
+      const inv = invoices.find((i) => i.id === invoiceId);
+      if (inv) {
+        notify({
+          to_email: clientEmail,
+          to_name: clientName,
+          subject: `Pagamento recebido: ${inv.invoice_number}`,
+          html_body: paymentReceivedTemplate({
+            client_name: clientName,
+            invoice_number: inv.invoice_number,
+            amount: Number(inv.amount).toFixed(2),
+            currency: inv.currency || "EUR",
+            service_name: process.title,
+            cta_url: `/portal/processos/${process.id}`,
+          }),
+          type: "notification",
+          reference_id: invoiceId,
+          reference_type: "invoice",
+        });
+      }
+    }
   };
 
   // Handle document upload
@@ -432,6 +544,28 @@ export default function AdminProcessDetailPage() {
     setInvoiceForm({ description: "", amount: "", due_date: "" });
     setShowInvoiceForm(false);
     setCreatingInvoice(false);
+
+    // Notify client of new invoice
+    if (clientEmail) {
+      notify({
+        to_email: clientEmail,
+        to_name: clientName,
+        subject: `Nova fatura: ${invoiceNumber}`,
+        html_body: newInvoiceTemplate({
+          client_name: clientName,
+          invoice_number: invoiceNumber,
+          amount: parseFloat(invoiceForm.amount).toFixed(2),
+          due_date: invoiceForm.due_date
+            ? new Date(invoiceForm.due_date).toLocaleDateString("pt-PT")
+            : undefined,
+          status: "Pendente",
+          cta_url: `/portal/processos/${process.id}`,
+        }),
+        type: "new_invoice",
+        reference_id: data.id,
+        reference_type: "invoice",
+      });
+    }
   };
 
   const closeInvoiceForm = () => {

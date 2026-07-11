@@ -114,25 +114,13 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(url);
     }
 
-    // Enforce MFA (AAL2) on the server. With "Limit duration of AAL1
-    // sessions" ON at the Supabase level, an admin who only reached AAL1
-    // (password entered, TOTP pending) must be sent to the challenge —
-    // otherwise the second factor can be bypassed. Server-side enforcement
-    // also fixes the client-only session loss loop, since the request is
-    // redirected before the admin shell ever renders.
-    if (pathname !== "/admin/login/mfa") {
-      const { data: aal } =
-        await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-      const { data: factors } = await supabase.auth.mfa.listFactors();
-      const hasVerifiedTotp = factors?.totp?.some(
-        (f) => f.status === "verified",
-      );
-      if (hasVerifiedTotp && (aal?.currentLevel ?? "aal1") !== "aal2") {
-        const url = request.nextUrl.clone();
-        url.pathname = "/admin/login/mfa";
-        return NextResponse.redirect(url);
-      }
-    }
+    // NOTE: MFA / AAL2 enforcement is handled client-side in
+    // admin/layout.tsx (which reads the real browser session). Doing it
+    // here with getAuthenticatorAssuranceLevel() forced a server-side
+    // session refresh on every request that re-emitted the auth cookie
+    // with a short/expired lifetime (worsened by "Limit AAL1" = 15 min),
+    // wiping the session right after login. Keeping this middleware to
+    // session + role only stops the cookie from being destroyed.
   }
 
   return supabaseResponse;

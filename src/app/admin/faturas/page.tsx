@@ -207,7 +207,7 @@ function FaturasContent() {
     // Fetch client_id and title from the process
     const { data: processData, error: processError } = await supabase
       .from("processes")
-      .select("client_id, title")
+      .select("id, client_id, title")
       .eq("id", formData.process_id)
       .maybeSingle();
 

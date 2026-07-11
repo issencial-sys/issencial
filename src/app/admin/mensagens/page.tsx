@@ -183,7 +183,7 @@ export default function AdminMensagensPage() {
 
     const { data } = await supabase
       .from("messages")
-      .select("*")
+      .select("id, client_id, sender_id, content, read, created_at")
       .is("process_id", null)
       .order("created_at", { ascending: true });
 
@@ -202,8 +202,8 @@ export default function AdminMensagensPage() {
       clientIds.length > 0
         ? supabase.from("profiles").select("id, name").in("id", clientIds)
         : { data: [] },
-      supabase.from("client_assignments").select("*"),
-      supabase.from("admin_users").select("*"),
+      supabase.from("client_assignments").select("client_id, admin_id"),
+      supabase.from("admin_users").select("user_id, display_name"),
     ]);
 
     const map = new Map<string, ClientInfo>();

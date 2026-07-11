@@ -13,6 +13,7 @@ import {
   UserCheck,
   CheckCircle2,
   ChevronDown,
+  X,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
@@ -59,6 +60,11 @@ export default function AdminClientesPage() {
     fetchClients();
   }, []);
 
+  // Reset to page 1 when filters/search change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, filterGestor, filterDate, filterProcesses]);
+
   const fetchClients = async () => {
     // Get current admin's ID to exclude them from clients list
     const {
@@ -68,7 +74,7 @@ export default function AdminClientesPage() {
     if (user) setCurrentUserId(user.id);
 
     // Get all profiles (excluding the admin's own profile)
-    let query = supabase.from("profiles").select("*").order("created_at", { ascending: false });
+    let query = supabase.from("profiles").select("id, name, phone, created_at").order("created_at", { ascending: false });
 
     if (user?.id) {
       query = query.neq("id", user.id);
@@ -77,7 +83,7 @@ export default function AdminClientesPage() {
     const [profilesResult, countsResult, assignmentsResult, adminUsersResult] = await Promise.all([
       query,
       supabase.from("processes").select("client_id"),
-      supabase.from("client_assignments").select("*"),
+      supabase.from("client_assignments").select("client_id, admin_id"),
       supabase.from("admin_users").select("user_id, display_name"),
     ]);
 
@@ -181,11 +187,6 @@ export default function AdminClientesPage() {
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE,
   );
-
-  // Reset to page 1 when filters/search change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [search, filterGestor, filterDate, filterProcesses]);
 
   return (
     <div>
@@ -316,6 +317,7 @@ export default function AdminClientesPage() {
           </p>
         </div>
       ) : (
+        <>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {paginatedClients.map((client) => {
             const assignment = assignments.get(client.id);
@@ -372,12 +374,13 @@ export default function AdminClientesPage() {
 
                 {/* Gestor info */}
                 <div className="mt-3 pt-3 border-t border-gray-100">
-                  {assignedAdmin ? (
+                  {assignment ? (
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2 text-xs">
                         <span className="text-gray-400">Gestor:</span>
                         <span className={`font-medium ${isAssignedToMe ? "text-accent" : "text-gray-600"}`}>
-                          {assignedAdmin.display_name || "Administrador"}
+                          {assignedAdmin?.display_name ||
+                            (isAssignedToMe ? "Você (si)" : "Administrador")}
                         </span>
                         {isAssignedToMe && (
                           <span className="inline-flex items-center gap-1 rounded-full bg-green-50 border border-green-200 px-2 py-0.5 text-[10px] font-semibold text-green-600">
@@ -386,6 +389,48 @@ export default function AdminClientesPage() {
                           </span>
                         )}
                       </div>
+                      {isAssignedToMe &&
+                        (assigningClient === client.id ? (
+                          <span className="flex items-center gap-1.5 text-xs text-gray-400">
+                            <Loader2 size={12} className="animate-spin" />
+                            A libertar...
+                          </span>
+                        ) : (
+                          <button
+                            onClick={async () => {
+                              if (!currentUserId) return;
+                              setAssigningClient(client.id);
+                              const { error } = await supabase
+                                .from("client_assignments")
+                                .delete()
+                                .eq("client_id", client.id);
+                              if (!error) {
+                                // Optimistic update — remove from Map immediately
+                                setAssignments((prev) => {
+                                  const next = new Map(prev);
+                                  next.delete(client.id);
+                                  return next;
+                                });
+                                setSuccessMessage(
+                                  `${client.name || "Cliente"} libertado com sucesso!`,
+                                );
+                                if (successTimeoutRef.current)
+                                  clearTimeout(successTimeoutRef.current);
+                                successTimeoutRef.current = setTimeout(() => {
+                                  setSuccessMessage(null);
+                                  successTimeoutRef.current = null;
+                                }, 4000);
+                                // Sync with server in background
+                                fetchClients();
+                              }
+                              setAssigningClient(null);
+                            }}
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-50 hover:text-red-600 hover:border-red-200 transition-all"
+                          >
+                            <X size={13} />
+                            Libertar
+                          </button>
+                        ))}
                     </div>
                   ) : (
                     <div className="flex items-center justify-between">
@@ -492,6 +537,7 @@ export default function AdminClientesPage() {
             Mostrando {paginatedClients.length} de {filtered.length} cliente{filtered.length !== 1 ? "s" : ""}
           </p>
         )}
+        </>
       )}
     </div>
   );

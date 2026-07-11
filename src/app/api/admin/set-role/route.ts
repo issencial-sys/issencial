@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 /**
  * POST /api/admin/set-role
@@ -9,6 +10,8 @@ import { createClient } from "@/lib/supabase/server";
 export async function POST(request: Request) {
   try {
     const supabase = await createClient();
+    const adminSupabase = createAdminClient();
+
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -27,8 +30,8 @@ export async function POST(request: Request) {
     }
 
     if (role === "admin") {
-      // Set admin role via auth admin API
-      const { error } = await supabase.auth.admin.updateUserById(user_id, {
+      // Set admin role via auth admin API (requires service role key)
+      const { error } = await adminSupabase.auth.admin.updateUserById(user_id, {
         app_metadata: { role: "admin" },
       });
 
@@ -39,8 +42,8 @@ export async function POST(request: Request) {
 
       return NextResponse.json({ success: true, message: "Admin role set" });
     } else {
-      // Remove admin role
-      const { error } = await supabase.auth.admin.updateUserById(user_id, {
+      // Remove admin role (requires service role key)
+      const { error } = await adminSupabase.auth.admin.updateUserById(user_id, {
         app_metadata: { role: "" },
       });
 

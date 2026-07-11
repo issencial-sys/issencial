@@ -61,10 +61,24 @@ export default function PortalLayout({
         return;
       }
 
-      // Admin users should not access the client portal — sign them out
+      // Admin users should not access the client portal — sign them out globally
       if (user.app_metadata?.role === "admin") {
-        await supabase.auth.signOut();
+        await supabase.auth.signOut({ scope: "global" });
         router.push("/admin/login");
+        return;
+      }
+
+      // Enforce MFA (AAL2). If a client has a verified TOTP factor but
+      // hasn't completed the second factor this session, redirect to the
+      // MFA challenge — otherwise the second factor could be bypassed.
+      const { data: aal } =
+        await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+      const { data: factors } = await supabase.auth.mfa.listFactors();
+      const hasVerifiedTotp = factors?.totp?.some(
+        (f) => f.status === "verified",
+      );
+      if (hasVerifiedTotp && (aal?.currentLevel ?? "aal1") !== "aal2") {
+        router.push("/login/mfa");
         return;
       }
 
@@ -87,16 +101,29 @@ export default function PortalLayout({
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (!session?.user) {
         router.push("/login");
         return;
       }
 
-      // Admin users should not access the client portal — sign them out
+      // Admin users should not access the client portal — sign them out globally
       if (session.user.app_metadata?.role === "admin") {
-        supabase.auth.signOut();
+        supabase.auth.signOut({ scope: "global" });
         router.push("/admin/login");
+        return;
+      }
+
+      // Re-check MFA on auth state change — if AAL2 is now required,
+      // redirect to the challenge before allowing access.
+      const { data: aal } =
+        await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+      const { data: factors } = await supabase.auth.mfa.listFactors();
+      const hasVerifiedTotp = factors?.totp?.some(
+        (f) => f.status === "verified",
+      );
+      if (hasVerifiedTotp && (aal?.currentLevel ?? "aal1") !== "aal2") {
+        router.push("/login/mfa");
         return;
       }
 
@@ -130,7 +157,8 @@ export default function PortalLayout({
   };
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    // scope: 'global' revokes all refresh tokens server-side
+    await supabase.auth.signOut({ scope: "global" });
     router.push("/");
   };
 

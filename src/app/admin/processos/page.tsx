@@ -137,13 +137,20 @@ export default function AdminProcessosPage() {
     const [processesResult, assignmentsResult, adminUsersResult] = await Promise.all([
       supabase
         .from("processes")
-        .select("*, profiles!inner(name)")
+        .select("id, title, client_id, status, created_at, profiles!inner(name)")
         .order("created_at", { ascending: false }),
-      supabase.from("client_assignments").select("*"),
+      supabase.from("client_assignments").select("client_id, admin_id"),
       supabase.from("admin_users").select("user_id, display_name"),
     ]);
 
-    setProcesses(processesResult.data ?? []);
+    // Normalise: Supabase types inner-join results as array;
+    // the Process interface expects a single object.
+    const normalized = (processesResult.data ?? []).map((p: any) => ({
+      ...p,
+      profiles: Array.isArray(p.profiles) ? p.profiles[0] : p.profiles,
+    }));
+
+    setProcesses(normalized);
 
     const assignMap = new Map<string, ClientAssignment>();
     (assignmentsResult.data ?? []).forEach((a) => assignMap.set(a.client_id, a));
@@ -187,6 +194,11 @@ export default function AdminProcessosPage() {
     }
     setFormCreating(false);
   };
+
+  // Reset to page 1 when filters/search change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, filter]);
 
   if (loading) {
     return (
@@ -238,11 +250,6 @@ export default function AdminProcessosPage() {
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE,
   );
-
-  // Reset to page 1 when filters/search change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [search, filter]);
 
   return (
     <div>

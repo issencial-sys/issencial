@@ -216,7 +216,8 @@ export default function AdminBlogPage() {
           </p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <>
+          <div className="space-y-3">
           {paginatedArticles.map((article) => (
             <div
               key={article.id}
@@ -335,6 +336,7 @@ export default function AdminBlogPage() {
             Mostrando {paginatedArticles.length} de {filtered.length} artigo{filtered.length !== 1 ? "s" : ""}
           </p>
         )}
+          </>
       )}
     </div>
   );

@@ -31,6 +31,8 @@ export default function AdminConfigPage() {
   const [loading, setLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [editingDisplayName, setEditingDisplayName] = useState("");
+  const [savedDisplayName, setSavedDisplayName] = useState<string | null>(null);
+  const [isEditingName, setIsEditingName] = useState(false);
   const [savingDisplayName, setSavingDisplayName] = useState(false);
   const [displayNameSaved, setDisplayNameSaved] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -57,6 +59,7 @@ export default function AdminConfigPage() {
         .maybeSingle();
       if (adminUser?.display_name) {
         setEditingDisplayName(adminUser.display_name);
+        setSavedDisplayName(adminUser.display_name);
       }
     }
     fetchAdmins();
@@ -213,12 +216,7 @@ export default function AdminConfigPage() {
             Exemplo: "Gestor Lima", "Equipa Issencial"
           </p>
 
-          {displayNameSaved ? (
-            <div className="flex items-center gap-2 text-sm text-green-600 bg-green-50 rounded-lg px-4 py-3 border border-green-200">
-              <CheckCircle2 size={16} />
-              Nome atualizado com sucesso!
-            </div>
-          ) : (
+          {isEditingName ? (
             <form
               onSubmit={async (e) => {
                 e.preventDefault();
@@ -228,11 +226,15 @@ export default function AdminConfigPage() {
 
                 const { error } = await supabase
                   .from("admin_users")
-                  .update({ display_name: editingDisplayName })
-                  .eq("user_id", currentUserId);
+                  .upsert(
+                    { user_id: currentUserId, display_name: editingDisplayName },
+                    { onConflict: "user_id" },
+                  );
 
                 if (!error) {
+                  setSavedDisplayName(editingDisplayName);
                   setDisplayNameSaved(true);
+                  setIsEditingName(false);
                   setTimeout(() => setDisplayNameSaved(false), 2000);
                 }
                 setSavingDisplayName(false);
@@ -255,12 +257,51 @@ export default function AdminConfigPage() {
                 Guardar
               </button>
             </form>
+          ) : (
+            <div className="flex items-center justify-between gap-3 rounded-lg border border-gray-200 px-4 py-3 bg-gray-50/50">
+              {savedDisplayName ? (
+                <span className="text-sm text-gray-900 font-medium truncate">
+                  {savedDisplayName}
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-2 text-sm font-medium text-gray-400 truncate">
+                  <AlertCircle size={15} className="shrink-0 text-amber-500" />
+                  Nenhum nome definido ainda
+                </span>
+              )}
+              <button
+                type="button"
+                onClick={() => {
+                  setEditingDisplayName(savedDisplayName ?? "");
+                  setIsEditingName(true);
+                }}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-primary px-4 py-2 text-sm font-semibold text-primary hover:bg-primary/10 transition-all"
+              >
+                {savedDisplayName ? "Editar" : "Definir nome"}
+              </button>
+            </div>
+          )}
+
+          {displayNameSaved && (
+            <div className="mt-3 flex items-center gap-2 text-sm text-green-600 bg-green-50 rounded-lg px-4 py-3 border border-green-200">
+              <CheckCircle2 size={16} />
+              Nome atualizado com sucesso!
+            </div>
           )}
 
           {/* Help text with current name preview */}
-          {editingDisplayName && (
+          {isEditingName && (
             <div className="mt-3 p-3 rounded-lg bg-accent/5 border border-accent/20 text-xs text-gray-600">
-              Os clientes verão: <strong>{editingDisplayName}</strong>
+              {editingDisplayName.trim() ? (
+                <>
+                  Os clientes verão: <strong>{editingDisplayName.trim()}</strong>
+                </>
+              ) : (
+                <>
+                  Sem nome definido, os clientes verão o seu email por defeito.{" "}
+                  <strong>Defina um nome para personalizar.</strong>
+                </>
+              )}
             </div>
           )}
         </div>
@@ -273,7 +314,7 @@ export default function AdminConfigPage() {
           </h2>
 
           {/* Admin list */}
-          {admins.length > 0 && (
+          {admins.length > 0 ? (
             <div className="space-y-2 mb-6">
               {admins.map((admin) => (
                 <div
@@ -305,6 +346,11 @@ export default function AdminConfigPage() {
                   </button>
                 </div>
               ))}
+            </div>
+          ) : (
+            <div className="mb-6 flex items-center gap-3 rounded-xl border border-dashed border-gray-200 bg-gray-50/40 px-4 py-4 text-sm text-gray-400">
+              <UserMinus size={16} className="shrink-0" />
+              Ainda não há administradores. Adicione o primeiro abaixo.
             </div>
           )}
 

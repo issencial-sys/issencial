@@ -3,6 +3,18 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   images: {
     formats: ["image/avif", "image/webp"],
+    // Allow Next.js image optimization for Supabase storage buckets
+    // (avatars, uploads, etc.). CSP already allows *.supabase.co.
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "*.supabase.co",
+      },
+      {
+        protocol: "https",
+        hostname: "*.supabase.in",
+      },
+    ],
   },
   experimental: {
     optimizePackageImports: ["lucide-react"],

@@ -10,11 +10,6 @@ const PREVIEW_MESSAGE = "Olá! Como podemos ajudar?";
 
 export default function WhatsAppButton() {
   const pathname = usePathname();
-
-  // Don't show on admin or portal pages
-  if (pathname.startsWith("/admin") || pathname.startsWith("/portal")) {
-    return null;
-  }
   const [showTooltip, setShowTooltip] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
 
@@ -35,6 +30,11 @@ export default function WhatsAppButton() {
       clearTimeout(hideTimer);
     };
   }, [hasInteracted]);
+
+  // Don't show on admin or portal pages
+  if (pathname.startsWith("/admin") || pathname.startsWith("/portal")) {
+    return null;
+  }
 
   const handleClick = () => {
     setHasInteracted(true);

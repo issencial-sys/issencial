@@ -80,6 +80,14 @@ export default function AdminMfaPage() {
         return;
       }
 
+      // If MFA is already verified for this session, skip the challenge
+      const { data: aal } =
+        await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+      if (aal?.currentLevel === "aal2") {
+        router.push("/admin");
+        return;
+      }
+
       // Find the verified TOTP factor to challenge
       const { data } = await supabase.auth.mfa.listFactors();
       const verifiedTotp = data?.totp?.find((f) => f.status === "verified");

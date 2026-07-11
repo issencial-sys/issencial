@@ -14,6 +14,7 @@ import {
   RefreshCw,
   Printer,
 } from "lucide-react";
+import DOMPurify from "dompurify";
 import { createClient } from "@/lib/supabase/client";
 
 type MfaState = "loading" | "off" | "enrolling" | "verify_enroll" | "on" | "recovery_codes";
@@ -270,7 +271,7 @@ export default function MfaSettings() {
               <div className="flex justify-center mb-4">
                 <div
                   className="rounded-xl border border-gray-200 bg-white p-4"
-                  dangerouslySetInnerHTML={{ __html: qrCode }}
+                  dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(qrCode) }}
                 />
               </div>
             )}

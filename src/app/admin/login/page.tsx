@@ -76,7 +76,8 @@ export default function AdminLoginPage() {
       const role = user?.app_metadata?.role;
 
       if (role !== "admin") {
-        await supabase.auth.signOut();
+        // scope: 'global' revokes all refresh tokens server-side
+        await supabase.auth.signOut({ scope: "global" });
         await logAuthEvent(email, "login_failed", {
           reason: "not_admin",
           source: "admin",

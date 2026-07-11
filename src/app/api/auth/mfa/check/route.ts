@@ -11,10 +11,11 @@ export async function POST(request: Request) {
       status: result.allowed ? 200 : 429,
     });
   } catch {
-    // If rate limiter fails, allow the request (fail open)
+    // Fail-closed: if rate limiter is unavailable, deny the request.
+    // Better to block legitimate access than allow brute force on MFA.
     return NextResponse.json({
-      allowed: true,
-      remaining: 1,
+      allowed: false,
+      remaining: 0,
       resetMs: 60000,
     });
   }

@@ -8,9 +8,11 @@ const NUM_CODES = 8;
 const CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // no I, O, 0, 1 to avoid confusion
 
 function generateRecoveryCode(): string {
+  const randomValues = new Uint8Array(CODE_LENGTH);
+  crypto.getRandomValues(randomValues);
   let code = "";
   for (let i = 0; i < CODE_LENGTH; i++) {
-    code += CHARS.charAt(Math.floor(Math.random() * CHARS.length));
+    code += CHARS.charAt(randomValues[i] % CHARS.length);
     if ((i + 1) % 5 === 0 && i < CODE_LENGTH - 1) code += "-";
   }
   return code;

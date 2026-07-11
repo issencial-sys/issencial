@@ -12,6 +12,7 @@ import {
   Image as ImageIcon,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { validateFileMagicBytes } from "@/lib/validate-file-type";
 
 interface UploadedFile {
   name: string;
@@ -77,6 +78,7 @@ export default function FileUpload({
       const uploadedFiles: UploadedFile[] = [];
 
       for (const file of Array.from(files)) {
+        // 1. Size check
         if (file.size > maxSizeMB * 1024 * 1024) {
           setError(
             `Ficheiro "${file.name}" excede o limite de ${maxSizeMB}MB.`,
@@ -84,6 +86,14 @@ export default function FileUpload({
           continue;
         }
 
+        // 2. Magic-byte validation (not just extension/MIME)
+        const magicCheck = await validateFileMagicBytes(file);
+        if (!magicCheck.valid) {
+          setError(magicCheck.reason);
+          continue;
+        }
+
+        // 3. Upload to Supabase Storage
         const filePath = `${folder}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
 
         const { data, error: uploadError } = await supabase.storage

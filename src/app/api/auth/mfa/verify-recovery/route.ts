@@ -22,34 +22,24 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Não autenticado." }, { status: 401 });
     }
 
-    // Hash the provided code and query directly for a match
+    // Hash the provided code and atomically mark it as used.
+    // The UPDATE ... WHERE used_at IS NULL ensures that even if two concurrent
+    // requests use the same code, only one succeeds (race-condition-safe).
     const codeHashed = await hashCode(code.trim().toUpperCase());
 
-    const { data: match, error: findError } = await supabase
+    const { data: match, error: updateError } = await supabase
       .from("mfa_recovery_codes")
-      .select("id")
+      .update({ used_at: new Date().toISOString() })
       .eq("user_id", user.id)
       .eq("code_hashed", codeHashed)
       .is("used_at", null)
+      .select("id")
       .maybeSingle();
 
-    if (findError || !match) {
+    if (updateError || !match) {
       return NextResponse.json(
         { error: "Código de recuperação inválido ou já utilizado." },
         { status: 400 },
-      );
-    }
-
-    // Mark the code as used
-    const { error: updateError } = await supabase
-      .from("mfa_recovery_codes")
-      .update({ used_at: new Date().toISOString() })
-      .eq("id", match.id);
-
-    if (updateError) {
-      return NextResponse.json(
-        { error: "Erro ao validar código de recuperação." },
-        { status: 500 },
       );
     }
 

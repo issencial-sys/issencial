@@ -140,7 +140,7 @@ export default function ProcessDetailPage() {
       // Fully remove any dangling channel with this topic (handles StrictMode race condition)
       supabase
         .getChannels()
-        .filter((c) => c.topic === "realtime:portal-process-messages-realtime")
+        .filter((c) => c.topic === `realtime:portal-process-messages-realtime-${id}`)
         .forEach((c) => supabase.removeChannel(c));
       channelRef.current = null;
 
@@ -216,45 +216,6 @@ export default function ProcessDetailPage() {
       }
 
       setLoading(false);
-
-      // Subscribe to realtime changes on messages for this process
-      const channel = supabase
-        .channel("portal-process-messages-realtime")
-        .on(
-          "postgres_changes",
-          {
-            event: "INSERT",
-            schema: "public",
-            table: "messages",
-            filter: `process_id=eq.${id}`,
-          },
-          (payload) => {
-            const newMsg = payload.new as {
-              id: string;
-              process_id: string;
-              client_id: string;
-              sender_id: string;
-              content: string;
-              created_at: string;
-            };
-            // Only add messages that belong to this process
-            setMessages((prev) => {
-              if (prev.some((m) => m.id === newMsg.id)) return prev;
-              return [
-                ...prev,
-                {
-                  id: newMsg.id,
-                  content: newMsg.content,
-                  sender_id: newMsg.sender_id,
-                  created_at: newMsg.created_at,
-                },
-              ];
-            });
-          },
-        )
-        .subscribe();
-
-      channelRef.current = channel;
     };
 
     fetchData();
@@ -265,6 +226,68 @@ export default function ProcessDetailPage() {
       }
     };
   }, [id]);
+
+  // Subscribe to realtime changes on messages for this process.
+  // Kept separate from the data fetch so the channel is created synchronously
+  // (after any lingering channel with the same topic is removed), avoiding
+  // `.on(...)` being called on an already-subscribed channel.
+  useEffect(() => {
+    if (!process) return;
+
+    const channelName = `portal-process-messages-realtime-${process.id}`;
+
+    // Remove any dangling channel with this topic from a previous run
+    supabase
+      .getChannels()
+      .filter((c) => c.topic === `realtime:${channelName}`)
+      .forEach((c) => supabase.removeChannel(c));
+    channelRef.current = null;
+
+    const channel = supabase
+      .channel(channelName)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "messages",
+          filter: `process_id=eq.${process.id}`,
+        },
+        (payload) => {
+          const newMsg = payload.new as {
+            id: string;
+            process_id: string;
+            client_id: string;
+            sender_id: string;
+            content: string;
+            created_at: string;
+          };
+          // Only add messages that belong to this process
+          setMessages((prev) => {
+            if (prev.some((m) => m.id === newMsg.id)) return prev;
+            return [
+              ...prev,
+              {
+                id: newMsg.id,
+                content: newMsg.content,
+                sender_id: newMsg.sender_id,
+                created_at: newMsg.created_at,
+              },
+            ];
+          });
+        },
+      )
+      .subscribe();
+
+    channelRef.current = channel;
+
+    return () => {
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
+    };
+  }, [process]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();

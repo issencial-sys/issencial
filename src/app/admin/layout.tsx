@@ -60,10 +60,10 @@ export default function AdminLayout({
         return;
       }
 
-      // Login page is public — don't redirect, just stop loading
+      // Login pages (incl. MFA) are public — render without admin wrapper
       if (pathname === "/admin/login" || pathname.startsWith("/admin/login/")) {
         setLoading(false);
-        return;
+        return <>{children}</>;
       }
 
       const {
@@ -81,6 +81,22 @@ export default function AdminLayout({
       const role = user.app_metadata?.role;
       if (role !== "admin") {
         router.push("/portal");
+        return;
+      }
+
+      // Enforce MFA (AAL2). An admin with a verified TOTP factor must
+      // complete the second factor before accessing the dashboard. A
+      // session that only reached AAL1 (signed in with password, MFA
+      // pending) must be sent to the MFA challenge, not the dashboard —
+      // otherwise the second factor could be bypassed entirely.
+      const { data: aal } =
+        await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+      const { data: factors } = await supabase.auth.mfa.listFactors();
+      const hasVerifiedTotp = factors?.totp?.some(
+        (f) => f.status === "verified",
+      );
+      if (hasVerifiedTotp && (aal?.currentLevel ?? "aal1") !== "aal2") {
+        router.push("/admin/login/mfa");
         return;
       }
 
@@ -102,7 +118,7 @@ export default function AdminLayout({
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (!session?.user) {
         // Only redirect if not already on the login page
         if (pathname !== "/admin/login") {
@@ -117,6 +133,25 @@ export default function AdminLayout({
         router.push("/portal");
         return;
       }
+
+      // If MFA is enrolled but not yet verified for this session,
+      // redirect to the challenge instead of trusting the AAL1 session.
+      const { data: aal } =
+        await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+      const { data: factors } = await supabase.auth.mfa.listFactors();
+      const hasVerifiedTotp = factors?.totp?.some(
+        (f) => f.status === "verified",
+      );
+      if (hasVerifiedTotp && (aal?.currentLevel ?? "aal1") !== "aal2") {
+        if (
+          pathname !== "/admin/login" &&
+          !pathname.startsWith("/admin/login/")
+        ) {
+          router.push("/admin/login/mfa");
+        }
+        return;
+      }
+
       setIsAdmin(true);
     });
 
@@ -142,8 +177,8 @@ export default function AdminLayout({
     return <>{children}</>;
   }
 
-  // Login page is public — render without admin wrapper
-  if (pathname === "/admin/login") {
+  // Login pages (incl. MFA) are public — render without admin wrapper
+  if (pathname === "/admin/login" || pathname.startsWith("/admin/login/")) {
     return <>{children}</>;
   }
 

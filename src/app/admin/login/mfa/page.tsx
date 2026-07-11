@@ -129,6 +129,17 @@ export default function AdminMfaPage() {
         });
         if (verifyError) throw verifyError;
 
+        // Persist the AAL2 session explicitly. With @supabase/ssr, the
+        // verify() bumps the session to AAL2 but does not always rewrite the
+        // auth cookie, causing it to disappear immediately after login and
+        // the admin shell to loop back to the MFA challenge. Refreshing the
+        // session forces the server to return the upgraded AAL2 session and
+        // setSession() rewrites the cookie with it.
+        const { data: sessionData } = await supabase.auth.refreshSession();
+        if (sessionData.session) {
+          await supabase.auth.setSession(sessionData.session);
+        }
+
         router.push("/admin");
       } catch {
         setRemainingAttempts((prev) => Math.max(prev - 1, 0));

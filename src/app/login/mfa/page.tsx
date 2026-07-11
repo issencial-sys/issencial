@@ -124,6 +124,12 @@ export default function ClientMfaPage() {
         });
         if (verifyError) throw verifyError;
 
+        // Persist the AAL2 session explicitly (see admin MFA page for why).
+        const { data: sessionData } = await supabase.auth.refreshSession();
+        if (sessionData.session) {
+          await supabase.auth.setSession(sessionData.session);
+        }
+
         const params = new URLSearchParams(window.location.search);
         const redirectTo = params.get("redirect") || "/portal";
         router.push(redirectTo);

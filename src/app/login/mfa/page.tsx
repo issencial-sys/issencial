@@ -125,7 +125,7 @@ export default function ClientMfaPage() {
         if (verifyError) throw verifyError;
 
         // Persist the AAL2 session explicitly (see admin MFA page for why).
-        const { data: sessionData } = await supabase.auth.refreshSession();
+        const { data: sessionData } = await supabase.auth.getSession();
         if (sessionData.session) {
           await supabase.auth.setSession(sessionData.session);
         }

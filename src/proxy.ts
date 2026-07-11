@@ -15,7 +15,7 @@ const PUBLIC_ROUTES = new Set([
   "/termos-privacidade",
 ]);
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
   // Skip auth check for public routes (avoids hanging getUser() call)
@@ -23,7 +23,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next({ request });
   }
 
-  let supabaseResponse = NextResponse.next({ request });
+  let response = NextResponse.next({ request });
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -35,14 +35,13 @@ export async function middleware(request: NextRequest) {
         },
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value, options }) => {
-            // Never let the middleware itself clear the session cookie.
-            // A value of "" means "clear" (logout / failed refresh) — if we
-            // wrote that, the browser would wipe the cookie right after a
+            // Never let the proxy itself clear the session cookie. A value
+            // of "" means "clear" (logout / failed refresh) — if we wrote
+            // that, the browser would wipe the session right after a
             // successful 2FA login. Only propagate non-empty updates so the
-            // client-side signOut remains the single source of truth for
-            // ending a session.
+            // client-side signOut remains the single source of truth.
             if (value === "") return;
-            supabaseResponse.cookies.set(name, value, options);
+            response.cookies.set(name, value, options);
           });
         },
       },
@@ -65,12 +64,12 @@ export async function middleware(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = "/admin/login";
     const redirectResponse = NextResponse.redirect(url);
-
-    // Clear Supabase auth cookies on the actual response we're returning
-    request.cookies.getAll()
+    request.cookies
+      .getAll()
       .filter((c) => c.name.startsWith("sb-"))
-      .forEach((c) => redirectResponse.cookies.set(c.name, "", { maxAge: 0, path: "/" }));
-
+      .forEach((c) =>
+        redirectResponse.cookies.set(c.name, "", { maxAge: 0, path: "/" }),
+      );
     return redirectResponse;
   }
 
@@ -88,12 +87,12 @@ export async function middleware(request: NextRequest) {
       const url = request.nextUrl.clone();
       url.pathname = "/admin/login";
       const redirectResponse = NextResponse.redirect(url);
-
-      // Clear Supabase auth cookies on the actual response we're returning
-      request.cookies.getAll()
+      request.cookies
+        .getAll()
         .filter((c) => c.name.startsWith("sb-"))
-        .forEach((c) => redirectResponse.cookies.set(c.name, "", { maxAge: 0, path: "/" }));
-
+        .forEach((c) =>
+          redirectResponse.cookies.set(c.name, "", { maxAge: 0, path: "/" }),
+        );
       return redirectResponse;
     }
   }
@@ -117,13 +116,13 @@ export async function middleware(request: NextRequest) {
     // NOTE: MFA / AAL2 enforcement is handled client-side in
     // admin/layout.tsx (which reads the real browser session). Doing it
     // here with getAuthenticatorAssuranceLevel() forced a server-side
-    // session refresh on every request that re-emitted the auth cookie
-    // with a short/expired lifetime (worsened by "Limit AAL1" = 15 min),
-    // wiping the session right after login. Keeping this middleware to
-    // session + role only stops the cookie from being destroyed.
+    // session refresh on every request that re-emitted the auth cookie with
+    // a short/expired lifetime (worsened by "Limit AAL1" = 15 min) and
+    // wiped the session right after login. Keeping this proxy to session +
+    // role only stops the cookie from being destroyed server-side.
   }
 
-  return supabaseResponse;
+  return response;
 }
 
 export const config = {

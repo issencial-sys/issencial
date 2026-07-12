@@ -119,8 +119,8 @@ export async function POST(request: Request) {
     }
 
     // Personalize each email with the correct unsubscribe URL
-    const queueEntries = [];
-    const emailQueueEntries = [];
+    const queueEntries: any[] = [];
+    const emailQueueEntries: any[] = [];
 
     for (const sub of subscribers) {
       const unsubscribeUrl = `${baseUnsubscribeUrl}${sub.token}`;

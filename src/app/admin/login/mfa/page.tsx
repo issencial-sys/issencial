@@ -129,16 +129,11 @@ export default function AdminMfaPage() {
         });
         if (verifyError) throw verifyError;
 
-        // Persist the AAL2 session explicitly. With @supabase/ssr, the
-        // verify() bumps the session to AAL2 but does not always rewrite the
-        // auth cookie, causing it to disappear immediately after login and
-        // the admin shell to loop back to the MFA challenge. Re-reading the
-        // session and setting it forces the cookie to be written with the
-        // upgraded AAL2 session.
-        const { data: sessionData } = await supabase.auth.getSession();
-        if (sessionData.session) {
-          await supabase.auth.setSession(sessionData.session);
-        }
+        // mfa.verify() already calls _saveSession internally and persists the
+        // upgraded AAL2 session to the auth cookies via the @supabase/ssr
+        // browser client. Do NOT call getSession()+setSession() here — that
+        // re-writes the store with the in-memory AAL1 session and wipes the
+        // auth cookies (session disappears immediately after MFA).
 
         router.replace("/admin");
       } catch {

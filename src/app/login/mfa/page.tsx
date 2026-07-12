@@ -124,11 +124,10 @@ export default function ClientMfaPage() {
         });
         if (verifyError) throw verifyError;
 
-        // Persist the AAL2 session explicitly (see admin MFA page for why).
-        const { data: sessionData } = await supabase.auth.getSession();
-        if (sessionData.session) {
-          await supabase.auth.setSession(sessionData.session);
-        }
+        // mfa.verify() already persists the upgraded AAL2 session to the auth
+        // cookies via the @supabase/ssr browser client. The previous
+        // getSession()+setSession() here re-wrote the store with the in-memory
+        // AAL1 session and wiped the auth cookies (session vanished after MFA).
 
         const params = new URLSearchParams(window.location.search);
         const redirectTo = params.get("redirect") || "/portal";

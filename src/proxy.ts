@@ -41,7 +41,16 @@ export async function proxy(request: NextRequest) {
             // successful 2FA login. Only propagate non-empty updates so the
             // client-side signOut remains the single source of truth.
             if (value === "") return;
-            response.cookies.set(name, value, options);
+            // Keep cookie attributes identical to the browser client so the
+            // two writers never produce divergent chunks that the browser
+            // fails to re-read after an F5.
+            response.cookies.set(name, value, {
+              ...options,
+              path: "/",
+              sameSite: "lax",
+              secure: true,
+              httpOnly: false,
+            });
           });
         },
       },

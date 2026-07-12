@@ -132,7 +132,7 @@ export default function ClientMfaPage() {
 
         const params = new URLSearchParams(window.location.search);
         const redirectTo = params.get("redirect") || "/portal";
-        router.push(redirectTo);
+        router.replace(redirectTo);
       } catch {
         setRemainingAttempts((prev) => Math.max(prev - 1, 0));
         setError("Código inválido. Tente novamente.");

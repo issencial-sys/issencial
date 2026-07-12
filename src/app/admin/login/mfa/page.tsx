@@ -140,7 +140,7 @@ export default function AdminMfaPage() {
           await supabase.auth.setSession(sessionData.session);
         }
 
-        router.push("/admin");
+        router.replace("/admin");
       } catch {
         setRemainingAttempts((prev) => Math.max(prev - 1, 0));
         setError("Código inválido. Tente novamente.");

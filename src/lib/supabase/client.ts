@@ -18,6 +18,15 @@ export function createClient() {
         secure: true,
         httpOnly: false,
       },
+      // The proxy (src/proxy.ts) is the SINGLE session refresher: it runs
+      // getUser() on every server request and rewrites the cookies when the
+      // access token is near expiry. If the browser client also auto-refreshes
+      // (default), the two refreshers race under refresh_token_rotation and the
+      // session gets invalidated intermittently -> random logout / redirect
+      // loop. Disabling it here makes the proxy the sole authority.
+      auth: {
+        autoRefreshToken: false,
+      },
     },
   );
   return browserClient;

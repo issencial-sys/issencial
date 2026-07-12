@@ -200,6 +200,33 @@ Ordenadas por probabilidade:
 
 ---
 
+## 3c. Evidência actualizada (2026-07-12, tarde)
+
+Observação do utilizador após correção H2 (que NÃO resolveu):
+- Cookies continuam a "desaparecer" intermitentemente; em algumas situações
+  demorou mais tempo.
+- **Mas `/admin/blog`, `/admin/newsletter`, `/admin/config` continuam a carregar
+  SEM redirecionar**, mesmo quando o resto do admin redireciona para login.
+
+**Consequência crítica:** se o cookie tivesse sido apagado do disco, O proxy
+bloquearia TODAS as rotas `/admin/*` (matcher abrange tudo). Como algumas
+páginas mantêm sessão, **o cookie NÃO está apagado** — ele persiste. O que se
+vê em Application→Cookies como "desaparecido" é o Supabase a remover/reescrever
+os cookies *durante um refresh de sessão* (estado intermédio), não perda real.
+
+Isto **refuta a tese de chunking/cookie-apagado** (H2 testada e falhou) e aponta
+para **refresh de sessão intermitente + loop de redirect** (H4).
+
+Confirmação adicional: o bug foi reportado ORIGINALMENTE em production
+(`issencial.vercel.app`), logo a toolbar/preview da Vercel (H5) está
+definitivamente descartada.
+
+Nova correção aplicada (H4): `createBrowserClient` configurado com
+`auth.autoRefreshToken: false` — o **proxy é o único refresher** de sessão,
+eliminando a corrida de dois refreshers sob `refresh_token_rotation_enabled`.
+
+---
+
 ## 5. Alterações feitas até agora (branch `fix/auth-session-stability`)
 
 Commits:

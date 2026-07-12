@@ -69,6 +69,7 @@ export default function AdminLayout({
       const {
         data: { user },
       } = await supabase.auth.getUser();
+      console.log("[DEBUG admin-layout] checkAdmin getUser -> user:", !!user, "role:", user?.app_metadata?.role);
 
       if (!user) {
         router.push("/admin/login");
@@ -91,6 +92,7 @@ export default function AdminLayout({
       // otherwise the second factor could be bypassed entirely.
       const { data: aal } =
         await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+      console.log("[DEBUG admin-layout] checkAdmin aal:", aal?.currentLevel, "nextLevel:", aal?.nextLevel);
       const { data: factors } = await supabase.auth.mfa.listFactors();
       const hasVerifiedTotp = factors?.totp?.some(
         (f) => f.status === "verified",
@@ -119,6 +121,7 @@ export default function AdminLayout({
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
+      console.log("[DEBUG admin-layout] onAuthStateChange event:", _event, "hasSession:", !!session?.user);
       // Only react to sign-out. Do NOT re-check AAL2 or re-emit the auth
       // cookie here: that races the proxy's server-side refresh (which is
       // the single writer under refresh_token_rotation_enabled) and causes

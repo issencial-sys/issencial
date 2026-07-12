@@ -122,11 +122,12 @@ export default function AdminMfaPage() {
           await supabase.auth.mfa.challenge({ factorId });
         if (challengeError) throw challengeError;
 
-        const { error: verifyError } = await supabase.auth.mfa.verify({
+        const { data: verifyData, error: verifyError } = await supabase.auth.mfa.verify({
           factorId,
           challengeId: challenge.id,
           code,
         });
+        console.log("[DEBUG admin-mfa] verify result -> error:", verifyError?.message ?? null, "hasSession:", !!verifyData?.session, "aal:", verifyData?.session ? verifyData.session?.app_metadata?.aal : undefined, "expires_at:", verifyData?.session?.expires_at, "hasRefresh:", !!verifyData?.session?.refresh_token);
         if (verifyError) throw verifyError;
 
         // mfa.verify() already calls _saveSession internally and persists the

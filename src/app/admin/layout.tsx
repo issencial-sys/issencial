@@ -69,7 +69,8 @@ export default function AdminLayout({
       const {
         data: { user },
       } = await supabase.auth.getUser();
-      console.log("[DEBUG admin-layout] checkAdmin getUser -> user:", !!user, "role:", user?.app_metadata?.role);
+      const { data: sess } = await supabase.auth.getSession();
+      console.log("[DEBUG admin-layout] checkAdmin getUser -> user:", !!user, "role:", user?.app_metadata?.role, "sessionExpiresAt:", sess?.session?.expires_at, "now:", Date.now(), "cookiePresent:", document.cookie.includes("sb-lyqmsluktqdeytpouyvh-auth-token"));
 
       if (!user) {
         router.push("/admin/login");
@@ -121,7 +122,8 @@ export default function AdminLayout({
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      console.log("[DEBUG admin-layout] onAuthStateChange event:", _event, "hasSession:", !!session?.user);
+      const sb = Object.keys(document.cookie.split("; ").filter(c=>c.startsWith("sb-")).reduce((a,c)=>{a[c.split("=")[0]]=1;return a;},{})).map(k=>k);
+      console.log("[DEBUG admin-layout] onAuthStateChange event:", _event, "hasSession:", !!session?.user, "expires_at:", session?.expires_at, "sbCookies:", JSON.stringify(sb), "docCookieLen:", document.cookie.length);
       // Only react to sign-out. Do NOT re-check AAL2 or re-emit the auth
       // cookie here: that races the proxy's server-side refresh (which is
       // the single writer under refresh_token_rotation_enabled) and causes

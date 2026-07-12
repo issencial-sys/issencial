@@ -6,6 +6,31 @@ import { usePathname, useRouter } from "next/navigation";
 import Image from "next/image";
 
 export const dynamic = "force-dynamic";
+
+// DEBUG: intercept all document.cookie writes to catch who clears the auth
+// cookie client-side (invisible to the Network tab because httpOnly:false).
+if (typeof window !== "undefined" && !(window as any).__cookieSpy) {
+  (window as any).__cookieSpy = true;
+  const origSetter = Object.getOwnPropertyDescriptor(
+    Document.prototype,
+    "cookie",
+  )!.set!;
+  Object.defineProperty(document, "cookie", {
+    configurable: true,
+    set(v: string) {
+      if (v.includes("lyqmsluktqdeytpouyvh-auth-token")) {
+        const isEmpty = /=\s*;/.test(v) || v.trim().endsWith("=");
+        console.log(
+          "[cookie-write] " + (isEmpty ? "EMPTY/DELETE ->" : "write ->"),
+          v.slice(0, 80),
+        );
+        if (isEmpty) console.trace("[cookie-write] empty delete stack");
+      }
+      return origSetter.call(document, v);
+    },
+  });
+}
+
 import {
   LayoutDashboard,
   MessageSquare,

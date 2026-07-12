@@ -35,15 +35,16 @@ export async function proxy(request: NextRequest) {
         },
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value, options }) => {
-            // Never let the proxy itself clear the session cookie. A value
-            // of "" means "clear" (logout / failed refresh) — if we wrote
-            // that, the browser would wipe the session right after a
-            // successful 2FA login. Only propagate non-empty updates so the
-            // client-side signOut remains the single source of truth.
-            if (value === "") return;
+            // NOTE: previously we ignored `value === ""` to "avoid clearing"
+            // the session. That was wrong: the @supabase/ssr GoTrue client
+            // writes value:"" precisely to DELETE obsolete auth-token chunks
+            // (e.g. ".1") after a refresh-token rotation shrinks the session.
+            // Ignoring those deletions left stale chunks behind; on the next
+            // read the SDK concatenates them, the parse fails, and the
+            // client-side storage wipes the whole session. So we MUST forward
+            // empty-value writes (they are intentional deletions).
             // Keep cookie attributes identical to the browser client so the
-            // two writers never produce divergent chunks that the browser
-            // fails to re-read after an F5.
+            // two writers never produce divergent chunks.
             response.cookies.set(name, value, {
               ...options,
               path: "/",

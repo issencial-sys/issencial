@@ -118,41 +118,19 @@ export default function AdminLayout({
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      // Only react to sign-out. Do NOT re-check AAL2 or re-emit the auth
+      // cookie here: that races the proxy's server-side refresh (which is
+      // the single writer under refresh_token_rotation_enabled) and causes
+      // GoTrue to revoke the session (cookie wipe -> forced re-login).
+      // AAL2 enforcement runs once at mount in checkAdmin().
       if (!session?.user) {
-        // Only redirect if not already on the login page
+        setUser(null);
+        setIsAdmin(false);
         if (pathname !== "/admin/login") {
           router.push("/admin/login");
         }
-        return;
       }
-      setUser(session.user);
-
-      const role = session.user.app_metadata?.role;
-      if (role !== "admin") {
-        router.push("/portal");
-        return;
-      }
-
-      // If MFA is enrolled but not yet verified for this session,
-      // redirect to the challenge instead of trusting the AAL1 session.
-      const { data: aal } =
-        await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-      const { data: factors } = await supabase.auth.mfa.listFactors();
-      const hasVerifiedTotp = factors?.totp?.some(
-        (f) => f.status === "verified",
-      );
-      if (hasVerifiedTotp && (aal?.currentLevel ?? "aal1") !== "aal2") {
-        if (
-          pathname !== "/admin/login" &&
-          !pathname.startsWith("/admin/login/")
-        ) {
-          router.push("/admin/login/mfa");
-        }
-        return;
-      }
-
-      setIsAdmin(true);
     });
 
     return () => subscription.unsubscribe();

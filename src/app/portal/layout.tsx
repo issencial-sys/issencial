@@ -101,34 +101,15 @@ export default function PortalLayout({
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      // Only react to sign-out. Do NOT re-check AAL2 or call signOut here:
+      // this races the proxy's single server-side cookie writer under
+      // refresh_token_rotation_enabled and can revoke the whole session.
+      // Role mismatch is handled at mount in the initial getUser() check.
       if (!session?.user) {
+        setUser(null);
         router.push("/login");
-        return;
       }
-
-      // Admin users should not access the client portal — sign them out globally
-      if (session.user.app_metadata?.role === "admin") {
-        supabase.auth.signOut({ scope: "global" });
-        router.push("/admin/login");
-        return;
-      }
-
-      // Re-check MFA on auth state change — if AAL2 is now required,
-      // redirect to the challenge before allowing access.
-      const { data: aal } =
-        await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-      const { data: factors } = await supabase.auth.mfa.listFactors();
-      const hasVerifiedTotp = factors?.totp?.some(
-        (f) => f.status === "verified",
-      );
-      if (hasVerifiedTotp && (aal?.currentLevel ?? "aal1") !== "aal2") {
-        router.push("/login/mfa");
-        return;
-      }
-
-      setUser(session.user);
-      fetchBadges(session.user.id);
     });
 
     return () => subscription.unsubscribe();

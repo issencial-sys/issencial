@@ -138,9 +138,24 @@ export async function proxy(request: NextRequest) {
       return NextResponse.redirect(url);
     }
 
-    // Check admin role via JWT custom claim
+    // Check admin role. Prefer the JWT custom claim, but it is
+    // INTERMITTENTLY absent from the post-MFA access token on Vercel
+    // (same root cause as the missing `aal` claim). When the claim is
+    // missing, fall back to the database (admin_users) as the source of
+    // truth — otherwise every admin request 307-redirects to /portal and
+    // the session appears to vanish. Only hit the DB when the claim is
+    // absent, to keep the common path cheap.
     const role = user.app_metadata?.role;
-    if (role !== "admin") {
+    let isAdmin = role === "admin";
+    if (!isAdmin) {
+      const { data: adminUser } = await supabase
+        .from("admin_users")
+        .select("user_id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      isAdmin = !!adminUser;
+    }
+    if (!isAdmin) {
       const url = request.nextUrl.clone();
       url.pathname = "/portal";
       return NextResponse.redirect(url);

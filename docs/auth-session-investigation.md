@@ -227,6 +227,177 @@ eliminando a corrida de dois refreshers sob `refresh_token_rotation_enabled`.
 
 ---
 
+## 3d. Factos provados por instrumentação no browser (2026-07-13)
+
+Foi adicionada instrumentação (commit `6b3b3f1`): um spy `document.cookie`
+na página MFA do admin + logs no proxy (gated em `AUTH_DEBUG`) + o
+endpoint `/api/debug-session` (já existia, devolve `role`/`aal`/`cookies`).
+
+### Logs recolhidos no preview (admin, após password + MFA)
+
+```
+[AUTH-DEBUG doc.cookie spy armed]
+[AUTH-DEBUG cookies.before-verify] ['...auth-token.0=3217', '...auth-token.1=235']
+[AUTH-DEBUG doc.cookie.set] sb-...-auth-token.0=base64-eyJ...  ← stack: _saveSession → _verify (mfa.verify)
+[AUTH-DEBUG doc.cookie.set] sb-...-auth-token.1=iIyMDI2...    ← stack: _saveSession → _verify (mfa.verify)
+[AUTH-DEBUG cookies.after-verify] ['...auth-token.0=3217', '...auth-token.1=272']
+```
+
+E no `/api/debug-session` (corrido logo após MFA, antes de quebrar):
+
+```
+ROLE: admin | AAL: undefined | COOKIES: [{".0",len:3180},{".1",len:239}]
+```
+
+**Conclusões extraídas (facto, não especulação):**
+
+1. **O `mfa.verify()` ESCREVE os cookies `.0`/`.1` normalmente** (o spy
+   capturou `_saveSession` → `_verify` a gravar ambos os chunks). O browser
+   **não** os apaga no momento do verify.
+2. **Os cookies ESTÃO presentes no disco logo após o MFA** (`after-verify`
+   mostra `.0`+`.1`; o `/api/debug-session` confirma que o browser ENVIA
+   `.0`+`.1`).
+3. **O JWT pós-MFA no Vercel NÃO traz o claim `aal`** →
+   `getAuthenticatorAssuranceLevel()` devolve `currentLevel: undefined`.
+4. **O `role` está correto** (`ROLE: admin`), tanto no client quanto no
+   server (`/api/debug-session` corre server-side e também vê `admin`).
+
+### Tentativa de correção (Opção 1) — NÃO RESOLVEU
+
+Commit `32c17a9`: no `admin/layout.tsx`, deixou de tratar `aal` ausente como
+"MFA pendente" — só redireciona para `/mfa` se o claim estiver presente E for
+`aal1`. **O sintoma persiste.**
+
+**Implicação crítica:** como a correção do layout não adiantou, o redirect
+loop/quebra **NÃO tem origem no `getAuthenticatorAssuranceLevel()` do
+`admin/layout.tsx`**. A causa está noutro writer de redirect. Candidatos
+restantes (todos dependem de `role`/`aal` lidos do JWT):
+
+- `src/app/admin/login/mfa/page.tsx:112` — `if (role !== "admin") router.push("/portal")`
+- `src/proxy.ts:142` — `if (role !== "admin") → /portal` (redirect **server-side** em cada request)
+- `src/proxy.ts:119` + `src/app/portal/layout.tsx:64` — admin em `/portal` → `signOut({scope:"global"})` + limpa cookies `maxAge:0`
+- `src/app/admin/layout.tsx:74` — `if (!user) router.push("/admin/login")`
+- `onAuthStateChange` `!session` → `/admin/login` (ambos os layouts)
+
+**Hipótese atual (não confirmada):** o proxy (server-side, corre em TODAS as
+requests `/admin/*`) vê `role !== "admin"` no JWT pós-MFA (claim intermitente
+no Vercel, tal como o `aal`) → redireciona `/admin` → `/portal` → o
+`/portal` faz `signOut({scope:"global"})` + limpa os cookies → **os cookies
+desaparecem**. Isto explica:
+- "quase instantâneo após MFA" (o proxy corre na request de navegação pós-MFA);
+- só admin (faz MFA; o portal/cliente não tem esta cadeia);
+- cookie "desaparece" (é o `signOut` global + `maxAge:0` do portal).
+
+Mas o `/api/debug-session` mostrou `ROLE: admin` no server... logo o proxy
+devia ver `admin` também. **Contradição em aberto** — precisa de
+`AUTH_DEBUG=1` nos logs da Vercel para ver o que o `proxy.getUser()` recebe
+exatamente no momento do redirect.
+
+---
+
+## 3e. Teste do `role` via DB — também NÃO RESOLVEU (2026-07-13)
+
+Commit `9cd7206`: o `admin/layout.tsx` e o `admin/login/mfa/page.tsx` deixaram
+de ler `user.app_metadata?.role` e passaram a validar admin via query à tabela
+`admin_users` (DB, fonte de verdade). O proxy (`proxy.ts:142`) mantém o check
+`role !== "admin"` mas usa `getUser()` **server-side** — e o `/api/debug-session`
+já provou que o server vê `ROLE: admin`, logo o proxy não redireciona.
+
+**Resultado do utilizador (preview, após login admin + MFA): OS COOKIES
+CONTINUAM A DESAPARECER.**
+
+### Consequência crítica — refutação das hipóteses de redirect
+
+Como remover a dependência do JWT (`role` E `aal`) do layout E do `mfa/page`
+não resolveu, **o redirecionamento não tem origem nessas verificações**. Além
+disso o utilizador reporta **não ver nenhum redirecionamento estranho** na barra
+de endereços quando o cookie some. Isto contradiz TODAS as hipóteses de
+redirect (layout → /portal, proxy → /portal, /mfa, /admin/login).
+
+**Nova direção obrigatória:** o "desaparecimento" NÃO é um redirect que leva o
+utilizador a outra rota visível. É a **sessão/cookies a serem apagados
+ativamente** (o browser ou o proxy escreve `value:""` / `maxAge:0`). Os
+candidatos restantes, todos baseados em FACTOS dos logs de instrumentação
+ainda por analisar:
+
+1. **Proxy `setAll` a escrever deleções** — o `setAll` (proxy.ts) ignora
+   `value===""` (não limpa), MAS o `getUser()` server-side que falha com
+   `AuthSessionMissing` faz `_removeSession()` (auth-js) que pode disparar
+   escrita de cookies vazios via o writer do proxy. Os logs `[AUTH-DEBUG
+   proxy.setAll]` (com `AUTH_DEBUG=1`) provam isto.
+2. **Browser `onAuthStateChange` a disparar `SIGNED_OUT`** — com
+   `autoRefreshToken:false`, se o `access_token` expirar ou o refresh falhar,
+   o SDK emite `SIGNED_OUT` e o `onAuthStateChange` (layout) faz
+   `router.push("/admin/login")`. Mas o utilizador não vê redirect... a não ser
+   que seja tão rápido que a página recarrega antes de ele notar. **O spy
+   `document.cookie` deve ter capturado uma escrita vazia se isto acontecer.**
+3. **Corrida de refresh token entre requests paralelos** do dashboard
+   (que faz ~24 queries em `Promise.all` no mount) — cada uma passa pelo proxy,
+   cada uma faz `getUser()`; com `refresh_token_rotation_enabled=true`, requests
+   paralelos podem girar o refresh token e revogar a sessão. **Isto explica por
+   que o dashboard/páginas com muitas queries quebram mais que blog (1 query).**
+
+### O que falta (decisivo, não-especulativo)
+
+Os logs de instrumentação JÁ ESTÃO NO AR (commit `6b3b3f1` + `AUTH_DEBUG=1`
+na Vercel). Precisa de:
+- **Vercel logs** (`[AUTH-DEBUG proxy.setAll]` / `[AUTH-DEBUG proxy.getUser]`)
+  no momento exato do desaparecimento → prova se o proxy apaga cookies.
+- **Console do browser** (`[AUTH-DEBUG doc.cookie.set]` com stack trace) →
+  prova se o browser apaga (ex.: `_removeSession` do `onAuthStateChange`).
+
+Sem estes dois logs, qualquer nova hipótese é especulação. Próximo passo:
+correr `vercel logs` durante a reprodução do login e colar os `[AUTH-DEBUG ...]`.
+
+---
+
+## 3f. Causa raiz FINAL — `getUser()` strict no proxy limpa cookies (2026-07-13)
+
+Os logs Vercel no deployment novo (`on07iupnr`) mostraram **ainda 307** em
+`/admin/*` (mistura 200/304/307). O `vercel deploy` confirma que o deployment
+tem as correções de role-DB, logo os 307 restantes vêm de OUTRO lugar do proxy.
+
+**Mecânica (lida no source `@supabase/auth-js` GoTrueClient.js + `getUser`):**
+
+- O proxy (`proxy.ts:79`) chamava `supabase.auth.getUser()`.
+- `getUser()` é **"strict"**: valida o `access_token` JWT junto do servidor
+  GoTrue. Quando esse token (validade ~1h) **expira**, a GoTrue recusa e o
+  auth-js corre `_removeSession()`, que escreve a **remoção dos cookies**
+  (`value:""`/`maxAge:0`) via o writer do proxy → o proxy vê `!user` →
+  redireciona `307`.
+- O comentário já existente no proxy (linhas 164-170) avisava: *"wiped the
+  session right after login"* — a equipa já sabia que o proxy destrói a
+  sessão, mas trocou `getAuthenticatorAssuranceLevel` por `getUser`, que tem o
+  MESMO defeito (strict, não refresca).
+
+**Facto que refuta token-expirado-rápido:** o cookie `sb-...-auth-token.0` tem
+`expires: 2027-08-17` (Max-Age 400d). O cookie NÃO expira — o que expira é o
+`access_token` JWT (~1h) **dentro** do cookie. Sem refresh, o `getUser()`
+falha ao expirar.
+
+**Por que explica TUDO:**
+- Logo após MFA: `access_token` fresco → `getUser()` OK → `200` (as páginas
+  abertas cedo: config/blog/newsletter).
+- Após ~1h / no **F5**: `access_token` expirou → `getUser()` falha → cookies
+  limpos + `307` → "desaparecem".
+- **localhost funciona**: o browser (dev server, single process, timing
+  diferente) não expõe a mesma janela de token-expirado-sem-refresh que o
+  Vercel (edge + múltiplos requests paralelos).
+
+### Correção aplicada (proxy `getUser` → `getSession`)
+
+Commit subsequente: o proxy passa a usar `supabase.auth.getSession()` em vez
+de `getUser()`. O `getSession()` **refresca o `access_token` quando expirado**
+(o server client tem `autoRefreshToken:true` por defeito), logo a sessão
+sobrevive à expiração do token sem limpar cookies. Isto elimina a classe de
+bug "cookies desaparecem após token expirar".
+
+> NOTA: manter `autoRefreshToken:false` no **browser** client e deixar o
+> proxy como único refresher (via `getSession`) evita a corrida de dois
+> refreshers sob `refresh_token_rotation_enabled`.
+
+---
+
 ## 5. Alterações feitas até agora (branch `fix/auth-session-stability`)
 
 Commits:
@@ -238,9 +409,26 @@ Commits:
 - Commits anteriores (planeamento): remoção de `setSession` manual pós-MFA;
   simplificação de `onAuthStateChange` nos layouts; `router.replace` pós-MFA;
   script `supabase/config-patch.sh` (reuse interval).
+- `6b3b3f1` — **instrumentação de debug** (proxy `setAll`/`getUser` logs gated
+  em `AUTH_DEBUG` + spy `document.cookie` na MFA do admin). Não muda
+  comportamento.
+- `32c17a9` — **correção tentada (Opção 1)**: `admin/layout.tsx` deixa de
+  tratar `aal` ausente como MFA-pendente. **NÃO RESOLVEU** o sintoma.
+- `9cd7206` — **correção tentada (Opção B)**: `admin/layout.tsx` +
+  `admin/login/mfa/page.tsx` validam admin via query `admin_users` (DB) em vez
+  do claim `role` do JWT. **NÃO RESOLVEU** o sintoma. Isto REFUTA as hipóteses
+  de redirect baseadas em `role`/`aal` do JWT.
+- `AUTH_DEBUG=1` adicionado à env var de Preview do Vercel (para ativar os logs
+  do proxy sem rebuild de código).
 
-**Nenhuma destas alterações corrigiu o sintoma.** Mantêm-se como melhorias de
-robustez, mas a causa raiz permanece por isolar.
+**Causa raiz AINDA não isolada.** Factos provados: o `mfa.verify()` escreve os
+cookies e eles persistem logo após o MFA; o utilizador NÃO vê redirecionamento
+estranho; remover a dependência do JWT (`role`+`aal`) no client não resolveu.
+Logo o "desaparecimento" é **escrita ativa de deleção** (proxy `setAll` OU
+browser `onAuthStateChange`/`_removeSession`), NÃO um redirect visível.
+Próximo passo decisivo: analisar os logs `[AUTH-DEBUG ...]` (proxy via Vercel
+logs + browser via Console) no momento exato do desaparecimento.
+(proxy server-side ou `mfa/page.tsx` ou `onAuthStateChange`).
 
 ---
 

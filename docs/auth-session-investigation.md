@@ -578,26 +578,49 @@ DISPONÍVEL.** A opção "3" do relatório APLICA-SE e é a solução preferida.
    - O `access_token` é lido diretamente do cookie `sb-*-auth-token(.0)` (JSON)
      e passado a `getClaims(token)`, que verifica a assinatura LOCALMENTE com
      WebCrypto — **zero round-trip à GoTrue** no caso comum.
-   - Só cai para `getSession()` (refresh real, rede) quando NÃO há token ou o
-     token está expirado/inválido (janela rara: 1×/hora).
+   - **NÃO há fallback `getSession()`** no proxy: se `getClaims` falha
+     (token expirado/inválido), trata-se como não-autenticado e deixa o browser
+     singleton (proativo) refrescar + recarregar. Isto **elimina a corrida 3g
+     na raiz** — o proxy nunca refresca, por isso as ~24 queries paralelas não
+     podem competir pelo mesmo refresh token.
    - `autoRefreshToken:false` mantido no cliente do proxy (não refresca em cada
-     chamada; o browser singleton é o refresher proativo).
+     chamada; o browser singleton é o único refresher).
 2. ✅ **`server.ts` mantém `autoRefreshToken:false`** — as admin API routes
    (`requireAdmin`) validam admin via DB e não refrescam em paralelo (evita a
    cascata 3g nas APIs). São strict, aceitando 403 transitório no expiry até o
-   proxy refrescar.
-3. ⏳ **Correção estrutural recomendada (pendente):** consolidar as ~24 fetches
-   paralelas do dashboard numa única request (ou poucas). Elimina a corrida na
-   raiz. Sob ES256+getClaims a janela já desaparece na prática, mas a consolidação
-   continua a ser boa prática (menos overhead).
-4. ⏳ **Lock distribuído** (Vercel KV / Upstash `SET NX` + TTL) só se for
-   estritamente necessário manter o paralelismo E se a cascata 3g reaparecer —
-   improvável sob getClaims local.
+   browser refrescar.
+3. ✅ **Proxy `/portal` NÃO limpa cookies para admin** — redireciona para
+   `/admin/login` SEM `maxAge:0`. A limpeza de cookies em `/portal` era um
+   path secundário de destruição de sessão (um admin aterrar em `/portal` perdia
+   tudo). Removido.
+4. ✅ **`admin/layout.tsx` e `mfa/page.tsx` não empurram admins para `/portal`
+   em erro de BD** — em `adminErr` (transient), fazem retry em vez de
+   `router.push("/portal")`. Só vão a `/portal` se `!adminUser` CONFIRMADO
+   (não-admin real). Isto corta o path principal que levava admins a `/portal`
+   → proxy limpava cookies.
+
+### Resultado do teste em preview (p45y2gelu, 2026-07-13 ~22:41)
+
+- **Clicar rápido na sidebar → cookies PERSISTEM** ✅ (getClaims local resolveu
+  o caso comum / bug 3f morto).
+- **Aguardar pouco depois → cookies DESAPARECEM** ❌ (ainda há destruição).
+- Logs: `GET /portal 307` presente → confirma que algo redireciona admins para
+  `/portal`, onde o proxy (código anterior) limpava cookies.
+- Interpretação: o `router.push("/portal")` em `admin/layout`/`mfa/page` (em
+  erro de BD) + a limpeza de cookies no proxy `/portal` eram o path ativo. O
+  clique-rápido escapava porque validava antes do race da query `admin_users`.
+
+> CORREÇÃO APLICADA (commit seguinte): removeu a limpeza de cookies no `/portal`
+> (proxy) e o `router.push("/portal")` em erro de BD (layout/mfa). Mais: o proxy
+> já não faz `getSession()` (corrida 3g eliminada na raiz). A aguardar 1h NÃO é
+> necessário — o bug manifestava-se no primeiro refresh proativo do browser
+> (janela de expiração do access_token), não só à hora exata.
 
 ### Próximo teste controlado (a fazer pelo utilizador em preview)
 
-- Deploy de `fix/auth-session-stability` (com getClaims no proxy) → URL preview.
-- Testar: MFA login → aguardar >1h SEM clicar → F5 → cookies persistem?
+- Novo deploy de `fix/auth-session-stability` (getClaims + sem corrida + sem
+  limpeza de cookies no /portal) → URL preview.
+- Testar: MFA login → aguardar alguns min sem clicar → F5 → cookies persistem?
 - Testar: MFA login → clicar rápido nas sidebar pages → persistem + sem 307?
-- Se falhar: cruzar `AUTH_DEBUG` (Vercel) com `get_logs` (MCP Supabase) no
-  segundo exato do desaparecimento para separar "cascata 3g" de "terceira causa".
+- Se falhar: cruzar `AUTH_DEBUG` (Vercel, procura `[AUTH-DEBUG proxy.auth]`) com
+  `get_logs` (MCP Supabase) no segundo exato do desaparecimento.

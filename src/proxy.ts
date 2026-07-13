@@ -134,32 +134,23 @@ export async function proxy(request: NextRequest) {
         email: claims.email as string | undefined,
       };
     } else {
+      // Locally-verified token is expired/invalid. We do NOT call
+      // getSession() here: under refresh_token_rotation_enabled, the ~24
+      // parallel /admin/* requests would each race to refresh with the same
+      // refresh token and wipe the session (token_revoked cascade, bug "3g").
+      // The browser singleton (client.ts, autoRefreshToken:true) is the sole
+      // refresher and refreshes PROACTIVELY before expiry, so in the common
+      // path the token is still valid when the proxy validates. If it isn't,
+      // we treat the request as unauthenticated and let the browser refresh
+      // + reload — never refreshing from the server.
       claimsError = claimsErr?.message ?? "no-claims";
-    }
-  }
-
-  // Fallback: no token, or locally-verified token is expired/invalid.
-  // getSession() refreshes the access token (network). This is rare (only on
-  // expiry or a corrupt cookie) and avoids the cascade because the browser
-  // singleton already refreshes proactively before expiry in the common path.
-  let getUserError: string | null = null;
-  if (!user) {
-    const { data: sessionData, error: sessionErr } = await supabase.auth.getSession();
-    if (sessionData.session?.user) {
-      user = {
-        id: sessionData.session.user.id,
-        app_metadata: sessionData.session.user.app_metadata as Record<string, unknown>,
-        email: sessionData.session.user.email,
-      };
-    } else if (sessionErr) {
-      getUserError = sessionErr.message;
     }
   }
 
   // [DEBUG] Log outcome to correlate with cookie deletions above.
   if (process.env.NODE_ENV !== "production" || process.env.AUTH_DEBUG) {
     console.error(
-      `[AUTH-DEBUG proxy.auth] ${pathname} user=${user ? user.id.slice(0, 8) : "null"} role=${user?.app_metadata?.role ?? "-"} aal=${user?.app_metadata?.aal ?? "-"} claimsErr=${claimsError ?? "none"} sessErr=${getUserError ?? "none"}`,
+      `[AUTH-DEBUG proxy.auth] ${pathname} user=${user ? user.id.slice(0, 8) : "null"} role=${user?.app_metadata?.role ?? "-"} aal=${user?.app_metadata?.aal ?? "-"} claimsErr=${claimsError ?? "none"}`,
     );
   }
 
@@ -170,18 +161,15 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Admin users trying to access /portal — sign them out by clearing cookies
+  // Admin users trying to access /portal — send them to /admin/login but
+  // NEVER clear the auth cookies. Clearing them here is what destroyed the
+  // session in earlier iterations (signOut-equivalent cookie wipe). The
+  // browser keeps its session and can re-authenticate instead of being
+  // force-logged-out.
   if (pathname === "/portal" && user?.app_metadata?.role === "admin") {
     const url = request.nextUrl.clone();
     url.pathname = "/admin/login";
-    const redirectResponse = NextResponse.redirect(url);
-    request.cookies
-      .getAll()
-      .filter((c) => c.name.startsWith("sb-"))
-      .forEach((c) =>
-        redirectResponse.cookies.set(c.name, "", { maxAge: 0, path: "/" }),
-      );
-    return redirectResponse;
+    return NextResponse.redirect(url);
   }
 
   // Protected portal sub-routes -> redirect to /login if not authenticated
@@ -193,18 +181,12 @@ export async function proxy(request: NextRequest) {
       return NextResponse.redirect(url);
     }
 
-    // Admin users should not access portal — sign them out by clearing cookies
+    // Admin users should not access portal — redirect to /admin/login
+    // WITHOUT clearing cookies (see note above).
     if (user.app_metadata?.role === "admin") {
       const url = request.nextUrl.clone();
       url.pathname = "/admin/login";
-      const redirectResponse = NextResponse.redirect(url);
-      request.cookies
-        .getAll()
-        .filter((c) => c.name.startsWith("sb-"))
-        .forEach((c) =>
-          redirectResponse.cookies.set(c.name, "", { maxAge: 0, path: "/" }),
-        );
-      return redirectResponse;
+      return NextResponse.redirect(url);
     }
   }
 

@@ -114,12 +114,20 @@ export default function AdminMfaPage() {
       // access token on Vercel, so trusting it here bounced admins to
       // /portal (which then signOut and wiped the session). admin_users is
       // the source of truth.
-      const { data: adminUser } = await supabase
+      const { data: adminUser, error: adminErr } = await supabase
         .from("admin_users")
         .select("user_id")
         .eq("user_id", user.id)
         .maybeSingle();
+      if (adminErr) {
+        // DB error (transient) — retry rather than bounce to /portal, which
+        // the proxy would treat as an admin hitting the portal and clear the
+        // cookies, destroying the session right after MFA.
+        setTimeout(() => checkMfa(), 1000);
+        return;
+      }
       if (!adminUser) {
+        // Confirmed non-admin → portal is the right destination.
         router.push("/portal");
         return;
       }

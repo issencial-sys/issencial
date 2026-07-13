@@ -90,9 +90,16 @@ export default function AdminLayout({
         .eq("user_id", user.id)
         .maybeSingle();
 
-      if (adminErr || !adminUser) {
-        // Not an admin (or DB error) → send to the portal, not a redirect
-        // loop. Avoid signOut here so we never nuke a valid session.
+      if (adminErr) {
+        // DB error (transient / network race) — do NOT bounce to /portal,
+        // which the proxy would then treat as an admin hitting the portal and
+        // clear the cookies (destroying the session). Retry instead.
+        setTimeout(() => checkAdmin(), 1000);
+        return;
+      }
+      if (!adminUser) {
+        // Confirmed non-admin → portal is fine (proxy only clears cookies for
+        // role === "admin", so a real non-admin is unaffected).
         router.push("/portal");
         return;
       }

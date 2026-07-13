@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 
 /**
  * GET /api/admin/users
@@ -10,17 +11,36 @@ export async function GET() {
   try {
     const supabase = await createClient();
 
-    // Verify admin authentication
+    // Verify admin authentication. Trust the JWT `role` claim when present,
+    // but it is intermittently absent from the post-MFA access token on
+    // Vercel — fall back to the database (admin_users) as the source of
+    // truth so the endpoint does not 401/403 every other request.
     const {
       data: { user },
     } = await supabase.auth.getUser();
 
-    if (!user || user.app_metadata?.role !== "admin") {
+    if (!user) {
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
     }
 
-    // Use admin API to get user emails
-    const { data: users, error } = await supabase.auth.admin.listUsers();
+    const { data: adminUser } = await supabase
+      .from("admin_users")
+      .select("user_id")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    if (!adminUser) {
+      return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+    }
+
+    // Use the admin API to get user emails. The user-scoped client cannot
+    // call listUsers() reliably because the post-MFA JWT may lack the admin
+    // flag on Vercel, so use a service-role client (server-side only).
+    const service = createSupabaseClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      { auth: { persistSession: false } },
+    );
+    const { data: users, error } = await service.auth.admin.listUsers();
 
     if (error) {
       console.error("Erro ao listar users:", error);

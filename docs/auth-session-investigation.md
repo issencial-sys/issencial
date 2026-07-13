@@ -398,6 +398,61 @@ bug "cookies desaparecem após token expirar".
 
 ---
 
+## 3g. Config Supabase + `token_revoked` em cascata (2026-07-13)
+
+Lida via `supabase` CLI global + **MCP Supabase** (`get_advisors`,
+`get_logs`). Factos da auth config remota (`/v1/projects/.../config/auth`):
+
+```
+jwt_exp = 3600                          ← access_token expira em 1 HORA
+refresh_token_rotation_enabled = true
+security_refresh_token_reuse_interval = 86400
+mfa_totp_enroll_enabled = true
+mfa_allow_low_aal = false
+hook_custom_access_token_enabled = false   ← NÃO há hook a injetar role/aal
+```
+
+- MFA está ativo e correto.
+- **O `aal` não vem no access token JWT** (sem custom hook, e `aal` não é
+  claim automático) → explica o `AAL: undefined` do `/api/debug-session`.
+- `get_advisors` (security) não aponta problemas de MFA/AAL/session.
+
+### `token_revoked` em cascata (provado nos logs via MCP)
+
+Os logs de auth mostraram, todos do admin `issencialofficial@gmail.com`
+(via TOTP factor `0eb52b71-...`):
+```
+auth_event: action="token_revoked"  ×4
+status 400 ×10, 401 ×5, 403 ×2, 429 ×3
+```
+Causa: o proxy chamava `getSession()` (que **refresca**) em CADA uma das
+~24 queries paralelas do dashboard. Sob `refresh_token_rotation_enabled`,
+a primeira revoga o refresh token e as outras falham em cascata.
+
+### Correção tentada (commit `0cb252e`) — NÃO RESOLVEU
+
+- Browser = único refresher (`autoRefreshToken:true`, singleton com
+  single-flight). Proxy reverteu a `getUser()` (strict, só valida, não
+  refresca).
+- **Resultado do utilizador (preview `jx7r5fyig`): OS COOKIES CONTINUAM A
+  DESAPARECER.**
+
+**Conclusão:** a `token_revoked` em cascata NÃO era a causa raiz (ou não a
+única). O "desaparecimento" persiste mesmo sem corrida de refresh.
+
+### Reabertura — o que falta provar
+
+Como o problema persiste após: (a) role-DB no layout/proxy/APIs, (b)
+getSession→getUser no proxy, (c) browser único refresher — resta isolar
+EXATAMENTE quem escreve `value:""`/`maxAge:0` nos cookies. Os
+`[AUTH-DEBUG doc.cookie.set]` (spy no browser) e `[AUTH-DEBUG
+proxy.getUser]` (logs Vercel com `AUTH_DEBUG=1`) já estão no ar. Próximo
+passo: ler os logs da Supabase (MCP `get_logs` auth) dos últimos minutos
+durante a reprodução, e cruzar com os `[AUTH-DEBUG ...]` do browser/Console
+para ver o `token_revoked` / `AuthSessionMissing` exato e em que momento.
+
+---
+
 ## 5. Alterações feitas até agora (branch `fix/auth-session-stability`)
 
 Commits:
@@ -420,21 +475,129 @@ Commits:
   de redirect baseadas em `role`/`aal` do JWT.
 - `AUTH_DEBUG=1` adicionado à env var de Preview do Vercel (para ativar os logs
   do proxy sem rebuild de código).
+- `d4f7b44` — **correção tentada**: proxy valida admin via `admin_users` (DB)
+  em vez do claim `role` do JWT. **NÃO RESOLVEU** por si (deploy antigo ainda
+  era testado).
+- `5c6f262` + `7679980` — **correção tentada**: todas as admin API routes
+  (`users`, `set-role`, `email/queue`, `messages/send`, `newsletter/send`,
+  `send-email`) validam admin via `admin_users` (helper `requireAdmin`) + a
+  `users` usa service-role para `listUsers()`. **NÃO RESOLVEU** o desaparecimento.
+- `d8783aa` — **correção tentada**: proxy `getUser()` → `getSession()` (refresca
+  token expirado). **NÃO RESOLVEU** (piorou: corrida de refresh).
+- `0cb252e` — **correção tentada**: browser = único refresher
+  (`autoRefreshToken:true`), proxy apenas valida (`getUser`). Baseado nos logs
+  MCP que mostravam `token_revoked` em cascata. **NÃO RESOLVEU** — cookies
+  continuam a desaparecer no preview `jx7r5fyig`.
 
-**Causa raiz AINDA não isolada.** Factos provados: o `mfa.verify()` escreve os
-cookies e eles persistem logo após o MFA; o utilizador NÃO vê redirecionamento
-estranho; remover a dependência do JWT (`role`+`aal`) no client não resolveu.
-Logo o "desaparecimento" é **escrita ativa de deleção** (proxy `setAll` OU
-browser `onAuthStateChange`/`_removeSession`), NÃO um redirect visível.
-Próximo passo decisivo: analisar os logs `[AUTH-DEBUG ...]` (proxy via Vercel
-logs + browser via Console) no momento exato do desaparecimento.
-(proxy server-side ou `mfa/page.tsx` ou `onAuthStateChange`).
+**Causa raiz AINDA não isolada** após 8 correções tentadas. Factos provados:
+o `mfa.verify()` escreve os cookies; o utilizador NÃO vê redirecionamento
+estranho; remover a dependência do JWT (`role`+`aal`) e a corrida de refresh
+não resolveu. O "desaparecimento" é **escrita ativa de deleção** (proxy
+`setAll` OU browser `onAuthStateChange`/`_removeSession`), NÃO um redirect
+visível. Próximo passo decisivo (em curso): ler os logs da Supabase (MCP
+`get_logs` auth) dos últimos minutos durante a reprodução, cruzando com os
+`[AUTH-DEBUG ...]` do browser, para ver o `token_revoked` / `AuthSessionMissing`
+exato e em que momento os cookies são apagados.
 
 ---
 
-## 6. Próximo passo recomendado
+## 6. Correção FINAL — `getSession()` + mitigação da corrida (2026-07-13)
 
-Antes de mais código: **capturar os atributos exatos do cookie** (hipóteses 1–3)
-no preview atual, e **testar com a Vercel Toolbar desligada / em production**
-(hipótese 5). É a forma mais rápida de isolar se o problema é (a) atributo de
-cookie, (b) chunking, ou (c) interferência do preview da Vercel.
+> Substitui a Secção 6 anterior ("Próximo passo recomendado"), que pedia para
+> testar a Vercel Toolbar / atributo de cookie — ambas **já refutadas** em 3c
+> e no ponto-cego 2 do relatório de análise. Removida para não reabrir hipóteses
+> mortas.
+
+### O confound em `0cb252e` (por que o "sem sucesso" era enganador)
+
+A correção `0cb252e` mudou **duas variáveis ao mesmo tempo**:
+1. Browser: `autoRefreshToken:false` → `true` (singleton, single-flight).
+2. Proxy: `getSession()` → **de volta a `getUser()`**.
+
+Quando o sintoma persistiu, o doc concluiu "a cascata `token_revoked` (3g)
+NÃO era a causa raiz". **Inferência inválida**: ao reverter o proxy para
+`getUser()`, reintroduziu-se exatamente o bug **3f** (strict, apaga cookies
+no expiry). O resultado observado é perfeitamente compatível com "o 3f voltou",
+independentemente do que aconteceu com o 3g. **Não se isolou nenhuma variável.**
+
+### Erro de modelo mental corrigido
+
+O proxy corre **server-side, em cada request HTTP, antes de qualquer JS do
+browser**. `autoRefreshToken` no client browser **não tem efeito** sobre quantas
+vezes o proxy chama `getSession()`/`getUser()`. E um "singleton" dentro do proxy
+não serve porque, na Vercel, requests concorrentes tipicamente não partilham
+estado (cada um pode ser uma instância de função separada). Isto explica
+**localhost funciona** (processo único, singleton real) vs **Vercel falha**
+(isolamento entre invocações).
+
+### O dilema real (e por que não há atalho)
+
+- `getUser()` (strict, sem refresh) no proxy → **3f**: token expira (1h) →
+  `_removeSession()` apaga cookies no F5/pós-1h.
+- `getSession()` (refresca) no proxy → **3g**: ~24 queries paralelas do
+  dashboard com token expirado → corrida de refresh → `token_revoked` em cascata.
+
+Não se resolve mantendo `getUser()` + `autoRefreshToken:false` no proxy — isso
+é o 3f de volta. **É preciso `getSession()` (ou `getClaims()`) E mitigar a
+corrida.**
+
+### A estratégia depende do tipo de assinatura JWT
+
+`supabase` CLI global + MCP: verificar Project Settings → JWT Signing Keys.
+- **Simétrico (HS256, legado):** qualquer validação exige round-trip à GoTrue →
+  refrescar no proxy implica rede → mantém a janela de corrida.
+- **Assimétrico (RS256/ES256):** `getClaims()` verifica **localmente** via
+  WebCrypto + JWKS em cache; zero round-trips no caso comum → elimina a corrida.
+  Só cai para `getSession()` (refresh real) quando `getClaims()` reporta
+  expiração. É a solução preferida.
+
+### Tipo de chave DETERMINADO — ES256 (2026-07-13, CONFIRMADO)
+
+> Correção da iteração anterior: a prova "404 em /auth/v1/jwks" estava ERRADA
+> porque usei o caminho errado. O caminho correto é `/auth/v1/.well-known/jwks.json`
+> (confirmado via `openid-configuration`).
+
+- Autenticámos o CLI global com um access token da conta issencial e fizemos
+  `supabase link --project-ref lyqmsluktqdeytpouyvh`.
+- `GET /auth/v1/.well-known/openid-configuration` → expõe `jwks_uri`.
+- `GET /auth/v1/.well-known/jwks.json` → **1 chave: `kty=EC`, `alg=ES256`**.
+- `@supabase/auth-js` 2.110.2 + `@supabase/ssr` 0.12.0 → `getClaims()` PRESENT.
+
+**Conclusão: o projeto é ASSIMÉTRICO (ES256). `getClaims()` local está
+DISPONÍVEL.** A opção "3" do relatório APLICA-SE e é a solução preferida.
+
+> Nota: as `sessions_*` settings (timebox/inactivity/single_per_user) vieram
+> todas a 0/False — não estão a causar o logout. `refresh_token_rotation_enabled`
+> continua `true` (isto é o que cria a janela de corrida no caso simétrico; sob
+> ES256+getClaims a janela desaparece na prática).
+
+### Plano de correção — APLICADO (2026-07-13)
+
+1. ✅ **Proxy migrado para `getClaims(accessToken)` local (ES256/JWKS)** como
+   check primário — confirmado por 3f (evita `_removeSession` no expiry).
+   - O `access_token` é lido diretamente do cookie `sb-*-auth-token(.0)` (JSON)
+     e passado a `getClaims(token)`, que verifica a assinatura LOCALMENTE com
+     WebCrypto — **zero round-trip à GoTrue** no caso comum.
+   - Só cai para `getSession()` (refresh real, rede) quando NÃO há token ou o
+     token está expirado/inválido (janela rara: 1×/hora).
+   - `autoRefreshToken:false` mantido no cliente do proxy (não refresca em cada
+     chamada; o browser singleton é o refresher proativo).
+2. ✅ **`server.ts` mantém `autoRefreshToken:false`** — as admin API routes
+   (`requireAdmin`) validam admin via DB e não refrescam em paralelo (evita a
+   cascata 3g nas APIs). São strict, aceitando 403 transitório no expiry até o
+   proxy refrescar.
+3. ⏳ **Correção estrutural recomendada (pendente):** consolidar as ~24 fetches
+   paralelas do dashboard numa única request (ou poucas). Elimina a corrida na
+   raiz. Sob ES256+getClaims a janela já desaparece na prática, mas a consolidação
+   continua a ser boa prática (menos overhead).
+4. ⏳ **Lock distribuído** (Vercel KV / Upstash `SET NX` + TTL) só se for
+   estritamente necessário manter o paralelismo E se a cascata 3g reaparecer —
+   improvável sob getClaims local.
+
+### Próximo teste controlado (a fazer pelo utilizador em preview)
+
+- Deploy de `fix/auth-session-stability` (com getClaims no proxy) → URL preview.
+- Testar: MFA login → aguardar >1h SEM clicar → F5 → cookies persistem?
+- Testar: MFA login → clicar rápido nas sidebar pages → persistem + sem 307?
+- Se falhar: cruzar `AUTH_DEBUG` (Vercel) com `get_logs` (MCP Supabase) no
+  segundo exato do desaparecimento para separar "cascata 3g" de "terceira causa".

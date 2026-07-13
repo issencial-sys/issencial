@@ -29,6 +29,26 @@ export async function proxy(request: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
+      // The proxy validates the session LOCALLY via getClaims() (asymmetric
+      // ES256 + cached JWKS, zero network) — NOT via getUser()/getSession()
+      // which round-trip to GoTrue. Rationale (docs/auth-session-investigation.md §6):
+      //  - getUser() is strict: when the 1h access_token expires, auth-js runs
+      //    _removeSession() and wipes the cookies (the original "3f" bug).
+      //  - getSession() refreshes: under refresh_token_rotation_enabled, the
+      //    ~24 parallel /admin/* requests each built a client and raced to
+      //    refresh with the same refresh token → token_revoked cascade that
+      //    wiped the session ("3g" bug).
+      //  - This project uses ES256 (confirmed via /auth/v1/.well-known/jwks.json,
+      //    kty=EC alg=ES256), so getClaims(token) verifies the signature
+      //    LOCALLY with WebCrypto. The parallel requests now do ~0 network
+      //    calls; the refresh race window shrinks to "once/hour on expiry".
+      // We keep autoRefreshToken:false so this server client never proactively
+      // refreshes; the browser singleton (client.ts) is the sole refresher,
+      // and getClaims falls back to getSession() only when the token is
+      // actually expired/invalid.
+      auth: {
+        autoRefreshToken: false,
+      },
       cookies: {
         getAll() {
           return request.cookies.getAll();
@@ -73,23 +93,73 @@ export async function proxy(request: NextRequest) {
     },
   );
 
-  // Validate the session with getUser() (strict). This proxy MUST NOT
-  // refresh the token: it runs once per request and the dashboard fires
-  // ~24 parallel /admin/* requests on mount. If each refreshed with the
-  // same refresh token under refresh_token_rotation_enabled, the first
-  // revokes the token and the rest fail in a cascade (token_revoked),
-  // destroying the session. The browser client (singleton, single-flight,
-  // autoRefreshToken on) is the sole refresher and keeps the access token
-  // fresh before it reaches the proxy.
-  const {
-    data: { user },
-    error: getUserError,
-  } = await supabase.auth.getUser();
+  // Validate the session LOCALLY via getClaims() (asymmetric ES256 + cached
+  // JWKS, zero network). See docs/auth-session-investigation.md §6 for the
+  // full bug history. We must NOT use getUser() (strict → wipes cookies on
+  // 1h expiry, bug "3f") nor getSession() unconditionally (refreshes →
+  // parallel token_revoked cascade under rotation, bug "3g").
+  //
+  // Strategy: read the access_token straight from the auth-token cookie and
+  // verify its signature locally. Only when there is no token (first visit)
+  // or the token is expired/invalid do we fall back to getSession() (a real
+  // refresh). Because verification is local, the ~24 parallel /admin/*
+  // requests make ~0 network calls in the common case.
+  let user:
+    | { id: string; app_metadata: Record<string, unknown>; email?: string }
+    | null = null;
 
-  // [DEBUG] Log getUser outcome to correlate with cookie deletions above.
+  // Extract access_token from the chunked sb-*-auth-token cookie (JSON body).
+  const authCookieName = request.cookies
+    .getAll()
+    .find((c) => c.name.endsWith("-auth-token") || c.name.endsWith("-auth-token.0"))?.name;
+  let accessToken: string | undefined;
+  if (authCookieName) {
+    try {
+      const raw = request.cookies.get(authCookieName)?.value ?? "";
+      const json = JSON.parse(raw.startsWith("base64-") ? atob(raw.slice(7)) : raw);
+      accessToken = json.access_token;
+    } catch {
+      accessToken = undefined;
+    }
+  }
+
+  let claimsError: string | null = null;
+  if (accessToken) {
+    const { data: claimsData, error: claimsErr } = await supabase.auth.getClaims(accessToken);
+    if (claimsData?.claims) {
+      const claims = claimsData.claims as Record<string, unknown>;
+      user = {
+        id: String(claims.sub),
+        app_metadata: (claims.app_metadata as Record<string, unknown>) ?? {},
+        email: claims.email as string | undefined,
+      };
+    } else {
+      claimsError = claimsErr?.message ?? "no-claims";
+    }
+  }
+
+  // Fallback: no token, or locally-verified token is expired/invalid.
+  // getSession() refreshes the access token (network). This is rare (only on
+  // expiry or a corrupt cookie) and avoids the cascade because the browser
+  // singleton already refreshes proactively before expiry in the common path.
+  let getUserError: string | null = null;
+  if (!user) {
+    const { data: sessionData, error: sessionErr } = await supabase.auth.getSession();
+    if (sessionData.session?.user) {
+      user = {
+        id: sessionData.session.user.id,
+        app_metadata: sessionData.session.user.app_metadata as Record<string, unknown>,
+        email: sessionData.session.user.email,
+      };
+    } else if (sessionErr) {
+      getUserError = sessionErr.message;
+    }
+  }
+
+  // [DEBUG] Log outcome to correlate with cookie deletions above.
   if (process.env.NODE_ENV !== "production" || process.env.AUTH_DEBUG) {
     console.error(
-      `[AUTH-DEBUG proxy.getUser] ${pathname} user=${user ? user.id.slice(0, 8) : "null"} role=${user?.app_metadata?.role ?? "-"} aal=${user?.app_metadata?.aal ?? "-"} err=${getUserError?.message ?? "none"}`,
+      `[AUTH-DEBUG proxy.auth] ${pathname} user=${user ? user.id.slice(0, 8) : "null"} role=${user?.app_metadata?.role ?? "-"} aal=${user?.app_metadata?.aal ?? "-"} claimsErr=${claimsError ?? "none"} sessErr=${getUserError ?? "none"}`,
     );
   }
 
@@ -164,8 +234,14 @@ export async function proxy(request: NextRequest) {
       isAdmin = !!adminUser;
     }
     if (!isAdmin) {
+      // Redirect to /admin/login — NOT /portal. The /portal route runs
+      // signOut({scope:"global"}) and clears the auth cookies, which made
+      // the session appear to "vanish" whenever the proxy briefly failed
+      // to confirm admin status (e.g. an intermittently expired access
+      // token). Sending the user to /admin/login keeps the cookies intact
+      // so they can re-authenticate instead of being force-logged-out.
       const url = request.nextUrl.clone();
-      url.pathname = "/portal";
+      url.pathname = "/admin/login";
       return NextResponse.redirect(url);
     }
 

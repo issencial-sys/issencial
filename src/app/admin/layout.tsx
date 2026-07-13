@@ -96,7 +96,20 @@ export default function AdminLayout({
       const hasVerifiedTotp = factors?.totp?.some(
         (f) => f.status === "verified",
       );
-      if (hasVerifiedTotp && (aal?.currentLevel ?? "aal1") !== "aal2") {
+
+      // The `aal` claim is not reliably present in the post-MFA access token
+      // on Vercel (getAuthenticatorAssuranceLevel returns currentLevel:
+      // undefined there, while it works on localhost). Do NOT treat a
+      // missing claim as "MFA pending" — that caused an infinite redirect
+      // loop right after a successful mfa.verify(). If the claim is missing
+      // but a verified TOTP factor exists, the second factor was already
+      // satisfied, so admit the session instead of bouncing to /mfa.
+      const currentLevel = aal?.currentLevel;
+      const mfaPending =
+        hasVerifiedTotp &&
+        currentLevel !== undefined &&
+        currentLevel !== "aal2";
+      if (mfaPending) {
         router.push("/admin/login/mfa");
         return;
       }

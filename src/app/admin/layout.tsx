@@ -78,11 +78,27 @@ export default function AdminLayout({
 
       setUser(user);
 
-      // Check admin role via custom claims
-      const role = user.app_metadata?.role;
-      if (role !== "admin") {
+      // Verify admin role against the database, NOT the JWT custom claim.
+      // The `role` claim in app_metadata is INTERMITTENTLY absent from the
+      // post-MFA access token on Vercel (same root cause as the missing
+      // `aal` claim). Trusting it here bounced every admin to /portal on
+      // Vercel, which then signOut({scope:"global"}) and wiped the session.
+      // admin_users is the source of truth for who is an admin.
+      const { data: adminUser, error: adminErr } = await supabase
+        .from("admin_users")
+        .select("display_name")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (adminErr || !adminUser) {
+        // Not an admin (or DB error) → send to the portal, not a redirect
+        // loop. Avoid signOut here so we never nuke a valid session.
         router.push("/portal");
         return;
+      }
+
+      if (adminUser.display_name) {
+        setAdminDisplayName(adminUser.display_name);
       }
 
       // Enforce MFA (AAL2). An admin with a verified TOTP factor must
@@ -112,16 +128,6 @@ export default function AdminLayout({
       if (mfaPending) {
         router.push("/admin/login/mfa");
         return;
-      }
-
-      // Fetch admin's display_name
-      const { data: adminUser } = await supabase
-        .from("admin_users")
-        .select("display_name")
-        .eq("user_id", user.id)
-        .maybeSingle();
-      if (adminUser?.display_name) {
-        setAdminDisplayName(adminUser.display_name);
       }
 
       setIsAdmin(true);

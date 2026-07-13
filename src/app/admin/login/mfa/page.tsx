@@ -109,8 +109,17 @@ export default function AdminMfaPage() {
         return;
       }
 
-      const role = user.app_metadata?.role;
-      if (role !== "admin") {
+      // Verify admin role against the database, NOT the JWT custom claim.
+      // The `role` claim is intermittently absent from the post-password
+      // access token on Vercel, so trusting it here bounced admins to
+      // /portal (which then signOut and wiped the session). admin_users is
+      // the source of truth.
+      const { data: adminUser } = await supabase
+        .from("admin_users")
+        .select("user_id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (!adminUser) {
         router.push("/portal");
         return;
       }

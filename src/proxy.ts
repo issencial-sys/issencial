@@ -73,24 +73,23 @@ export async function proxy(request: NextRequest) {
     },
   );
 
-  // Use getSession() (NOT getUser()). getUser() is "strict": it validates
-  // the access token against the Auth server and, when that token has
-  // expired, the server rejects it and the auth-js client runs
-  // _removeSession() — which wipes the auth cookies and 307-redirects every
-  // /admin/* request once the ~1h access token lapses (this is what made
-  // cookies "vanish" after a while / on F5 on Vercel). getSession() instead
-  // refreshes the access token when expired (autoRefreshToken is on for the
-  // server client), so a valid session survives.
+  // Validate the session with getUser() (strict). This proxy MUST NOT
+  // refresh the token: it runs once per request and the dashboard fires
+  // ~24 parallel /admin/* requests on mount. If each refreshed with the
+  // same refresh token under refresh_token_rotation_enabled, the first
+  // revokes the token and the rest fail in a cascade (token_revoked),
+  // destroying the session. The browser client (singleton, single-flight,
+  // autoRefreshToken on) is the sole refresher and keeps the access token
+  // fresh before it reaches the proxy.
   const {
-    data: { session },
-    error: getSessionError,
-  } = await supabase.auth.getSession();
-  const user = session?.user ?? null;
+    data: { user },
+    error: getUserError,
+  } = await supabase.auth.getUser();
 
-  // [DEBUG] Log getSession outcome to correlate with cookie deletions above.
+  // [DEBUG] Log getUser outcome to correlate with cookie deletions above.
   if (process.env.NODE_ENV !== "production" || process.env.AUTH_DEBUG) {
     console.error(
-      `[AUTH-DEBUG proxy.getSession] ${pathname} user=${user ? user.id.slice(0, 8) : "null"} role=${user?.app_metadata?.role ?? "-"} aal=${user?.app_metadata?.aal ?? "-"} err=${getSessionError?.message ?? "none"}`,
+      `[AUTH-DEBUG proxy.getUser] ${pathname} user=${user ? user.id.slice(0, 8) : "null"} role=${user?.app_metadata?.role ?? "-"} aal=${user?.app_metadata?.aal ?? "-"} err=${getUserError?.message ?? "none"}`,
     );
   }
 

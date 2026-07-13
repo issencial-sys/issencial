@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { requireAdmin } from "@/lib/supabase/requireAdmin";
 
 /**
  * API Route: /api/send-email
@@ -18,14 +19,11 @@ export async function POST(request: Request) {
   try {
     const supabase = await createClient();
 
-    // Verify admin authentication (only admins can trigger email sends)
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    // Verify admin authentication (validated against admin_users, not JWT).
+    // Falls back to the cron secret so the scheduled job can still run.
+    const user = await requireAdmin();
 
-    if (!user || user.app_metadata?.role !== "admin") {
-      // Allow the endpoint to be called without auth for cron jobs
-      // by checking for an API secret
+    if (!user) {
       const authHeader = request.headers.get("authorization");
       if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
         return NextResponse.json({ error: "Não autorizado" }, { status: 401 });

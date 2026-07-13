@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { requireAdmin } from "@/lib/supabase/requireAdmin";
 
 /**
  * POST /api/messages/send
@@ -10,16 +11,10 @@ import { createClient } from "@/lib/supabase/server";
 export async function POST(request: Request) {
   try {
     const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
 
+    // Verify admin role (validated against admin_users, not the JWT claim)
+    const user = await requireAdmin();
     if (!user) {
-      return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
-    }
-
-    // Verify admin role
-    if (user.app_metadata?.role !== "admin") {
       return NextResponse.json({ error: "Não autorizado" }, { status: 403 });
     }
 

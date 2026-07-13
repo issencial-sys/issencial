@@ -1,16 +1,15 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { requireAdmin } from "@/lib/supabase/requireAdmin";
 import { newsletterEditionTemplate } from "@/lib/email";
 
 export async function POST(request: Request) {
   try {
     const supabase = await createClient();
 
-    // Verify admin authentication
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user || user.app_metadata?.role !== "admin") {
+    // Verify admin authentication (validated against admin_users, not JWT)
+    const user = await requireAdmin();
+    if (!user) {
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
     }
 
@@ -225,11 +224,9 @@ export async function GET(request: Request) {
   try {
     const supabase = await createClient();
 
-    // Verify admin authentication
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user || user.app_metadata?.role !== "admin") {
+    // Verify admin authentication (validated against admin_users, not JWT)
+    const user = await requireAdmin();
+    if (!user) {
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
     }
 

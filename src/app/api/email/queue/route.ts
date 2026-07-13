@@ -1,16 +1,17 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { requireAdmin } from "@/lib/supabase/requireAdmin";
 import { type EmailTemplateType } from "@/lib/email/shared";
 
 export async function POST(request: Request) {
   try {
-    const supabase = await createClient();
-
-    // Verify admin auth
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user || user.app_metadata?.role !== "admin") {
+    // Verify admin auth (validated against admin_users, not the JWT claim)
+    const user = await requireAdmin();
+    if (!user) {
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
     }
+
+    const supabase = await createClient();
 
     const { to_email, to_name, subject, html_body, type, reference_id, reference_type } = await request.json();
 

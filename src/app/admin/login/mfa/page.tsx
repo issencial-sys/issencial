@@ -21,6 +21,41 @@ export default function AdminMfaPage() {
   const router = useRouter();
   const supabase = createClient();
 
+  // [DEBUG] Spy on every browser-side document.cookie write to attribute who
+  // deletes the auth-token chunks that vanish on Vercel. Logs a stack trace so
+  // we can tell a proxy-driven refresh from an internal SDK write.
+  useEffect(() => {
+    if (typeof window === "undefined" || !(window as any).__authCookieSpy) {
+      const native = Object.getOwnPropertyDescriptor(Document.prototype, "cookie");
+      const spy = (action: string, val: string) => {
+        if (val.includes("auth-token")) {
+          console.warn(`[AUTH-DEBUG doc.cookie.${action}]`, val.slice(0, 60), new Error().stack);
+        }
+      };
+      const desc = Object.getOwnPropertyDescriptor(Document.prototype, "cookie")!;
+      Object.defineProperty(Document.prototype, "cookie", {
+        configurable: true,
+        get() {
+          return (desc.get ?? native!.get!).call(document);
+        },
+        set(v: string) {
+          spy("set", v as string);
+          return (desc.set ?? native!.set!).call(document, v as string);
+        },
+      });
+      (window as any).__authCookieSpy = true;
+      console.warn("[AUTH-DEBUG doc.cookie spy armed]");
+    }
+  }, []);
+
+  const logAuthCookies = (where: string) => {
+    const cs = document.cookie
+      .split(";")
+      .map((c) => c.trim())
+      .filter((c) => c.includes("auth-token"));
+    console.warn(`[AUTH-DEBUG cookies.${where}]`, cs.map((c) => `${c.split("=")[0]}=${c.length}`));
+  };
+
   // Rate limit check
   const checkRateLimit = async (): Promise<boolean> => {
     try {
@@ -118,6 +153,7 @@ export default function AdminMfaPage() {
       setError(null);
 
       try {
+        logAuthCookies("before-verify");
         const { data: challenge, error: challengeError } =
           await supabase.auth.mfa.challenge({ factorId });
         if (challengeError) throw challengeError;
@@ -128,6 +164,7 @@ export default function AdminMfaPage() {
           code,
         });
         if (verifyError) throw verifyError;
+        logAuthCookies("after-verify");
 
         // mfa.verify() already calls _saveSession internally and persists the
         // upgraded AAL2 session to the auth cookies via the @supabase/ssr
@@ -165,6 +202,7 @@ export default function AdminMfaPage() {
         }
 
         // Recovery code verified — sign out MFA session and redirect
+        logAuthCookies("after-recovery");
         router.push("/admin");
       } catch (err: any) {
         setRemainingAttempts((prev) => Math.max(prev - 1, 0));

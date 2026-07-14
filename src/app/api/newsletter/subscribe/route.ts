@@ -1,17 +1,57 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { newsletterConfirmTemplate } from "@/lib/email";
+import { z } from "zod";
+import { formRateLimiter, getClientIp } from "@/lib/rate-limiter";
+
+const newsletterSubscribeSchema = z.object({
+  email: z.string().email("Email inválido").max(254),
+  name: z.string().max(100, "Nome muito longo").optional().default(""),
+});
 
 export async function POST(request: Request) {
   try {
-    const { email, name } = await request.json();
+    // Rate limiting by IP (public endpoint — abuse vector without it)
+    const ip = getClientIp(request);
+    const limiter = await formRateLimiter;
+    const rateCheck = await limiter.check(ip);
 
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    const responseHeaders: Record<string, string> = {
+      "X-RateLimit-Limit": "5",
+      "X-RateLimit-Remaining": String(rateCheck.remaining),
+      "X-RateLimit-Reset": String(Math.ceil(rateCheck.resetMs / 1000)),
+    };
+
+    if (!rateCheck.allowed) {
       return NextResponse.json(
-        { error: "Email inválido." },
-        { status: 400 }
+        { error: "Muitos pedidos. Tente novamente dentro de um minuto." },
+        {
+          status: 429,
+          headers: {
+            ...responseHeaders,
+            "Retry-After": String(Math.ceil(rateCheck.resetMs / 1000)),
+          },
+        },
       );
     }
+
+    const body = await request.json();
+
+    // Honeypot check — field filled by bots
+    if (body.honeypot) {
+      // Pretend success to not alert the bot
+      return NextResponse.json({ success: true });
+    }
+
+    // Validate with Zod (server-side — client validation is not security)
+    const parsed = newsletterSubscribeSchema.safeParse(body);
+    if (!parsed.success) {
+      const errors = parsed.error.issues.map((i) => i.message).join(", ");
+      return NextResponse.json({ error: errors }, { status: 400 });
+    }
+
+    const email = parsed.data.email.toLowerCase().trim();
+    const name = parsed.data.name;
 
     const supabase = await createClient();
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "";

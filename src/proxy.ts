@@ -54,21 +54,6 @@ export async function proxy(request: NextRequest) {
           return request.cookies.getAll();
         },
         setAll(cookiesToSet) {
-          // [DEBUG] Instrument every server-side cookie write to attribute
-          // who deletes the auth-token chunks that vanish on Vercel.
-          if (process.env.NODE_ENV !== "production" || process.env.AUTH_DEBUG) {
-            const deletions = cookiesToSet.filter(
-              (c) => c.value === "" || (c.options?.maxAge ?? 0) <= 0,
-            );
-            if (deletions.length || cookiesToSet.some((c) => c.name.includes("auth-token"))) {
-              console.error(
-                `[AUTH-DEBUG proxy.setAll] ${request.nextUrl.pathname} writes=${cookiesToSet.length} deletions=${deletions.length}`,
-                deletions.map((d) => ({ name: d.name, value: d.value, maxAge: d.options?.maxAge })),
-                "incoming-cookies=",
-                request.cookies.getAll().filter((c) => c.name.includes("auth-token")).map((c) => c.name),
-              );
-            }
-          }
           cookiesToSet.forEach(({ name, value, options }) => {
             // NOTE: previously we ignored `value === ""` to "avoid clearing"
             // the session. That was wrong: the @supabase/ssr GoTrue client
@@ -148,13 +133,6 @@ export async function proxy(request: NextRequest) {
     };
   } else if (sessionErr) {
     sessionError = sessionErr.message;
-  }
-
-  // [DEBUG] Log outcome to correlate with cookie deletions above.
-  if (process.env.NODE_ENV !== "production" || process.env.AUTH_DEBUG) {
-    console.error(
-      `[AUTH-DEBUG proxy.auth] ${pathname} user=${user ? user.id.slice(0, 8) : "null"} role=${user?.app_metadata?.role ?? "-"} aal=${user?.app_metadata?.aal ?? "-"} sessErr=${sessionError ?? "none"}`,
-    );
   }
 
   // Redirect root /portal to /login if not authenticated

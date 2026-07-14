@@ -63,8 +63,10 @@ const nextConfig: NextConfig = {
             key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
-              // Scripts: allow own + next.js inline scripts (unsafe-inline needed for Next.js)
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+              // Scripts: allow own + next.js inline scripts (unsafe-inline needed for Next.js).
+              // 'unsafe-eval' removed: Next.js 15 App Router does not require eval() and its
+              // presence widens the XSS surface.
+              "script-src 'self' 'unsafe-inline'",
               // Styles: allow own + inline styles + Google Fonts
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               // Fonts: allow Google Fonts

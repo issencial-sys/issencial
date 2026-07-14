@@ -12,10 +12,14 @@ import { createClient } from "@/lib/supabase/server";
  */
 export async function requireAdmin() {
   const supabase = await createClient();
+  // Use getSession() (not getUser()) so an expired-but-not-yet-refreshed
+  // access_token still resolves from the in-cookie session instead of
+  // returning null and causing an intermittent 401. The server client has
+  // autoRefreshToken:false, so this reads the cookie without refreshing.
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
+    data: { session },
+  } = await supabase.auth.getSession();
+  const user = session?.user ?? null;
   if (!user) return null;
 
   const { data: adminUser } = await supabase

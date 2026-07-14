@@ -16,8 +16,9 @@ export async function GET() {
     // Vercel — fall back to the database (admin_users) as the source of
     // truth so the endpoint does not 401/403 every other request.
     const {
-      data: { user },
-    } = await supabase.auth.getUser();
+      data: { session },
+    } = await supabase.auth.getSession();
+    const user = session?.user ?? null;
 
     if (!user) {
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 });

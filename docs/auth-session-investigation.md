@@ -624,3 +624,53 @@ DISPONÍVEL.** A opção "3" do relatório APLICA-SE e é a solução preferida.
 - Testar: MFA login → clicar rápido nas sidebar pages → persistem + sem 307?
 - Se falhar: cruzar `AUTH_DEBUG` (Vercel, procura `[AUTH-DEBUG proxy.auth]`) com
   `get_logs` (MCP Supabase) no segundo exato do desaparecimento.
+
+---
+
+### 6h. Iteração ij3r0rvdb — regressão (também /portal falha) + WEB RESEARCH (2026-07-14)
+
+**Sintoma (deploy ij3r0rvdb):** após MFA → redirecionado para `/admin/login`
+sem spinner, mas NENHUMA página admin carrega (reload → volta a `/admin/login`).
+Pior: limpar cookies e tentar **/portal** → MESMO erro (login+MFA, cookies ok,
+redirecionado para login). **O /portal, que funcionava perfeitamente antes,
+agora também falha.** Essa regressão é a pista: o único código partilhado por
+`/admin` e `/portal` é a nova leitura `getClaims(accessToken)` com parsing manual
+do cookie.
+
+**WEB RESEARCH (factos da Supabase, não especulação):**
+- `getClaims()` **SEM argumento** "will refresh the session if needed" → chama
+  `getSession()` → rede → recria a corrida 3g. (Supabase `getClaims` docs, Reddit)
+- `getClaims(jwt)` COM token explícito → verifica LOCALMENTE (JWKS/WebCrypto),
+  zero rede. É a solução recomendada para middleware com muitos requests
+  paralelos (getUser → flood/`token_revoked`). (Reddit, Medium getUser-vs-getClaims)
+- Issue `supabase/ssr#190` "Single-use refresh tokens + middleware refresh on
+  every request" descreve EXATAMENTE a cascata 3g (recomendação oficial: **NÃO
+  refrescar no middleware**; delegar o refresh ao browser).
+- Cookie auth é **chunked** (`.0`/`.1`) e o valor pode ter prefixo `base64-`
+  (confirmado no `@supabase/ssr/dist/main/cookies.js` `decodeChunkedCookieValue`).
+  O meu parsing manual (`JSON.parse` do primeiro chunk) falha quando há chunking
+  → `access_token` undefined → `getClaims` nunca corre → `user` null → redirect
+  para login. **Isto quebrou até o /portal.**
+
+**CAUSA RAIZ (6h):** o parsing manual do cookie `auth-token` (chunked + base64-)
+era frágil e retornava `access_token` undefined na maioria dos casos → o proxy
+tratava utilizadores válidos como não-autenticados → redirect para login em
+`/admin` E `/portal`.
+
+**CORREÇÃO APLICADA (ij3r0rvdb → commit 12c242c + getSession rewrite):**
+1. ✅ Proxy `/admin` deixou de decidir role (loop spinner morto, ver 6g).
+2. ✅ Proxy agora usa `getSession()` com `autoRefreshToken:false` **em vez de**
+   `getClaims(accessToken)` com parsing manual.
+   - `getSession()` com `autoRefreshToken:false` lê a sessão dos cookies com o
+     storage do `@supabase/ssr` a combinar chunks + descodificar `base64-`
+     (sem parsing manual frágil).
+   - Com `autoRefreshToken:false`, `getSession()` NÃO refresca (lê só da cookie,
+     zero rede, zero corrida) — confirmado no `GoTrueClient.getSession`/`_useSession`.
+   - Se `session` é null (expirado/ausente) → não autenticado → browser singleton
+     (client.ts, único refresher) refresca + recarrega.
+   - Retorna `session.user.app_metadata` completo (role, aal).
+
+**PRÓXIMO TESTE:** deploy limpo com `getSession()`+`autoRefreshToken:false`.
+- MFA login → entra no /admin sem spinner?
+- /portal funciona de novo (regressão resolvida)?
+- Aguardar alguns min + F5 → cookies persistem?

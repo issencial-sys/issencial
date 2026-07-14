@@ -93,64 +93,67 @@ export async function proxy(request: NextRequest) {
     },
   );
 
-  // Validate the session LOCALLY via getClaims() (asymmetric ES256 + cached
-  // JWKS, zero network). See docs/auth-session-investigation.md §6 for the
-  // full bug history. We must NOT use getUser() (strict → wipes cookies on
-  // 1h expiry, bug "3f") nor getSession() unconditionally (refreshes →
-  // parallel token_revoked cascade under rotation, bug "3g").
+  // Validate the session via getSession() with autoRefreshToken:false.
+  // See docs/auth-session-investigation.md §6 for the full bug history.
   //
-  // Strategy: read the access_token straight from the auth-token cookie and
-  // verify its signature locally. Only when there is no token (first visit)
-  // or the token is expired/invalid do we fall back to getSession() (a real
-  // refresh). Because verification is local, the ~24 parallel /admin/*
-  // requests make ~0 network calls in the common case.
+  // Why getSession() and not getUser()/getClaims():
+  //  - getUser() is strict: a locally-expired 1h access_token makes auth-js run
+  //    _removeSession() and wipe the cookies (the original "3f" bug).
+  //  - getClaims() WITHOUT a token argument internally calls getSession() and
+  //    REFRESHES — under refresh_token_rotation_enabled the ~24 parallel
+  //    /admin/* requests each race to refresh with the same refresh token and
+  //    wipe the session (token_revoked cascade, "3g").
+  //  - getClaims(token) with an explicit token verifies LOCALLY (asymmetric
+  //    ES256 + cached JWKS), but requires manually extracting the access_token
+  //    from the chunked cookie — which is fragile (chunk .0/.1 splitting,
+  //    base64- prefix) and BROKE even /portal in the previous iteration.
+  //
+  // The robust choice: getSession() with autoRefreshToken:false reads the
+  // session from the cookies, with the @supabase/ssr storage client combining
+  // the chunks and decoding the base64- prefix for us (no manual parsing).
+  // Because autoRefreshToken is false, getSession() does NOT refresh — it only
+  // returns the in-cookie session (zero network, no race). If the token is
+  // expired/absent, session is null and we treat the request as
+  // unauthenticated, letting the browser singleton (client.ts, the sole
+  // refresher) refresh + reload. This is the Supabase-recommended middleware
+  // pattern minus the per-request refresh that causes token_revoked cascades.
   let user:
     | { id: string; app_metadata: Record<string, unknown>; email?: string }
     | null = null;
 
-  // Extract access_token from the chunked sb-*-auth-token cookie (JSON body).
-  const authCookieName = request.cookies
-    .getAll()
-    .find((c) => c.name.endsWith("-auth-token") || c.name.endsWith("-auth-token.0"))?.name;
-  let accessToken: string | undefined;
-  if (authCookieName) {
-    try {
-      const raw = request.cookies.get(authCookieName)?.value ?? "";
-      const json = JSON.parse(raw.startsWith("base64-") ? atob(raw.slice(7)) : raw);
-      accessToken = json.access_token;
-    } catch {
-      accessToken = undefined;
-    }
-  }
 
-  let claimsError: string | null = null;
-  if (accessToken) {
-    const { data: claimsData, error: claimsErr } = await supabase.auth.getClaims(accessToken);
-    if (claimsData?.claims) {
-      const claims = claimsData.claims as Record<string, unknown>;
-      user = {
-        id: String(claims.sub),
-        app_metadata: (claims.app_metadata as Record<string, unknown>) ?? {},
-        email: claims.email as string | undefined,
-      };
-    } else {
-      // Locally-verified token is expired/invalid. We do NOT call
-      // getSession() here: under refresh_token_rotation_enabled, the ~24
-      // parallel /admin/* requests would each race to refresh with the same
-      // refresh token and wipe the session (token_revoked cascade, bug "3g").
-      // The browser singleton (client.ts, autoRefreshToken:true) is the sole
-      // refresher and refreshes PROACTIVELY before expiry, so in the common
-      // path the token is still valid when the proxy validates. If it isn't,
-      // we treat the request as unauthenticated and let the browser refresh
-      // + reload — never refreshing from the server.
-      claimsError = claimsErr?.message ?? "no-claims";
-    }
+  //    ES256 + cached JWKS), but requires manually extracting the access_token
+  //    from the chunked cookie — which is fragile (chunk .0/.1 splitting,
+  //    base64- prefix) and BROKE even /portal in the previous iteration.
+  //
+  // The robust choice: getSession() with autoRefreshToken:false reads the
+  // session from the cookies, with the @supabase/ssr storage client combining
+  // the chunks and decoding the base64- prefix for us (no manual parsing).
+  // Because autoRefreshToken is false, getSession() does NOT refresh — it only
+  // returns the in-cookie session (zero network, no race). If the token is
+  // expired/absent, session is null and we treat the request as
+  // unauthenticated, letting the browser singleton (client.ts, the sole
+  // refresher) refresh + reload. This is the Supabase-recommended middleware
+  // pattern minus the per-request refresh that causes token_revoked cascades.
+  let sessionError: string | null = null;
+  const {
+    data: { session },
+    error: sessionErr,
+  } = await supabase.auth.getSession();
+  if (session?.user) {
+    user = {
+      id: session.user.id,
+      app_metadata: (session.user.app_metadata ?? {}) as Record<string, unknown>,
+      email: session.user.email,
+    };
+  } else if (sessionErr) {
+    sessionError = sessionErr.message;
   }
 
   // [DEBUG] Log outcome to correlate with cookie deletions above.
   if (process.env.NODE_ENV !== "production" || process.env.AUTH_DEBUG) {
     console.error(
-      `[AUTH-DEBUG proxy.auth] ${pathname} user=${user ? user.id.slice(0, 8) : "null"} role=${user?.app_metadata?.role ?? "-"} aal=${user?.app_metadata?.aal ?? "-"} claimsErr=${claimsError ?? "none"}`,
+      `[AUTH-DEBUG proxy.auth] ${pathname} user=${user ? user.id.slice(0, 8) : "null"} role=${user?.app_metadata?.role ?? "-"} aal=${user?.app_metadata?.aal ?? "-"} sessErr=${sessionError ?? "none"}`,
     );
   }
 

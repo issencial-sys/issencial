@@ -31,6 +31,7 @@ export default function AdminLoginPage() {
       if (user) {
         const role = user.app_metadata?.role;
         if (role === "admin") {
+          setCheckingAuth(false);
           router.push("/admin");
           return;
         }

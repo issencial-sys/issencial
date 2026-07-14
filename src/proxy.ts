@@ -190,50 +190,29 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  // Admin routes (excluding /admin/login which is in PUBLIC_ROUTES)
+  // Admin routes (excluding /admin/login which is in PUBLIC_ROUTES).
+  // The proxy ONLY checks that a session exists (locally verified via
+  // getClaims). It does NOT decide admin role here.
+  //
+  // Why not check role in the proxy: the admin role comes from the JWT
+  // `role` custom claim, which is INTERMITTENTLY absent from the post-MFA
+  // access token on Vercel, and from the admin_users DB table, which is
+  // subject to network races. Deciding role here split the source of truth
+  // from the client (admin/layout.tsx, which trusts the JWT role claim via
+  // getUser) and produced an infinite redirect loop: the proxy said
+  // !isAdmin → 307 → /admin/login, the login page saw role:"admin" →
+  // router.push("/admin") → proxy 307 → ... (spinner forever, cookies kept).
+  //
+  // So role enforcement is delegated entirely to the client (admin/layout
+  // + mfa/page), which already retries on DB errors and only bounces
+  // confirmed non-admins to /portal. The proxy just gates unauthenticated
+  // requests.
   if (pathname.startsWith("/admin")) {
     if (!user) {
       const url = request.nextUrl.clone();
       url.pathname = "/admin/login";
       return NextResponse.redirect(url);
     }
-
-    // Check admin role. Prefer the JWT custom claim, but it is
-    // INTERMITTENTLY absent from the post-MFA access token on Vercel
-    // (same root cause as the missing `aal` claim). When the claim is
-    // missing, fall back to the database (admin_users) as the source of
-    // truth — otherwise every admin request 307-redirects to /portal and
-    // the session appears to vanish. Only hit the DB when the claim is
-    // absent, to keep the common path cheap.
-    const role = user.app_metadata?.role;
-    let isAdmin = role === "admin";
-    if (!isAdmin) {
-      const { data: adminUser } = await supabase
-        .from("admin_users")
-        .select("user_id")
-        .eq("user_id", user.id)
-        .maybeSingle();
-      isAdmin = !!adminUser;
-    }
-    if (!isAdmin) {
-      // Redirect to /admin/login — NOT /portal. The /portal route runs
-      // signOut({scope:"global"}) and clears the auth cookies, which made
-      // the session appear to "vanish" whenever the proxy briefly failed
-      // to confirm admin status (e.g. an intermittently expired access
-      // token). Sending the user to /admin/login keeps the cookies intact
-      // so they can re-authenticate instead of being force-logged-out.
-      const url = request.nextUrl.clone();
-      url.pathname = "/admin/login";
-      return NextResponse.redirect(url);
-    }
-
-    // NOTE: MFA / AAL2 enforcement is handled client-side in
-    // admin/layout.tsx (which reads the real browser session). Doing it
-    // here with getAuthenticatorAssuranceLevel() forced a server-side
-    // session refresh on every request that re-emitted the auth cookie with
-    // a short/expired lifetime (worsened by "Limit AAL1" = 15 min) and
-    // wiped the session right after login. Keeping this proxy to session +
-    // role only stops the cookie from being destroyed server-side.
   }
 
   return response;

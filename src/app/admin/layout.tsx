@@ -64,7 +64,7 @@ export default function AdminLayout({
       // Login pages (incl. MFA) are public — render without admin wrapper
       if (pathname === "/admin/login" || pathname.startsWith("/admin/login/")) {
         setLoading(false);
-        return <>{children}</>;
+        return;
       }
 
       const {

@@ -19,6 +19,7 @@ interface ArticleItem {
   date: string;
   readingTime: string;
   image?: string;
+  is_featured?: boolean;
 }
 
 const categoryFilters = [
@@ -68,8 +69,9 @@ export default function BlogPageContent() {
     const supabase = createClient();
     const { data: dbArticles } = await supabase
       .from("blog_articles")
-      .select("slug, title, excerpt, category, category_label, author, date, reading_time, image")
+      .select("slug, title, excerpt, category, category_label, author, date, reading_time, image, is_featured")
       .eq("status", "published")
+      .order("is_featured", { ascending: false })
       .order("created_at", { ascending: false });
 
     if (dbArticles && dbArticles.length > 0) {
@@ -84,6 +86,7 @@ export default function BlogPageContent() {
           date: a.date,
           readingTime: a.reading_time,
           image: a.image || undefined,
+          is_featured: a.is_featured || false,
         }))
       );
     } else {
@@ -103,7 +106,7 @@ export default function BlogPageContent() {
         return parseDate(b.date) - parseDate(a.date);
       });
       setArticles(
-        sorted.map((a) => ({
+        sorted.map((a, i) => ({
           slug: a.slug,
           title: a.title,
           excerpt: a.excerpt,
@@ -113,6 +116,7 @@ export default function BlogPageContent() {
           date: a.date,
           readingTime: a.readingTime,
           image: (a as any).image || undefined,
+          is_featured: i === 0,
         }))
       );
     }
@@ -134,7 +138,8 @@ export default function BlogPageContent() {
 
   // Paginate
   const paginatedArticles = filteredArticles.slice(0, currentPage * ARTICLES_PER_PAGE);
-  const featured = articles[0];
+  // Use the article marked as featured, otherwise the first article
+  const featured = articles.find((a) => a.is_featured) || articles[0];
 
   const handleCategoryChange = (category: string) => {
     setActiveCategory(category);
@@ -203,8 +208,16 @@ export default function BlogPageContent() {
                 className="group block rounded-2xl overflow-hidden bg-[#f1f1f1] transition-all duration-300 hover:shadow-[0_20px_60px_rgba(0,46,53,0.06)]"
               >
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
-                  <div className={`relative min-h-[300px] md:min-h-[400px] bg-gradient-to-br ${categoryGradients[featured.category]} flex items-center justify-center`}>
+                  <div className={`relative min-h-[300px] md:min-h-[400px] bg-gradient-to-br ${categoryGradients[featured.category]} flex items-center justify-center overflow-hidden`}>
+                    {/* Pattern overlay — always visible behind the image or as fallback */}
                     <div className="absolute inset-0 opacity-[0.06] bg-[radial-gradient(circle_at_50%_50%,#d7de6a_1px,transparent_1px)] bg-[length:40px_40px]" />
+                    {featured.image && (
+                      <img
+                        src={featured.image}
+                        alt={featured.title}
+                        className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                    )}
                     <div className="absolute top-4 left-4">
                       <span className="inline-block px-3 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider bg-white/15 text-white backdrop-blur-sm">
                         Em Destaque

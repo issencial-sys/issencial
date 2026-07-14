@@ -1,0 +1,36 @@
+{
+  "name": "Issencial — Serviços Integrados Globais",
+  "short_name": "Issencial",
+  "description": "A sua sociedade de confiança para cuidar de processos a todos os níveis — desde viagens e educação até serviços administrativos — em qualquer parte do mundo.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#002e35",
+  "theme_color": "#002e35",
+  "orientation": "portrait-primary",
+  "lang": "pt-PT",
+  "dir": "ltr",
+  "categories": ["business", "services", "productivity"],
+  "icons": [
+    {
+      "src": "/logo/principal_branco.png",
+      "sizes": "96x96",
+      "type": "image/png"
+    },
+    {
+      "src": "/logo/principal_branco.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/logo/principal_branco.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/logo/principal_branco.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

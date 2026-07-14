@@ -301,9 +301,9 @@ export default function AdminLayout({
       </aside>
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col min-h-screen">
-        {/* Mobile header */}
-        <header className="lg:hidden flex items-center justify-between bg-white border-b border-gray-200 px-4 py-3">
+      <div className="flex-1 flex flex-col h-dvh overflow-hidden">
+        {/* Mobile header — sempre visível/fixo */}
+        <header className="lg:hidden shrink-0 z-30 flex items-center justify-between bg-white border-b border-gray-200 px-4 py-3">
           <button
             onClick={() => setMobileSidebar(true)}
             className="p-2 text-gray-700 hover:bg-gray-100 rounded-lg"
@@ -324,12 +324,12 @@ export default function AdminLayout({
           </div>
         </header>
 
-        {/* Page content */}
+        {/* Page content — só o conteúdo faz scroll; o header fica fixo */}
         <main
-          className={`flex-1 overflow-hidden ${
+          className={`flex-1 min-h-0 overflow-y-auto ${
             pathname === "/admin/mensagens" || pathname.startsWith("/admin/mensagens/")
-              ? "flex flex-col h-screen"
-              : "p-4 sm:p-6 lg:p-8 overflow-auto"
+              ? "flex flex-col"
+              : "p-4 sm:p-6 lg:p-8"
           }`}
         >
           {children}

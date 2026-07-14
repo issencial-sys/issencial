@@ -15,6 +15,7 @@ import {
   Calendar,
   ChevronDown,
   X,
+  Star,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
@@ -30,6 +31,7 @@ interface BlogArticle {
   reading_time: string;
   status: string;
   created_at: string;
+  is_featured: boolean;
 }
 
 const categoryColors: Record<string, string> = {
@@ -62,6 +64,7 @@ export default function AdminBlogPage() {
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [showFilters, setShowFilters] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [togglingFeatured, setTogglingFeatured] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 10;
   const supabase = createClient();
@@ -75,7 +78,7 @@ export default function AdminBlogPage() {
     setLoading(true);
     const { data } = await supabase
       .from("blog_articles")
-      .select("id, slug, title, excerpt, category, category_label, author, date, reading_time, status, created_at")
+      .select("id, slug, title, excerpt, category, category_label, author, date, reading_time, status, created_at, is_featured")
       .order("created_at", { ascending: false });
 
     if (data) setArticles(data as BlogArticle[]);
@@ -121,6 +124,34 @@ export default function AdminBlogPage() {
     await supabase.from("blog_articles").delete().eq("id", id);
     setArticles((prev) => prev.filter((a) => a.id !== id));
     setDeleting(null);
+  };
+
+  const handleToggleFeatured = async (id: string, currentlyFeatured: boolean) => {
+    setTogglingFeatured(id);
+
+    if (currentlyFeatured) {
+      // Remove featured status
+      await supabase.from("blog_articles").update({ is_featured: false }).eq("id", id);
+      setArticles((prev) =>
+        prev.map((a) => (a.id === id ? { ...a, is_featured: false } : a))
+      );
+    } else {
+      // First, remove featured from current featured article (if any)
+      const currentFeatured = articles.find((a) => a.is_featured);
+      if (currentFeatured) {
+        await supabase.from("blog_articles").update({ is_featured: false }).eq("id", currentFeatured.id);
+      }
+      // Then, set new featured article
+      await supabase.from("blog_articles").update({ is_featured: true }).eq("id", id);
+      setArticles((prev) =>
+        prev.map((a) => ({
+          ...a,
+          is_featured: a.id === id ? true : false,
+        }))
+      );
+    }
+
+    setTogglingFeatured(null);
   };
 
   if (loading) {
@@ -229,6 +260,12 @@ export default function AdminBlogPage() {
                     <span className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider ${categoryColors[article.category] || categoryColors.passaporte}`}>
                       {article.category_label || categoryLabels[article.category]}
                     </span>
+                    {article.is_featured && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100 text-amber-700">
+                        <Star size={10} className="fill-amber-500" />
+                        Destaque
+                      </span>
+                    )}
                     <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold ${statusStyles[article.status] || "bg-gray-100 text-gray-500"}`}>
                       {article.status === "draft" ? "Rascunho" : article.status === "published" ? "Publicado" : "Arquivado"}
                     </span>
@@ -253,6 +290,31 @@ export default function AdminBlogPage() {
 
                 {/* Actions */}
                 <div className="flex items-center gap-1 flex-shrink-0">
+                  {/* Featured toggle */}
+                  <button
+                    onClick={() => handleToggleFeatured(article.id, article.is_featured)}
+                    disabled={togglingFeatured === article.id || article.status !== "published"}
+                    className={`p-2 rounded-lg transition-all ${
+                      article.is_featured
+                        ? "text-amber-400 hover:text-amber-500 hover:bg-amber-50"
+                        : article.status === "published"
+                          ? "text-gray-300 hover:text-amber-400 hover:bg-amber-50"
+                          : "text-gray-200 cursor-not-allowed"
+                    } disabled:opacity-40`}
+                    title={
+                      article.is_featured
+                        ? "Remover destaque"
+                        : article.status !== "published"
+                          ? "Apenas artigos publicados podem estar em destaque"
+                          : "Definir como artigo em destaque"
+                    }
+                  >
+                    {togglingFeatured === article.id ? (
+                      <Loader2 size={16} className="animate-spin" />
+                    ) : (
+                      <Star size={16} className={article.is_featured ? "fill-amber-400" : ""} />
+                    )}
+                  </button>
                   <Link
                     href={`/blog/${article.slug}`}
                     target="_blank"

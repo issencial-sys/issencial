@@ -3,7 +3,10 @@ import "./globals.css";
 import CookieConsent from "@/components/ui/CookieConsent";
 import WhatsAppButton from "@/components/ui/WhatsAppButton";
 
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://issencial.pt";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(BASE_URL),
   title: "Issencial — Serviços Integrados Globais",
   description:
     "A sua sociedade de confiança para cuidar de processos a todos os níveis — desde viagens e educação até serviços administrativos — em qualquer parte do mundo.",
@@ -17,10 +20,9 @@ export const metadata: Metadata = {
   ],
   icons: {
     icon: [
-      { url: "/favicon.ico", type: "image/x-icon" },
-      { url: "/logo/principal_branco.png", type: "image/png" },
+      { url: "/logo/principal_branco.png", type: "image/png", sizes: "96x96" },
     ],
-    apple: [{ url: "/logo/principal_branco.png", type: "image/png" }],
+    apple: [{ url: "/logo/principal_branco.png", type: "image/png", sizes: "180x180" }],
   },
   openGraph: {
     title: "Issencial — Serviços Integrados Globais",
@@ -46,6 +48,13 @@ export const metadata: Metadata = {
       "A sua sociedade de confiança para cuidar de processos a todos os níveis.",
     images: ["/og-image.svg"],
   },
+  other: {
+    "apple-mobile-web-app-capable": "yes",
+    "apple-mobile-web-app-status-bar-style": "black-translucent",
+    "apple-mobile-web-app-title": "Issencial",
+    "msapplication-TileColor": "#002e35",
+  },
+  manifest: "/manifest.json",
 };
 
 export default function RootLayout({

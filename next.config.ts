@@ -63,10 +63,11 @@ const nextConfig: NextConfig = {
             key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
-              // Scripts: allow own + next.js inline scripts (unsafe-inline needed for Next.js).
-              // 'unsafe-eval' removed: Next.js 15 App Router does not require eval() and its
-              // presence widens the XSS surface.
-              "script-src 'self' 'unsafe-inline'",
+              // Scripts: allow own + next.js inline scripts.
+              // 'unsafe-eval' is required by React in development mode for Fast
+              // Refresh and callstack reconstruction. React does NOT use eval()
+              // in production — this is harmless outside dev.
+              `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : ""}`,
               // Styles: allow own + inline styles + Google Fonts
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               // Fonts: allow Google Fonts

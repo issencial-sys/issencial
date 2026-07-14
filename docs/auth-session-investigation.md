@@ -674,3 +674,70 @@ tratava utilizadores válidos como não-autenticados → redirect para login em
 - MFA login → entra no /admin sem spinner?
 - /portal funciona de novo (regressão resolvida)?
 - Aguardar alguns min + F5 → cookies persistem?
+
+---
+
+### 6i. ✅ RESOLVIDO (deploy mulkuvdg6, 2026-07-14)
+
+**Resultado do utilizador (teste em preview):**
+- Login + MFA → **cookies PERMANECEM** ✅
+- F5 → cookies permanecem, **NENHUM redirect** ✅
+- **/portal funciona perfeitamente** ✅ (regressão resolvida)
+- **/admin funciona** sem spinner ✅
+
+**Comportamento conhecido (inofensivo):** na PRIMEIRA vez que se faz
+login+MFA numa sessão (token ainda sem `role:"admin"` claim estável / query
+`admin_users` ainda não respondeu), o `mfa/page.tsx` empurra para
+`/admin/login`. Ao voltar ao /portal e refazer login+MFA, o token já está
+estável e o `role` claim presente → vai direto ao /portal nos testes
+seguintes. É um race de primeira-execução, NÃO destruição de sessão.
+
+**CAUSA RAIZ FINAL (consolidada):**
+1. `getUser()` strict no proxy → `_removeSession()` apagava cookies no expiry
+   (3f). Resolvido: proxy usa `getSession()`+`autoRefreshToken:false`.
+2. `getSession()`/`getClaims()` sem token em cada request paralelo → corrida
+   `token_revoked` sob `refresh_token_rotation_enabled` (3g). Resolvido:
+   `autoRefreshToken:false` no server → browser singleton é o único refresher.
+3. Parsing manual do cookie chunked (`.0`/`.1` + `base64-`) → `access_token`
+   undefined → redirect para login em /admin E /portal. Resolvido: `getSession()`
+   deixa o `@supabase/ssr` combinar chunks.
+4. Proxy decidia role + `router.push("/portal")` em erro de BD → loop spinner +
+   limpeza de cookies. Resolvido: proxy só valida sessão; role delegado ao
+   client (com retry); `/portal` não limpa cookies.
+
+**Estado:** bug de estabilidade de sessão RESOLVIDO. Próximo passo opcional:
+suavizar o bounce de primeira-execução no `mfa/page.tsx` (ver 6j).
+
+---
+
+### 6j. Polimento opcional — bounce de primeira-execução (PENDENTE)
+
+Na primeira vez que se faz login+MFA numa sessão, o `mfa/page.tsx` (`checkMfa`)
+usa `getUser()` + query `admin_users` para decidir o destino. Se o `role:"admin"`
+claim ainda não está no JWT (intermitente pós-MFA) e a query ainda não respondeu,
+`!adminUser` → `router.push("/admin/login")` → utilizador tem de refazer login.
+
+**Melhoria proposta:** em `mfa/page.tsx`, se a verificação de role não concluir
+em tempo útil (adminErr após retry, ou role ausente), redirecionar para `/portal`
+(utilizador normal) em vez de `/admin/login`, e deixar o `admin/layout` decidir
+role no client. Ou: se `user` existe mas role indeterminado, ir para `/portal` e
+deixar o `admin/layout` (que já tem retry) promover a `/admin` se for admin.
+Isto evita o bounce para login na primeira execução.
+
+**Decisão do utilizador pendente:** aplicar 6j ou deixar como está (funciona, só
+tem o bounce de primeira-execução inofensivo).
+
+---
+
+## 7. Resumo das correções aplicadas (commits)
+
+| Commit | Ficheiro(s) | O quê |
+|--------|-------------|-------|
+| 32c17a9 | admin/layout.tsx | aal handling (mfaPending só se claim presente) |
+| 9cd7206 | admin/layout.tsx, admin/login/mfa/page.tsx | checkAdmin/checkMfa via DB |
+| 7679980 | requireAdmin.ts + admin API routes | requireAdmin helper |
+| 0cb252e | client.ts | autoRefreshToken false→true (browser único refresher) |
+| 7d7161c | proxy.ts, server.ts, doc | getClaims local (ES256) + redirect /admin/login |
+| f234ded | proxy.ts, admin/layout.tsx, mfa/page.tsx, doc | remove getSession fallback + /portal não limpa cookies + retry em erro BD |
+| 12c242c | proxy.ts, admin/layout.tsx, admin/login/page.tsx | proxy só valida sessão (role no client) — mata loop spinner |
+| 88b38a6 | proxy.ts, doc | getSession()+autoRefreshToken:false (substitui parsing manual do cookie) |

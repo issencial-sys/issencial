@@ -33,6 +33,8 @@ build*.log
 
 # env files (can opt-in for committing if needed)
 .env*
+redis kv.txt
+redis-kv.txt
 
 # vercel
 .vercel

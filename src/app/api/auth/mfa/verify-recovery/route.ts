@@ -14,12 +14,18 @@ export async function POST(request: Request) {
     }
 
     const supabase = await createClient();
+    // getUser() (not getSession()): server-side, the session comes straight
+    // from the cookie storage and may not be authentic — getUser() validates
+    // the JWT with the Supabase Auth server. This is the warning seen in the
+    // Vercel logs: "Using the user object as returned from
+    // supabase.auth.getSession() ... could be insecure".
     const {
-      data: { session },
-    } = await supabase.auth.getSession();
-    const user = session?.user ?? null;
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+    const authUser = userError ? null : user;
 
-    if (!user) {
+    if (!authUser) {
       return NextResponse.json({ error: "Não autenticado." }, { status: 401 });
     }
 
@@ -31,7 +37,7 @@ export async function POST(request: Request) {
     const { data: match, error: updateError } = await supabase
       .from("mfa_recovery_codes")
       .update({ used_at: new Date().toISOString() })
-      .eq("user_id", user.id)
+      .eq("user_id", authUser.id)
       .eq("code_hashed", codeHashed)
       .is("used_at", null)
       .select("id")

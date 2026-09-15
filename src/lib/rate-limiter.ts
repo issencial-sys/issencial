@@ -24,6 +24,8 @@ interface RateLimiterResult {
   allowed: boolean;
   remaining: number;
   resetMs: number; // ms até ao reset
+  /** true quando o backend do limiter falhou e a decisão é fail-open */
+  degraded?: boolean;
 }
 
 // ─── In-Memory implementation ──────────────
@@ -97,12 +99,30 @@ async function createUpstashLimiter({ maxRequests, windowSeconds }: RateLimiterC
 
   return {
     async check(ip: string): Promise<RateLimiterResult> {
-      const { success, remaining, reset } = await ratelimit.limit(ip);
-      return {
-        allowed: success,
-        remaining,
-        resetMs: Math.max(reset - Date.now(), 1000),
-      };
+      try {
+        const { success, remaining, reset } = await ratelimit.limit(ip);
+        return {
+          allowed: success,
+          remaining,
+          resetMs: Math.max(reset - Date.now(), 1000),
+        };
+      } catch (err) {
+        // Upstash error (paused/evicted DB, network, auth...). Fail OPEN with
+        // a loud log: blocking all logins because Redis is down turns one
+        // outage into a total login lockout (seen in prod after the Upstash
+        // pause). Callers that need stricter behavior can treat `degraded`
+        // as a signal to apply their own fallback throttling.
+        console.error(
+          "[rate-limiter] Upstash unavailable, failing open:",
+          err instanceof Error ? err.message : err,
+        );
+        return {
+          allowed: true,
+          remaining: maxRequests,
+          resetMs: windowSeconds * 1000,
+          degraded: true,
+        };
+      }
     },
   };
 }
